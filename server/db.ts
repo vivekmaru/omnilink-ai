@@ -205,10 +205,75 @@ export class OmniLinkDB {
     return row.count;
   }
 
+  // Count unread links
+  getUnreadCount(): number {
+    const row = this.db.prepare("SELECT COUNT(*) as count FROM links WHERE read_status = 'unread' AND is_archived = 0").get() as { count: number };
+    return row.count;
+  }
+
+  // Count currently reading links
+  getReadingCount(): number {
+    const row = this.db.prepare("SELECT COUNT(*) as count FROM links WHERE read_status = 'reading' AND is_archived = 0").get() as { count: number };
+    return row.count;
+  }
+
+  // Count reviewed / read links
+  getReadCount(): number {
+    const row = this.db.prepare("SELECT COUNT(*) as count FROM links WHERE read_status = 'read' AND is_archived = 0").get() as { count: number };
+    return row.count;
+  }
+
   // Get all links (ordered by created_at DESC)
   getAllLinks(): LinkItem[] {
     const rows = this.db.prepare('SELECT * FROM links ORDER BY created_at DESC').all();
     return rows.map((r) => this.mapRowToLink(r));
+  }
+
+  // Get filtered links with optional criteria
+  getFilteredLinks(options: {
+    readStatus?: string;
+    category?: string;
+    platform?: string;
+    tag?: string;
+    onlyFavorites?: boolean;
+    includeArchived?: boolean;
+    limit?: number;
+  } = {}): LinkItem[] {
+    const { readStatus, category, platform, tag, onlyFavorites, includeArchived, limit = 50 } = options;
+    const conditions: string[] = [];
+    const params: any[] = [];
+
+    if (!includeArchived) {
+      conditions.push('is_archived = 0');
+    }
+    if (onlyFavorites) {
+      conditions.push('is_favorite = 1');
+    }
+    if (readStatus && readStatus !== 'all') {
+      conditions.push('read_status = ?');
+      params.push(readStatus);
+    }
+    if (category && category !== 'all') {
+      conditions.push('category = ?');
+      params.push(category);
+    }
+    if (platform && platform !== 'all') {
+      conditions.push('platform = ?');
+      params.push(platform);
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+    const sql = `SELECT * FROM links ${whereClause} ORDER BY created_at DESC LIMIT ?`;
+    params.push(limit);
+
+    const rows = this.db.prepare(sql).all(...params);
+    let items = rows.map((r) => this.mapRowToLink(r));
+
+    if (tag && tag !== 'all') {
+      items = items.filter((item) => (item.tags || []).includes(tag));
+    }
+
+    return items;
   }
 
   // Get single link by ID
