@@ -1,4 +1,4 @@
-import { LinkItem, DuplicateCheckResult } from '../types';
+import { LinkItem, DuplicateCheckResult, PlatformType } from '../types';
 
 const TRACKING_PARAMS = new Set([
   'utm_source',
@@ -161,4 +161,32 @@ export function checkDuplicateInLinks(targetUrl: string, links: LinkItem[]): Dup
     existingLink: null,
     normalizedUrl: normalizedTarget,
   };
+}
+
+/**
+ * Detects the platform of a URL (github, reddit_post, paper, youtube, instagram_short, twitter_x, article, other)
+ */
+export function detectPlatform(url: string): PlatformType {
+  const lower = url.toLowerCase();
+  if (lower.includes('github.com')) return 'github';
+  if (lower.includes('reddit.com/r/') && (lower.includes('/comments/') || lower.includes('/s/'))) {
+    if (lower.includes('comment')) return 'reddit_post';
+    return 'reddit_post';
+  }
+  if (lower.includes('reddit.com')) return 'reddit_post';
+  if (lower.includes('instagram.com/reel') || lower.includes('instagram.com/p/') || lower.includes('tiktok.com')) return 'instagram_short';
+  if (lower.includes('youtube.com') || lower.includes('youtu.be')) return 'youtube';
+  if (lower.includes('twitter.com') || lower.includes('x.com')) return 'twitter_x';
+  if (lower.includes('arxiv.org') || lower.includes('biorxiv.org') || lower.includes('.pdf')) return 'paper';
+  if (
+    lower.includes('medium.com') ||
+    lower.includes('dev.to') ||
+    lower.includes('substack.com') ||
+    lower.includes('blog') ||
+    lower.includes('article') ||
+    lower.includes('news')
+  ) {
+    return 'article';
+  }
+  return 'article';
 }

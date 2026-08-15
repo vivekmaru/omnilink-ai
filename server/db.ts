@@ -51,13 +51,6 @@ export class OmniLinkDB {
         updated_at TEXT NOT NULL
       );
 
-      -- Safe column migration if table already exists
-      try {
-        this.db.exec('ALTER TABLE links ADD COLUMN reader_snapshot TEXT');
-      } catch {
-        // Column already exists
-      }
-
       CREATE INDEX IF NOT EXISTS idx_links_url ON links(url);
       CREATE INDEX IF NOT EXISTS idx_links_category ON links(category);
       CREATE INDEX IF NOT EXISTS idx_links_platform ON links(platform);
@@ -104,6 +97,13 @@ export class OmniLinkDB {
         FOREIGN KEY(link_id) REFERENCES links(id) ON DELETE CASCADE
       );
     `);
+
+    // Safe column migration if table already exists
+    try {
+      this.db.exec('ALTER TABLE links ADD COLUMN reader_snapshot TEXT');
+    } catch {
+      // Column already exists
+    }
   }
 
   // Row mapper

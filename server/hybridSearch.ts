@@ -70,6 +70,18 @@ export class HybridSearchEngine {
     return dot / (Math.sqrt(normA) * Math.sqrt(normB));
   }
 
+  // Reciprocal Rank Fusion (RRF) formula: (1 / (k + ftsRank)) + (1 / (k + vectorRank))
+  static computeRrfScore(ftsRank: number | null, vectorRank: number | null, k = 60): number {
+    let score = 0;
+    if (ftsRank !== null && ftsRank > 0) {
+      score += 1.0 / (k + ftsRank);
+    }
+    if (vectorRank !== null && vectorRank > 0) {
+      score += 1.0 / (k + vectorRank);
+    }
+    return score;
+  }
+
   // Generate embedding using Gemini text-embedding-004
   async generateEmbedding(text: string, genAi: GoogleGenAI | null): Promise<number[]> {
     if (!text || !text.trim()) {

@@ -209,8 +209,17 @@ export function analyzeAndSuggestTags(input: {
     for (const alias of rule.aliases) {
       const aliasClean = alias.toLowerCase();
 
+      const matchesIn = (targetText: string) => {
+        if (!targetText) return false;
+        if (aliasClean.length <= 4) {
+          const escaped = aliasClean.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          return new RegExp(`\\b${escaped}\\b`, 'i').test(targetText);
+        }
+        return targetText.includes(aliasClean);
+      };
+
       // Check in Title (Highest weight: 1.5x)
-      if (titleTokens.rawText.includes(aliasClean)) {
+      if (matchesIn(titleTokens.rawText)) {
         const score = (rule.baseWeight || 80) * 1.05;
         if (score > bestScore) {
           bestScore = score;
@@ -219,7 +228,7 @@ export function analyzeAndSuggestTags(input: {
         }
       }
       // Check in Description / Notes (Weight: 1.0x)
-      else if (descTokens.rawText.includes(aliasClean) || notesTokens.rawText.includes(aliasClean)) {
+      else if (matchesIn(descTokens.rawText) || matchesIn(notesTokens.rawText)) {
         const score = (rule.baseWeight || 80) * 0.92;
         if (score > bestScore) {
           bestScore = score;
