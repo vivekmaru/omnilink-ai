@@ -1,0 +1,101 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg: #fbfaf8;
+    --sidebar-bg: #f4f2ee;
+    --card-bg: #ffffff;
+    --card-border: rgba(26, 26, 24, 0.08);
+    --card-hover-border: #d97757;
+    --ink: #1a1a18;
+    --ink-muted: #6b6964;
+    --ink-faint: rgba(26, 26, 24, 0.08);
+    --accent: #d97757;
+    --accent-hover: #c46243;
+    --accent-subtle: rgba(217, 119, 87, 0.1);
+    --tag-bg: #f0eee9;
+  }
+
+  .dark {
+    --bg: #141413;
+    --sidebar-bg: #1a1918;
+    --card-bg: #1f1e1c;
+    --card-border: rgba(255, 255, 255, 0.08);
+    --card-hover-border: rgba(224, 130, 100, 0.5);
+    --ink: #f7f6f3;
+    --ink-muted: #a3a19b;
+    --ink-faint: rgba(255, 255, 255, 0.08);
+    --accent: #e08264;
+    --accent-hover: #e9957a;
+    --accent-subtle: rgba(224, 130, 100, 0.15);
+    --tag-bg: #272522;
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    background: #d97757;
+    color: #ffffff;
+  }
+}
+
+/* Custom font utilities */
+.font-newsreader {
+  font-family: 'Newsreader', Georgia, Cambria, 'Times New Roman', Times, serif;
+}
+
+.font-serif {
+  font-family: 'Newsreader', Georgia, Cambria, 'Times New Roman', Times, serif;
+}
+
+.font-syne {
+  font-family: 'Newsreader', Georgia, 'Syne', serif;
+}
+
+.font-mono-code, .font-mono {
+  font-family: 'JetBrains Mono', 'Space Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.nav-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.55;
+  font-weight: 500;
+}
+
+.badge-ai {
+  background-color: #d97757;
+  color: #ffffff;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+}
+
+/* Custom crisp scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(107, 105, 100, 0.2);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(217, 119, 87, 0.4);
+}
