@@ -29,10 +29,30 @@ import {
 dotenv.config();
 
 const app = express();
-const PORT = 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Healthcheck endpoint for Docker container & Cloud Load Balancers
+app.get(['/health', '/api/health'], (req, res) => {
+  try {
+    const totalCount = omniDb.count();
+    res.json({
+      status: 'ok',
+      uptime: process.uptime(),
+      version: '1.2.0',
+      database: 'healthy',
+      totalBookmarks: totalCount,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err: any) {
+    res.status(503).json({
+      status: 'unhealthy',
+      error: err.message,
+    });
+  }
+});
 
 // Lazy Google GenAI Client
 let genAiClient: GoogleGenAI | null = null;

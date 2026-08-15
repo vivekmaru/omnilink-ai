@@ -128,6 +128,7 @@ Restart Claude Desktop, and Claude will now have direct access to `search_reposi
 ## 📚 Documentation & Integration Guides
 
 - 📖 [**Architecture & Technical Specification**](file:///Users/vivek/antigravity/OmniLink-AI---Smart-Link-Repository/ARCHITECTURE.md)
+- 🚀 [**Production Deployment Guide (Docker / Fly.io / Tunnels)**](file:///Users/vivek/antigravity/OmniLink-AI---Smart-Link-Repository/docs/DEPLOYMENT_GUIDE.md)
 - 🤖 [**Model Context Protocol (MCP) Integration Guide**](file:///Users/vivek/antigravity/OmniLink-AI---Smart-Link-Repository/docs/MCP_INTEGRATION_GUIDE.md)
 - 📱 [**Mobile Quick Share & Apple Shortcuts Guide**](file:///Users/vivek/antigravity/OmniLink-AI---Smart-Link-Repository/docs/MOBILE_QUICK_SHARE_GUIDE.md)
 - 🌐 [**Chrome Extension Setup & Omnibox Guide**](file:///Users/vivek/antigravity/OmniLink-AI---Smart-Link-Repository/docs/CHROME_EXTENSION_GUIDE.md)
