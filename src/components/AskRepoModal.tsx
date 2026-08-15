@@ -142,46 +142,91 @@ export const AskRepoModal: React.FC<AskRepoModalProps> = ({
           {/* Current Active Response */}
           {response && (
             <div className="space-y-4 bg-black/[0.02] dark:bg-white/[0.02] border border-black/10 dark:border-white/10 rounded-xl p-5">
-              <div className="flex items-center justify-between font-mono text-xs font-semibold text-[#d97757] dark:text-[#e08264] uppercase tracking-wider">
+              <div className="flex flex-wrap items-center justify-between gap-2 font-mono text-xs font-semibold text-[#d97757] dark:text-[#e08264] uppercase tracking-wider">
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4" />
                   <span>AI Repository Synthesis</span>
                 </div>
-                {response.orchestration && (
-                  <span className="text-[10px] normal-case text-zinc-500 dark:text-zinc-400 font-mono flex items-center gap-1 bg-black/5 dark:bg-white/5 px-2 py-0.5 rounded border border-black/5 dark:border-white/5">
-                    <Zap className="w-3 h-3 text-amber-500" />
-                    {response.orchestration.model} ({response.orchestration.latencyMs}ms)
-                  </span>
-                )}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {(response as any).retrieval && (
+                    <span className="text-[10px] normal-case text-emerald-600 dark:text-emerald-400 font-mono flex items-center gap-1 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                      <span>Hybrid RAG (FTS5 + text-embedding-004)</span>
+                    </span>
+                  )}
+                  {response.orchestration && (
+                    <span className="text-[10px] normal-case text-zinc-500 dark:text-zinc-400 font-mono flex items-center gap-1 bg-black/5 dark:bg-white/5 px-2 py-0.5 rounded border border-black/5 dark:border-white/5">
+                      <Zap className="w-3 h-3 text-amber-500" />
+                      {response.orchestration.model} ({response.orchestration.latencyMs}ms)
+                    </span>
+                  )}
+                </div>
               </div>
 
               <div className="text-xs sm:text-sm text-slate-800 dark:text-slate-200 whitespace-pre-wrap leading-relaxed">
                 {response.answer}
               </div>
 
-              {/* Referenced Link Cards */}
+              {/* Referenced Link Cards & Retrieval Telemetry */}
               {response.referencedLinkIds && response.referencedLinkIds.length > 0 && (
                 <div className="pt-4 border-t border-black/10 dark:border-white/10 space-y-2.5">
-                  <div className="font-mono text-[11px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-semibold">
-                    Referenced Sources in Your Repository:
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-[11px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-semibold">
+                      Referenced Knowledge Sources:
+                    </span>
+                    <span className="font-mono text-[10px] text-slate-400">
+                      {response.referencedLinkIds.length} items cited
+                    </span>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {getReferencedLinks(response.referencedLinkIds).map((refLink) => (
-                      <div
-                        key={refLink.id}
-                        onClick={() => onOpenLinkDetail(refLink)}
-                        className="p-3 bg-white dark:bg-[#1c1b18] border border-black/10 dark:border-white/10 rounded-xl hover:border-[#d97757]/40 transition-colors cursor-pointer flex items-center justify-between gap-2"
-                      >
-                        <div className="truncate">
-                          <div className="font-semibold text-xs text-slate-900 dark:text-slate-100 truncate font-newsreader">
-                            {refLink.title}
+                    {getReferencedLinks(response.referencedLinkIds).map((refLink) => {
+                      const matchInfo = (response as any).retrieval?.topMatches?.find((m: any) => m.id === refLink.id);
+                      return (
+                        <div
+                          key={refLink.id}
+                          onClick={() => onOpenLinkDetail(refLink)}
+                          className="p-3 bg-white dark:bg-[#1c1b18] border border-black/10 dark:border-white/10 rounded-xl hover:border-[#d97757]/40 transition-colors cursor-pointer flex items-center justify-between gap-2 group"
+                        >
+                          <div className="truncate">
+                            <div className="font-semibold text-xs text-slate-900 dark:text-slate-100 truncate font-newsreader group-hover:text-[#d97757] dark:group-hover:text-[#e08264] transition-colors">
+                              {refLink.title}
+                            </div>
+                            <div className="font-mono text-[10px] text-slate-500 dark:text-slate-400 truncate flex items-center gap-1.5 mt-0.5">
+                              <span>{refLink.category}</span>
+                              <span>•</span>
+                              <span>{refLink.platform}</span>
+                              {matchInfo?.vectorSimilarity && (
+                                <>
+                                  <span>•</span>
+                                  <span className="text-emerald-500">
+                                    {Math.round(matchInfo.vectorSimilarity * 100)}% match
+                                  </span>
+                                </>
+                              )}
+                            </div>
                           </div>
-                          <div className="font-mono text-[10px] text-slate-500 dark:text-slate-400 truncate">
-                            {refLink.category} • {refLink.platform}
-                          </div>
+                          <ExternalLink className="w-3.5 h-3.5 text-[#d97757] dark:text-[#e08264] shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
                         </div>
-                        <ExternalLink className="w-3.5 h-3.5 text-[#d97757] dark:text-[#e08264] shrink-0" />
-                      </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Exploration Suggestions */}
+              {response.suggestions && response.suggestions.length > 0 && (
+                <div className="pt-3 border-t border-black/10 dark:border-white/10 space-y-2">
+                  <span className="font-mono text-[10px] uppercase text-slate-400 font-semibold tracking-wider">
+                    Follow-Up Deep Dives:
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {response.suggestions.map((sug, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => handleAsk(sug)}
+                        className="text-left text-[11px] px-2.5 py-1 rounded-lg bg-black/5 dark:bg-white/5 hover:bg-[#d97757]/10 text-slate-700 dark:text-slate-300 hover:text-[#d97757] dark:hover:text-[#e08264] border border-black/5 dark:border-white/5 transition-colors"
+                      >
+                        {sug} &rarr;
+                      </button>
                     ))}
                   </div>
                 </div>

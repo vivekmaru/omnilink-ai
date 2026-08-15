@@ -275,3 +275,26 @@ export interface DuplicateCheckResult {
   normalizedUrl: string;
 }
 
+export interface HybridSearchMatch {
+  link: LinkItem;
+  rrfScore: number;
+  ftsRank: number | null;
+  vectorSimilarity: number | null;
+  matchReasons: string[];
+}
+
+export interface HybridSearchResponse {
+  success: boolean;
+  count: number;
+  results: HybridSearchMatch[];
+}
+
+export interface EmbeddingsStatusResponse {
+  total: number;
+  indexed: number;
+  unindexed: number;
+  percentage: number;
+  model: string;
+}
+
+

@@ -9,6 +9,8 @@ import {
   RssSyncResult,
   OpmlImportResult,
   DuplicateCheckResult,
+  HybridSearchMatch,
+  EmbeddingsStatusResponse,
 } from '../types';
 import { checkDuplicateInLinks, normalizeUrl } from '../utils/url';
 
@@ -545,5 +547,47 @@ export class ApiService {
   // Get OPML export download link
   static getOpmlExportUrl(): string {
     return '/api/rss/opml/export';
+  }
+
+  // --- Hybrid Search & Vector Embedding APIs ---
+
+  // Perform Hybrid (FTS5 + Dense Vector + RRF) search
+  static async searchHybrid(query: string, options: {
+    category?: string;
+    platform?: string;
+    readStatus?: string;
+    limit?: number;
+    minScore?: number;
+  } = {}): Promise<HybridSearchMatch[]> {
+    try {
+      const res = await fetch('/api/ai/search/hybrid', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, ...options }),
+      });
+      if (!res.ok) throw new Error('Hybrid search failed');
+      const data = await res.json();
+      return data.results || [];
+    } catch (err) {
+      console.warn('Hybrid search API error, falling back to local filter:', err);
+      return [];
+    }
+  }
+
+  // Trigger full vector embedding re-indexing
+  static async reindexEmbeddings(): Promise<{ indexed: number; total: number }> {
+    const res = await fetch('/api/ai/embeddings/reindex', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!res.ok) throw new Error('Failed to trigger reindexing');
+    return res.json();
+  }
+
+  // Check vector embeddings index status
+  static async getEmbeddingsStatus(): Promise<EmbeddingsStatusResponse> {
+    const res = await fetch('/api/ai/embeddings/status');
+    if (!res.ok) throw new Error('Failed to get embeddings status');
+    return res.json();
   }
 }

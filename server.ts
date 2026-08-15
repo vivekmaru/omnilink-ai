@@ -9,6 +9,8 @@ import { ModelOrchestrator } from './server/modelOrchestrator';
 import { GeminiModelId } from './src/types';
 import { analyzeAndSuggestTags } from './src/services/autoTagging';
 import { normalizeUrl, checkDuplicateInLinks } from './src/utils/url';
+import { omniDb } from './server/db';
+import { hybridSearchEngine } from './server/hybridSearch';
 
 dotenv.config();
 
@@ -252,33 +254,32 @@ const SEED_LINKS: LinkItem[] = [
   }
 ];
 
+// Initialize and migrate database
+omniDb.migrateIfNeeded(SEED_LINKS);
+
 function loadLinks(): LinkItem[] {
-  try {
-    if (fs.existsSync(REPO_FILE)) {
-      const data = fs.readFileSync(REPO_FILE, 'utf-8');
-      const parsed = JSON.parse(data);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
-      }
-    }
-  } catch (err) {
-    console.error('Error reading repository file:', err);
-  }
-  // Initialize with seed data
-  saveLinks(SEED_LINKS);
-  return SEED_LINKS;
+  return omniDb.getAllLinks();
 }
 
-function saveLinks(links: LinkItem[]): void {
+function saveLinks(links?: LinkItem[]): void {
+  // SQLite maintains atomic persistence automatically.
+  // Optional backup sync to repository.json for portability:
   try {
-    fs.writeFileSync(REPO_FILE, JSON.stringify(links, null, 2), 'utf-8');
+    const all = links || omniDb.getAllLinks();
+    fs.writeFileSync(REPO_FILE, JSON.stringify(all, null, 2), 'utf-8');
   } catch (err) {
-    console.error('Error writing repository file:', err);
+    console.error('Error syncing repository backup file:', err);
   }
 }
 
-// In-memory link repository
+// Active link repository backed by SQLite
 let linksDatabase: LinkItem[] = loadLinks();
+
+// Helper to refresh in-memory reference from SQLite
+function refreshLinksCache(): LinkItem[] {
+  linksDatabase = omniDb.getAllLinks();
+  return linksDatabase;
+}
 
 // Helper to detect platform
 function detectPlatform(url: string): PlatformType {
@@ -407,8 +408,8 @@ app.post('/api/links', async (req, res) => {
       return;
     }
 
-    // Check if URL already exists
-    const existing = linksDatabase.find((l) => l.url.trim() === url.trim());
+    // Check if URL already exists in SQLite
+    const existing = omniDb.getLinkByUrl(url.trim());
     if (existing) {
       res.status(200).json({ link: existing, message: 'Link already exists in repository' });
       return;
@@ -473,8 +474,14 @@ app.post('/api/links', async (req, res) => {
       aiScore,
     };
 
-    linksDatabase.unshift(newLink);
-    saveLinks(linksDatabase);
+    omniDb.insertLink(newLink);
+    refreshLinksCache();
+    saveLinks();
+
+    // Trigger background vector indexing
+    hybridSearchEngine.indexLink(newLink, getGenAI()).catch((err) => {
+      console.warn('[HybridSearch] Background embedding generation notice:', err);
+    });
 
     res.status(201).json({ link: newLink });
   } catch (err: any) {
@@ -486,34 +493,34 @@ app.post('/api/links', async (req, res) => {
 // PUT /api/links/:id - Update link
 app.put('/api/links/:id', (req, res) => {
   const { id } = req.params;
-  const index = linksDatabase.findIndex((l) => l.id === id);
-  if (index === -1) {
+  const updated = omniDb.updateLink(id, req.body);
+  if (!updated) {
     res.status(404).json({ error: 'Link not found.' });
     return;
   }
 
-  const updated: LinkItem = {
-    ...linksDatabase[index],
-    ...req.body,
-    id, // Keep immutable ID
-    updatedAt: new Date().toISOString(),
-  };
+  refreshLinksCache();
+  saveLinks();
 
-  linksDatabase[index] = updated;
-  saveLinks(linksDatabase);
+  // Re-index updated text embedding in background
+  hybridSearchEngine.indexLink(updated, getGenAI()).catch((err) => {
+    console.warn('[HybridSearch] Background update embedding notice:', err);
+  });
+
   res.json({ link: updated });
 });
 
 // DELETE /api/links/:id - Delete link
 app.delete('/api/links/:id', (req, res) => {
   const { id } = req.params;
-  const initialLength = linksDatabase.length;
-  linksDatabase = linksDatabase.filter((l) => l.id !== id);
-  if (linksDatabase.length === initialLength) {
+  const deleted = omniDb.deleteLink(id);
+  if (!deleted) {
     res.status(404).json({ error: 'Link not found.' });
     return;
   }
-  saveLinks(linksDatabase);
+
+  refreshLinksCache();
+  saveLinks();
   res.json({ success: true, id });
 });
 
@@ -525,32 +532,32 @@ app.post('/api/links/batch', (req, res) => {
     return;
   }
 
-  const idSet = new Set(ids);
   if (action === 'delete') {
-    linksDatabase = linksDatabase.filter((l) => !idSet.has(l.id));
+    omniDb.batchDelete(ids);
   } else if (action === 'archive') {
-    linksDatabase = linksDatabase.map((l) => (idSet.has(l.id) ? { ...l, isArchived: true } : l));
+    omniDb.batchUpdate(ids, { isArchived: true });
   } else if (action === 'unarchive') {
-    linksDatabase = linksDatabase.map((l) => (idSet.has(l.id) ? { ...l, isArchived: false } : l));
+    omniDb.batchUpdate(ids, { isArchived: false });
   } else if (action === 'markRead') {
-    linksDatabase = linksDatabase.map((l) => (idSet.has(l.id) ? { ...l, readStatus: 'read' } : l));
+    omniDb.batchUpdate(ids, { readStatus: 'read' });
   } else if (action === 'markUnread') {
-    linksDatabase = linksDatabase.map((l) => (idSet.has(l.id) ? { ...l, readStatus: 'unread' } : l));
+    omniDb.batchUpdate(ids, { readStatus: 'unread' });
   } else if (action === 'setCategory' && value) {
-    linksDatabase = linksDatabase.map((l) => (idSet.has(l.id) ? { ...l, category: String(value) } : l));
+    omniDb.batchUpdate(ids, { category: String(value) });
   } else if (action === 'addTag' && value) {
-    linksDatabase = linksDatabase.map((l) => {
-      if (idSet.has(l.id)) {
+    for (const id of ids) {
+      const item = omniDb.getLinkById(id);
+      if (item) {
         const cleanTag = String(value).trim().toLowerCase();
-        const nextTags = Array.from(new Set([...l.tags, cleanTag]));
-        return { ...l, tags: nextTags };
+        const nextTags = Array.from(new Set([...item.tags, cleanTag]));
+        omniDb.updateLink(id, { tags: nextTags });
       }
-      return l;
-    });
+    }
   }
 
-  saveLinks(linksDatabase);
-  res.json({ success: true, count: ids.length, total: linksDatabase.length });
+  refreshLinksCache();
+  saveLinks();
+  res.json({ success: true, count: ids.length, total: omniDb.count() });
 });
 
 // GET /api/links/check-duplicate & POST /api/links/check-duplicate
@@ -580,13 +587,11 @@ app.post('/api/links/merge/:id', async (req, res) => {
     const { id } = req.params;
     const { title, category, tags, notes, mode, autoAiExtract } = req.body;
 
-    const index = linksDatabase.findIndex((l) => l.id === id);
-    if (index === -1) {
+    const existing = omniDb.getLinkById(id);
+    if (!existing) {
       res.status(404).json({ error: 'Existing link not found to merge.' });
       return;
     }
-
-    const existing = linksDatabase[index];
 
     let mergedTitle = existing.title;
     let mergedCategory = existing.category;
@@ -652,19 +657,27 @@ app.post('/api/links/merge/:id', async (req, res) => {
       }
     }
 
-    const updatedLink: LinkItem = {
-      ...existing,
+    const updatedLink = omniDb.updateLink(id, {
       title: mergedTitle,
       category: mergedCategory,
       tags: mergedTags,
       notes: mergedNotes,
       summary: updatedSummary,
       aiScore: updatedAiScore,
-      updatedAt: new Date().toISOString(),
-    };
+    });
 
-    linksDatabase[index] = updatedLink;
-    saveLinks(linksDatabase);
+    if (!updatedLink) {
+      res.status(500).json({ error: 'Failed to update link in database' });
+      return;
+    }
+
+    refreshLinksCache();
+    saveLinks();
+
+    // Re-index embedding in background
+    hybridSearchEngine.indexLink(updatedLink, getGenAI()).catch((err) => {
+      console.warn('[HybridSearch] Background merge embedding notice:', err);
+    });
 
     res.json({ link: updatedLink, message: 'Bookmark successfully merged' });
   } catch (err: any) {
@@ -1112,7 +1125,7 @@ ${JSON.stringify(linkSummaries, null, 2)}`;
   }
 });
 
-// POST /api/ai/ask - Conversational RAG over saved repository via Thinking Gemini 3.7
+// POST /api/ai/ask - Conversational RAG over saved repository via Hybrid Search (FTS5 + Dense Vectors + RRF)
 app.post('/api/ai/ask', async (req, res) => {
   try {
     const { question, preferredModel } = req.body;
@@ -1121,7 +1134,15 @@ app.post('/api/ai/ask', async (req, res) => {
       return;
     }
 
-    const knowledgeBase = linksDatabase.map((l) => ({
+    const genAi = getGenAI();
+
+    // Stage 1 & 2: Hybrid Retrieval (SQLite FTS5 BM25 + Gemini text-embedding-004 dense vectors + RRF)
+    const hybridMatches = await hybridSearchEngine.search(question, genAi, { limit: 8 });
+    const relevantLinks = hybridMatches.length > 0
+      ? hybridMatches.map((m) => m.link)
+      : omniDb.getAllLinks().slice(0, 10);
+
+    const knowledgeBase = relevantLinks.map((l) => ({
       id: l.id,
       title: l.title,
       url: l.url,
@@ -1134,15 +1155,18 @@ app.post('/api/ai/ask', async (req, res) => {
       notes: l.notes,
     }));
 
-    const prompt = `You are OmniLink AI's knowledge assistant. The user has saved the following links/bookmarks in their repository.
-Answer the user's question accurately using their saved knowledge base. Cite specific saved links by their title and [ID: id].
-If relevant, synthesize multiple links, compare concepts, or extract code snippets and key takeaways.
-Also provide 2-3 follow-up exploration suggestions.
+    const prompt = `You are OmniLink AI's knowledge assistant. The user has asked a question against their personal knowledge repository.
+Below are the top relevant bookmarks retrieved via Hybrid Search (SQLite FTS5 lexical ranking + semantic dense vector embeddings + Reciprocal Rank Fusion):
+
+${JSON.stringify(knowledgeBase, null, 2)}
 
 User Question: "${question}"
 
-Saved Repository Knowledge Base:
-${JSON.stringify(knowledgeBase, null, 2)}`;
+Instructions:
+1. Answer the user's question accurately using ONLY their saved knowledge base.
+2. Cite specific saved links by their title and [ID: id].
+3. Synthesize multiple links, compare concepts, or extract code snippets and key takeaways.
+4. Also provide 2-3 follow-up exploration suggestions.`;
 
     const schema = {
       type: Type.OBJECT,
@@ -1162,7 +1186,6 @@ ${JSON.stringify(knowledgeBase, null, 2)}`;
       required: ['answer', 'referencedLinkIds', 'suggestions'],
     };
 
-    const genAi = getGenAI();
     const orchResult = await ModelOrchestrator.executeStructuredPrompt<{
       answer: string;
       referencedLinkIds: string[];
@@ -1172,7 +1195,7 @@ ${JSON.stringify(knowledgeBase, null, 2)}`;
       {
         taskType: 'deep_reasoning',
         promptText: question,
-        itemCount: linksDatabase.length,
+        itemCount: relevantLinks.length,
         preferredModel,
         forceThinking: true,
       },
@@ -1182,11 +1205,24 @@ ${JSON.stringify(knowledgeBase, null, 2)}`;
 
     let result = orchResult.data;
     if (!result || !result.answer) {
-      result = generateHeuristicAskRepo(question, linksDatabase);
+      result = generateHeuristicAskRepo(question, relevantLinks);
     }
 
     res.json({
       ...result,
+      retrieval: {
+        strategy: 'hybrid_fts5_vector_rrf',
+        retrievedCount: relevantLinks.length,
+        totalVaultItems: omniDb.count(),
+        topMatches: hybridMatches.map((m) => ({
+          id: m.link.id,
+          title: m.link.title,
+          rrfScore: m.rrfScore,
+          ftsRank: m.ftsRank,
+          vectorSimilarity: m.vectorSimilarity,
+          reasons: m.matchReasons,
+        })),
+      },
       orchestration: {
         model: orchResult.executedModel,
         fallbackUsed: orchResult.fallbackUsed,
@@ -1196,8 +1232,53 @@ ${JSON.stringify(knowledgeBase, null, 2)}`;
     });
   } catch (err: any) {
     console.error('Ask Repo error:', err);
-    res.json(generateHeuristicAskRepo(req.body?.question || 'General search', linksDatabase));
+    res.json(generateHeuristicAskRepo(req.body?.question || 'General search', omniDb.getAllLinks()));
   }
+});
+
+// POST /api/ai/search/hybrid - Dedicated Hybrid Lexical + Semantic Search API
+app.post('/api/ai/search/hybrid', async (req, res) => {
+  try {
+    const { query, category, platform, readStatus, limit, minScore } = req.body;
+    const genAi = getGenAI();
+    const results = await hybridSearchEngine.search(query || '', genAi, {
+      limit: Number(limit) || 15,
+      category,
+      platform,
+      readStatus,
+      minScore: minScore !== undefined ? Number(minScore) : 0.001,
+    });
+    res.json({ success: true, count: results.length, results });
+  } catch (err: any) {
+    console.error('Hybrid search error:', err);
+    res.status(500).json({ error: err.message || 'Hybrid search failed' });
+  }
+});
+
+// POST /api/ai/embeddings/reindex - Trigger full vector re-indexing
+app.post('/api/ai/embeddings/reindex', async (req, res) => {
+  try {
+    const genAi = getGenAI();
+    const result = await hybridSearchEngine.runBackgroundIndexing(genAi);
+    res.json({ success: true, ...result });
+  } catch (err: any) {
+    console.error('Reindexing error:', err);
+    res.status(500).json({ error: err.message || 'Reindexing failed' });
+  }
+});
+
+// GET /api/ai/embeddings/status - Check vector embedding status
+app.get('/api/ai/embeddings/status', (req, res) => {
+  const total = omniDb.count();
+  const unindexed = omniDb.getUnindexedLinkIds().length;
+  const indexed = total - unindexed;
+  res.json({
+    total,
+    indexed,
+    unindexed,
+    percentage: total > 0 ? Math.round((indexed / total) * 100) : 100,
+    model: 'text-embedding-004 (768-d)',
+  });
 });
 
 // GET /api/stats - Dashboard metrics
@@ -1876,15 +1957,25 @@ async function start() {
 
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`OmniLink AI Server running on http://localhost:${PORT}`);
+    console.log(`SQLite Database active at data/omnilink.db (${omniDb.count()} links)`);
+
+    // Launch non-blocking background vector embedding indexer
+    setTimeout(() => {
+      hybridSearchEngine.runBackgroundIndexing(getGenAI()).catch((err) => {
+        console.warn('[HybridSearch] Initial indexing background notice:', err);
+      });
+    }, 1500);
 
     // Auto-poll enabled RSS feeds every 15 minutes
     setInterval(async () => {
       try {
-        const syncResult = await RssFeedManager.syncAllEnabledFeeds(linksDatabase, getGenAI());
+        const syncResult = await RssFeedManager.syncAllEnabledFeeds(omniDb.getAllLinks(), getGenAI());
         if (syncResult.newLinks.length > 0) {
-          linksDatabase.unshift(...syncResult.newLinks);
-          saveLinks(linksDatabase);
+          omniDb.bulkInsert(syncResult.newLinks);
+          refreshLinksCache();
+          saveLinks();
           console.log(`[RSS Background Sync] Ingested ${syncResult.newLinks.length} new items into unread list.`);
+          hybridSearchEngine.runBackgroundIndexing(getGenAI()).catch(() => {});
         }
       } catch (err: any) {
         console.warn('[RSS Background Sync] Polling error:', err.message);
