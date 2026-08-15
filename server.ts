@@ -12,6 +12,19 @@ import { normalizeUrl, checkDuplicateInLinks } from './src/utils/url';
 import { omniDb } from './server/db';
 import { hybridSearchEngine } from './server/hybridSearch';
 import { ReadabilityService } from './server/readabilityService';
+import {
+  validateBody,
+  validateQuery,
+  sanitizeText,
+  CreateLinkSchema,
+  UpdateLinkSchema,
+  BatchActionSchema,
+  MergeLinkSchema,
+  AskRepoSchema,
+  HybridSearchSchema,
+  CheckDuplicateSchema,
+  AddRssFeedSchema,
+} from './server/validators';
 
 dotenv.config();
 
@@ -401,13 +414,9 @@ app.get('/api/links', (req, res) => {
 });
 
 // POST /api/links - Add link with optional auto-AI extraction
-app.post('/api/links', async (req, res) => {
+app.post('/api/links', validateBody(CreateLinkSchema), async (req, res) => {
   try {
     const { url, title, notes, category, tags, autoAiExtract, source } = req.body;
-    if (!url || typeof url !== 'string') {
-      res.status(400).json({ error: 'URL is required.' });
-      return;
-    }
 
     // Check if URL already exists in SQLite
     const existing = omniDb.getLinkByUrl(url.trim());
@@ -492,7 +501,7 @@ app.post('/api/links', async (req, res) => {
 });
 
 // PUT /api/links/:id - Update link
-app.put('/api/links/:id', (req, res) => {
+app.put('/api/links/:id', validateBody(UpdateLinkSchema), (req, res) => {
   const { id } = req.params;
   const updated = omniDb.updateLink(id, req.body);
   if (!updated) {
@@ -580,12 +589,8 @@ app.post('/api/links/:id/reader/snapshot', async (req, res) => {
 });
 
 // POST /api/links/batch - Batch operations
-app.post('/api/links/batch', (req, res) => {
+app.post('/api/links/batch', validateBody(BatchActionSchema), (req, res) => {
   const { ids, action, value } = req.body;
-  if (!Array.isArray(ids) || !action) {
-    res.status(400).json({ error: 'ids array and action are required.' });
-    return;
-  }
 
   if (action === 'delete') {
     omniDb.batchDelete(ids);
@@ -626,18 +631,14 @@ app.get('/api/links/check-duplicate', (req, res) => {
   res.json(result);
 });
 
-app.post('/api/links/check-duplicate', (req, res) => {
+app.post('/api/links/check-duplicate', validateBody(CheckDuplicateSchema), (req, res) => {
   const { url } = req.body;
-  if (!url || typeof url !== 'string') {
-    res.json({ isDuplicate: false, existingLink: null, normalizedUrl: '' });
-    return;
-  }
   const result = checkDuplicateInLinks(url, linksDatabase);
   res.json(result);
 });
 
 // POST /api/links/merge/:id - Smart merge or update an existing link with new input
-app.post('/api/links/merge/:id', async (req, res) => {
+app.post('/api/links/merge/:id', validateBody(MergeLinkSchema), async (req, res) => {
   try {
     const { id } = req.params;
     const { title, category, tags, notes, mode, autoAiExtract } = req.body;
@@ -1181,13 +1182,9 @@ ${JSON.stringify(linkSummaries, null, 2)}`;
 });
 
 // POST /api/ai/ask - Conversational RAG over saved repository via Hybrid Search (FTS5 + Dense Vectors + RRF)
-app.post('/api/ai/ask', async (req, res) => {
+app.post('/api/ai/ask', validateBody(AskRepoSchema), async (req, res) => {
   try {
     const { question, preferredModel } = req.body;
-    if (!question || typeof question !== 'string') {
-      res.status(400).json({ error: 'question string is required' });
-      return;
-    }
 
     const genAi = getGenAI();
 
@@ -1292,7 +1289,7 @@ Instructions:
 });
 
 // POST /api/ai/search/hybrid - Dedicated Hybrid Lexical + Semantic Search API
-app.post('/api/ai/search/hybrid', async (req, res) => {
+app.post('/api/ai/search/hybrid', validateBody(HybridSearchSchema), async (req, res) => {
   try {
     const { query, category, platform, readStatus, limit, minScore } = req.body;
     const genAi = getGenAI();
@@ -1433,13 +1430,9 @@ app.get('/api/rss/feeds', (req, res) => {
 });
 
 // POST /api/rss/feeds - Subscribe to a new RSS feed
-app.post('/api/rss/feeds', async (req, res) => {
+app.post('/api/rss/feeds', validateBody(AddRssFeedSchema), async (req, res) => {
   try {
     const { url, title, description, category, defaultTags, autoAiExtract, pollIntervalMinutes, siteUrl, initialSync } = req.body;
-    if (!url || typeof url !== 'string') {
-      res.status(400).json({ error: 'Feed URL is required.' });
-      return;
-    }
 
     let finalFeedUrl = url.trim();
     let finalTitle = title;
@@ -1993,6 +1986,19 @@ function getRandomThumbnail(platform: PlatformType): string {
   };
   return images[platform] || images.other;
 }
+
+// Global API Error Boundary Middleware
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('[OmniLink Server Uncaught Error]:', err);
+  if (res.headersSent) {
+    return next(err);
+  }
+  res.status(err.status || 500).json({
+    error: err.message || 'Internal Server Error',
+    path: req.path,
+    timestamp: new Date().toISOString(),
+  });
+});
 
 // Vite middleware & Production Serving
 async function start() {
