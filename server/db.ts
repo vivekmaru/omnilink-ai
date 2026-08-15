@@ -46,9 +46,17 @@ export class OmniLinkDB {
         feed_id TEXT,
         feed_title TEXT,
         is_rss_feed_item INTEGER DEFAULT 0,
+        reader_snapshot TEXT, -- JSON string of offline article snapshot
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
       );
+
+      -- Safe column migration if table already exists
+      try {
+        this.db.exec('ALTER TABLE links ADD COLUMN reader_snapshot TEXT');
+      } catch {
+        // Column already exists
+      }
 
       CREATE INDEX IF NOT EXISTS idx_links_url ON links(url);
       CREATE INDEX IF NOT EXISTS idx_links_category ON links(category);
@@ -103,6 +111,7 @@ export class OmniLinkDB {
     let tags: string[] = [];
     let summary: any = { tldr: '' };
     let aiSummary: any = undefined;
+    let readerSnapshot: any = undefined;
 
     try {
       tags = typeof row.tags === 'string' ? JSON.parse(row.tags) : row.tags || [];
@@ -122,6 +131,14 @@ export class OmniLinkDB {
       }
     } catch {
       aiSummary = undefined;
+    }
+
+    try {
+      if (row.reader_snapshot) {
+        readerSnapshot = typeof row.reader_snapshot === 'string' ? JSON.parse(row.reader_snapshot) : row.reader_snapshot;
+      }
+    } catch {
+      readerSnapshot = undefined;
     }
 
     return {
@@ -146,6 +163,7 @@ export class OmniLinkDB {
       feedId: row.feed_id || undefined,
       feedTitle: row.feed_title || undefined,
       isRssFeedItem: Boolean(row.is_rss_feed_item),
+      readerSnapshot,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
     };
@@ -175,6 +193,7 @@ export class OmniLinkDB {
       feed_id: link.feedId || null,
       feed_title: link.feedTitle || null,
       is_rss_feed_item: link.isRssFeedItem ? 1 : 0,
+      reader_snapshot: link.readerSnapshot ? JSON.stringify(link.readerSnapshot) : null,
       created_at: link.createdAt || new Date().toISOString(),
       updated_at: link.updatedAt || new Date().toISOString(),
     };
@@ -214,12 +233,12 @@ export class OmniLinkDB {
         id, url, title, description, author, platform, category, tags,
         summary, ai_summary, thumbnail_url, favicon_url, notes,
         is_favorite, is_archived, read_status, reading_time_minutes, ai_score,
-        feed_id, feed_title, is_rss_feed_item, created_at, updated_at
+        feed_id, feed_title, is_rss_feed_item, reader_snapshot, created_at, updated_at
       ) VALUES (
         @id, @url, @title, @description, @author, @platform, @category, @tags,
         @summary, @ai_summary, @thumbnail_url, @favicon_url, @notes,
         @is_favorite, @is_archived, @read_status, @reading_time_minutes, @ai_score,
-        @feed_id, @feed_title, @is_rss_feed_item, @created_at, @updated_at
+        @feed_id, @feed_title, @is_rss_feed_item, @reader_snapshot, @created_at, @updated_at
       )
     `);
     stmt.run(params);
@@ -260,6 +279,7 @@ export class OmniLinkDB {
         feed_id = @feed_id,
         feed_title = @feed_title,
         is_rss_feed_item = @is_rss_feed_item,
+        reader_snapshot = @reader_snapshot,
         updated_at = @updated_at
       WHERE id = @id
     `);
@@ -280,12 +300,12 @@ export class OmniLinkDB {
         id, url, title, description, author, platform, category, tags,
         summary, ai_summary, thumbnail_url, favicon_url, notes,
         is_favorite, is_archived, read_status, reading_time_minutes, ai_score,
-        feed_id, feed_title, is_rss_feed_item, created_at, updated_at
+        feed_id, feed_title, is_rss_feed_item, reader_snapshot, created_at, updated_at
       ) VALUES (
         @id, @url, @title, @description, @author, @platform, @category, @tags,
         @summary, @ai_summary, @thumbnail_url, @favicon_url, @notes,
         @is_favorite, @is_archived, @read_status, @reading_time_minutes, @ai_score,
-        @feed_id, @feed_title, @is_rss_feed_item, @created_at, @updated_at
+        @feed_id, @feed_title, @is_rss_feed_item, @reader_snapshot, @created_at, @updated_at
       )
     `);
 

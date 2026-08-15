@@ -11,6 +11,7 @@ import { analyzeAndSuggestTags } from './src/services/autoTagging';
 import { normalizeUrl, checkDuplicateInLinks } from './src/utils/url';
 import { omniDb } from './server/db';
 import { hybridSearchEngine } from './server/hybridSearch';
+import { ReadabilityService } from './server/readabilityService';
 
 dotenv.config();
 
@@ -522,6 +523,60 @@ app.delete('/api/links/:id', (req, res) => {
   refreshLinksCache();
   saveLinks();
   res.json({ success: true, id });
+});
+
+// GET /api/links/:id/reader - Get or extract offline reader mode article snapshot
+app.get('/api/links/:id/reader', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const link = omniDb.getLinkById(id);
+    if (!link) {
+      res.status(404).json({ error: 'Link not found' });
+      return;
+    }
+
+    if (link.readerSnapshot && link.readerSnapshot.contentMarkdown) {
+      res.json({ success: true, snapshot: link.readerSnapshot, cached: true });
+      return;
+    }
+
+    // Extract fresh article snapshot
+    const snapshot = await ReadabilityService.extractFromUrl(link.url);
+    if (snapshot) {
+      omniDb.updateLink(id, { readerSnapshot: snapshot });
+      refreshLinksCache();
+      res.json({ success: true, snapshot, cached: false });
+    } else {
+      res.status(422).json({ error: 'Unable to parse full article content from target page.' });
+    }
+  } catch (err: any) {
+    console.error('Reader extraction error:', err);
+    res.status(500).json({ error: err.message || 'Reader extraction failed' });
+  }
+});
+
+// POST /api/links/:id/reader/snapshot - Force fresh offline article snapshot
+app.post('/api/links/:id/reader/snapshot', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const link = omniDb.getLinkById(id);
+    if (!link) {
+      res.status(404).json({ error: 'Link not found' });
+      return;
+    }
+
+    const snapshot = await ReadabilityService.extractFromUrl(link.url);
+    if (snapshot) {
+      const updated = omniDb.updateLink(id, { readerSnapshot: snapshot });
+      refreshLinksCache();
+      res.json({ success: true, snapshot, link: updated });
+    } else {
+      res.status(422).json({ error: 'Failed to extract article content from URL.' });
+    }
+  } catch (err: any) {
+    console.error('Force reader snapshot error:', err);
+    res.status(500).json({ error: err.message || 'Snapshot failed' });
+  }
 });
 
 // POST /api/links/batch - Batch operations

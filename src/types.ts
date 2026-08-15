@@ -21,6 +21,18 @@ export interface LinkSummary {
   estimatedReadTimeMinutes?: number;
 }
 
+export interface ReaderSnapshot {
+  title: string;
+  byline?: string;
+  excerpt?: string;
+  siteName?: string;
+  contentMarkdown: string;
+  contentHtml?: string;
+  readingTimeMinutes: number;
+  wordCount: number;
+  extractedAt: string;
+}
+
 export interface LinkItem {
   id: string;
   url: string;
@@ -45,6 +57,7 @@ export interface LinkItem {
   feedId?: string;
   feedTitle?: string;
   isRssFeedItem?: boolean;
+  readerSnapshot?: ReaderSnapshot;
 }
 
 export interface ClusterGroup {

@@ -11,6 +11,7 @@ import {
   DuplicateCheckResult,
   HybridSearchMatch,
   EmbeddingsStatusResponse,
+  ReaderSnapshot,
 } from '../types';
 import { checkDuplicateInLinks, normalizeUrl } from '../utils/url';
 
@@ -589,5 +590,31 @@ export class ApiService {
     const res = await fetch('/api/ai/embeddings/status');
     if (!res.ok) throw new Error('Failed to get embeddings status');
     return res.json();
+  }
+
+  // --- Offline Reader Mode APIs ---
+
+  // Get or extract offline reader mode article snapshot
+  static async getReaderSnapshot(linkId: string): Promise<ReaderSnapshot> {
+    const res = await fetch(`/api/links/${linkId}/reader`);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Failed to fetch article content');
+    }
+    const data = await res.json();
+    return data.snapshot;
+  }
+
+  // Force capture fresh offline reader snapshot
+  static async captureReaderSnapshot(linkId: string): Promise<ReaderSnapshot> {
+    const res = await fetch(`/api/links/${linkId}/reader/snapshot`, {
+      method: 'POST',
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Failed to capture snapshot');
+    }
+    const data = await res.json();
+    return data.snapshot;
   }
 }

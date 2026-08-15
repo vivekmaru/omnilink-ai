@@ -47,6 +47,11 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
   const [copiedUrl, setCopiedUrl] = useState(false);
   const [copiedSnippetIdx, setCopiedSnippetIdx] = useState<number | null>(null);
 
+  // Reader Mode state
+  const [activeTab, setActiveTab] = useState<'insights' | 'reader'>('insights');
+  const [readerLoading, setReaderLoading] = useState(false);
+  const [copiedReaderMd, setCopiedReaderMd] = useState(false);
+
   // AI Deep Dive Chat state
   const [aiQuestion, setAiQuestion] = useState('');
   const [aiAnswer, setAiAnswer] = useState<string | null>(null);
@@ -57,6 +62,26 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
     navigator.clipboard.writeText(link.url);
     setCopiedUrl(true);
     setTimeout(() => setCopiedUrl(false), 1500);
+  };
+
+  const handleCaptureReaderSnapshot = async () => {
+    setReaderLoading(true);
+    try {
+      const snapshot = await ApiService.captureReaderSnapshot(link.id);
+      const updated = { ...link, readerSnapshot: snapshot };
+      onUpdateLink(updated);
+    } catch (err) {
+      console.error('Failed to capture reader snapshot:', err);
+    } finally {
+      setReaderLoading(false);
+    }
+  };
+
+  const handleCopyReaderMarkdown = () => {
+    if (!link.readerSnapshot?.contentMarkdown) return;
+    navigator.clipboard.writeText(link.readerSnapshot.contentMarkdown);
+    setCopiedReaderMd(true);
+    setTimeout(() => setCopiedReaderMd(false), 1500);
   };
 
   const handleCopySnippet = (code: string, idx: number) => {
@@ -122,17 +147,38 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
         }}
       >
         {/* Modal Top Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-black/10 dark:border-white/10 shrink-0">
-          <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-3.5 border-b border-black/10 dark:border-white/10 shrink-0 bg-black/[0.01] dark:bg-white/[0.01]">
+          <div className="flex items-center gap-2">
             <span className="font-mono text-[10px] uppercase font-bold px-3 py-1 rounded-full bg-[#d97757]/10 text-[#d97757] dark:text-[#e08264] border border-[#d97757]/20">
               {link.platform.replace('_', ' ')}
             </span>
-            {link.readingTimeMinutes && (
-              <span className="font-mono text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                <Clock className="w-3.5 h-3.5" />
-                <span>{link.readingTimeMinutes} min read</span>
-              </span>
-            )}
+            {/* View Mode Tab Switcher */}
+            <div className="flex items-center p-0.5 rounded-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5">
+              <button
+                onClick={() => setActiveTab('insights')}
+                className={`px-3 py-1 rounded-full font-mono text-[11px] font-medium transition-all ${
+                  activeTab === 'insights'
+                    ? 'bg-white dark:bg-[#1f1e1c] text-[#d97757] dark:text-[#e08264] shadow-xs'
+                    : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                }`}
+              >
+                AI Insights & Meta
+              </button>
+              <button
+                onClick={() => setActiveTab('reader')}
+                className={`flex items-center gap-1 px-3 py-1 rounded-full font-mono text-[11px] font-medium transition-all ${
+                  activeTab === 'reader'
+                    ? 'bg-white dark:bg-[#1f1e1c] text-[#d97757] dark:text-[#e08264] shadow-xs'
+                    : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                }`}
+              >
+                <BookOpen className="w-3 h-3" />
+                <span>Reader Mode</span>
+                {link.readerSnapshot && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                )}
+              </button>
+            </div>
           </div>
 
           <div className="flex items-center gap-2">
@@ -177,7 +223,7 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-6">
-          {/* Main Title & Author */}
+          {/* Main Title & Author Header */}
           <div>
             <h2 className="font-newsreader font-medium text-2xl sm:text-3xl text-slate-900 dark:text-[#f7f6f3] leading-tight">
               {link.title}
@@ -192,21 +238,30 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
               {link.author && <span>Curated by: <strong className="text-slate-900 dark:text-[#f7f6f3]">{link.author}</strong></span>}
               <span>•</span>
               <span className="truncate max-w-sm">{link.url}</span>
+              {link.readingTimeMinutes && (
+                <>
+                  <span>•</span>
+                  <span>{link.readingTimeMinutes} min read</span>
+                </>
+              )}
             </div>
           </div>
 
-          {/* AI Executive TL;DR Summary */}
-          {(link.summary?.tldr || link.aiSummary?.tldr) && (
-            <div className="p-5 rounded-[20px] bg-black/[0.02] dark:bg-white/[0.02] border border-[#d97757]/30 space-y-2">
-              <div className="flex items-center gap-2 font-mono text-xs font-bold text-[#d97757] dark:text-[#e08264] uppercase tracking-wider">
-                <Sparkles className="w-4 h-4" />
-                <span>Executive AI TL;DR</span>
-              </div>
-              <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                {link.summary?.tldr || link.aiSummary?.tldr}
-              </p>
-            </div>
-          )}
+          {/* TAB 1: AI Insights & Meta */}
+          {activeTab === 'insights' && (
+            <div className="space-y-6">
+              {/* AI Executive TL;DR Summary */}
+              {(link.summary?.tldr || link.aiSummary?.tldr) && (
+                <div className="p-5 rounded-[20px] bg-black/[0.02] dark:bg-white/[0.02] border border-[#d97757]/30 space-y-2">
+                  <div className="flex items-center gap-2 font-mono text-xs font-bold text-[#d97757] dark:text-[#e08264] uppercase tracking-wider">
+                    <Sparkles className="w-4 h-4" />
+                    <span>Executive AI TL;DR</span>
+                  </div>
+                  <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                    {link.summary?.tldr || link.aiSummary?.tldr}
+                  </p>
+                </div>
+              )}
 
           {/* Key Takeaways */}
           {((link.summary?.keyTakeaways && link.summary.keyTakeaways.length > 0) ||
@@ -448,7 +503,91 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
             )}
           </div>
         </div>
-      </div>
+      )}
+
+      {/* TAB 2: Offline Reader Mode */}
+      {activeTab === 'reader' && (
+        <div className="space-y-6">
+          {link.readerSnapshot ? (
+            <div className="space-y-6">
+              {/* Reader Meta Toolbar */}
+              <div className="p-4 rounded-2xl bg-black/[0.02] dark:bg-white/[0.02] border border-black/10 dark:border-white/10 flex flex-wrap items-center justify-between gap-3 font-mono text-xs text-slate-500 dark:text-slate-400">
+                <div className="flex items-center gap-3">
+                  <span className="flex items-center gap-1 text-[#d97757] dark:text-[#e08264] font-semibold">
+                    <BookOpen className="w-3.5 h-3.5" />
+                    <span>Offline Snapshot</span>
+                  </span>
+                  <span>•</span>
+                  <span>{link.readerSnapshot.wordCount} words</span>
+                  <span>•</span>
+                  <span>{link.readerSnapshot.readingTimeMinutes} min read</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleCopyReaderMarkdown}
+                    className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-black/5 dark:bg-white/5 hover:bg-black/10 text-slate-700 dark:text-slate-300 font-mono text-[11px] transition-colors"
+                  >
+                    {copiedReaderMd ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+                    <span>{copiedReaderMd ? 'Copied Markdown' : 'Copy Article .md'}</span>
+                  </button>
+                  <button
+                    onClick={handleCaptureReaderSnapshot}
+                    disabled={readerLoading}
+                    className="flex items-center gap-1 px-3 py-1 rounded-lg bg-black/5 dark:bg-white/5 hover:bg-black/10 text-slate-700 dark:text-slate-300 font-mono text-[11px] transition-colors disabled:opacity-50"
+                  >
+                    {readerLoading ? (
+                      <div className="w-3 h-3 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        <Sparkles className="w-3 h-3 text-[#d97757]" />
+                        <span>Re-Snapshot</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Distraction-Free Article Body */}
+              <article className="prose dark:prose-invert max-w-none text-slate-800 dark:text-slate-200 font-newsreader text-base sm:text-lg leading-relaxed whitespace-pre-wrap selection:bg-[#d97757]/20 p-2">
+                {link.readerSnapshot.contentMarkdown}
+              </article>
+            </div>
+          ) : (
+            <div className="py-12 px-6 rounded-2xl bg-black/[0.02] dark:bg-white/[0.02] border border-dashed border-black/15 dark:border-white/15 text-center space-y-4">
+              <div className="w-12 h-12 rounded-full bg-[#d97757]/10 text-[#d97757] flex items-center justify-center mx-auto border border-[#d97757]/20">
+                <BookOpen className="w-6 h-6" />
+              </div>
+              <div className="max-w-md mx-auto space-y-1">
+                <h4 className="font-newsreader font-medium text-lg text-slate-900 dark:text-[#f7f6f3]">
+                  No Offline Article Snapshot Yet
+                </h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-mono">
+                  Capture a sanitized, distraction-free Markdown copy of this article to read offline even if the original website goes down or moves behind a paywall.
+                </p>
+              </div>
+              <button
+                onClick={handleCaptureReaderSnapshot}
+                disabled={readerLoading}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#d97757] hover:bg-[#c46243] text-white text-xs font-semibold rounded-full shadow-xs disabled:opacity-50 transition-all font-mono cursor-pointer"
+              >
+                {readerLoading ? (
+                  <>
+                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Sanitizing & Snapshotting Article...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Capture Offline Reader Snapshot</span>
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
+  </div>
+</div>
   );
 };
