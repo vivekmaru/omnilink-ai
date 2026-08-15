@@ -54,8 +54,8 @@ export const StatsBar: React.FC<StatsBarProps> = ({
               onClick={() => onSelectPlatform('all')}
               className={`px-2.5 py-1 rounded-md font-medium transition-all ${
                 selectedPlatform === 'all'
-                  ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-xs'
-                  : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
+                  ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-xs font-semibold'
+                  : 'bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white'
               }`}
             >
               All ({stats.totalLinks})
@@ -71,13 +71,13 @@ export const StatsBar: React.FC<StatsBarProps> = ({
                   onClick={() => onSelectPlatform(isActive ? 'all' : p.id)}
                   className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md font-medium transition-all ${
                     isActive
-                      ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-xs'
-                      : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
+                      ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-xs font-semibold'
+                      : 'bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white'
                   }`}
                 >
                   {p.icon}
                   <span>{p.label}</span>
-                  <span className={`text-[10px] px-1 rounded ${isActive ? 'bg-white/20 text-white dark:bg-zinc-900/20 dark:text-zinc-900' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500'}`}>
+                  <span className={`text-[10px] px-1 rounded ${isActive ? 'bg-white/20 text-white dark:bg-slate-900/20 dark:text-slate-900 font-semibold' : 'bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-slate-400 font-medium'}`}>
                     {count}
                   </span>
                 </button>

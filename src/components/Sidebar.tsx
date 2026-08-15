@@ -203,8 +203,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   }}
                   className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] transition-colors ${
                     currentView === 'grid'
-                      ? 'bg-[#d97757]/10 text-[#d97757] dark:bg-[#e08264]/15 dark:text-[#e08264] font-medium'
-                      : 'text-[#1a1a18]/80 dark:text-[#f7f6f3]/80 hover:bg-black/5 dark:hover:bg-white/5'
+                      ? 'bg-[#d97757]/10 text-[#d97757] dark:bg-[#e08264]/15 dark:text-[#e08264] font-semibold'
+                      : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
@@ -221,8 +221,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   }}
                   className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] transition-colors ${
                     currentView === 'list'
-                      ? 'bg-[#d97757]/10 text-[#d97757] dark:bg-[#e08264]/15 dark:text-[#e08264] font-medium'
-                      : 'text-[#1a1a18]/80 dark:text-[#f7f6f3]/80 hover:bg-black/5 dark:hover:bg-white/5'
+                      ? 'bg-[#d97757]/10 text-[#d97757] dark:bg-[#e08264]/15 dark:text-[#e08264] font-semibold'
+                      : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
@@ -238,8 +238,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   }}
                   className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] transition-colors ${
                     currentView === 'kanban'
-                      ? 'bg-[#d97757]/10 text-[#d97757] dark:bg-[#e08264]/15 dark:text-[#e08264] font-medium'
-                      : 'text-[#1a1a18]/80 dark:text-[#f7f6f3]/80 hover:bg-black/5 dark:hover:bg-white/5'
+                      ? 'bg-[#d97757]/10 text-[#d97757] dark:bg-[#e08264]/15 dark:text-[#e08264] font-semibold'
+                      : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
@@ -255,15 +255,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   }}
                   className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] transition-colors ${
                     currentView === 'cluster'
-                      ? 'bg-[#d97757]/10 text-[#d97757] dark:bg-[#e08264]/15 dark:text-[#e08264] font-medium'
-                      : 'text-[#1a1a18]/80 dark:text-[#f7f6f3]/80 hover:bg-black/5 dark:hover:bg-white/5'
+                      ? 'bg-[#d97757]/10 text-[#d97757] dark:bg-[#e08264]/15 dark:text-[#e08264] font-semibold'
+                      : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
                     <Network className="w-3.5 h-3.5" />
                     <span>AI Clusters</span>
                   </div>
-                  <span className="text-[10px] font-mono text-[#d97757] dark:text-[#e08264] bg-[#d97757]/10 px-1.5 py-0.5 rounded">
+                  <span className="text-[10px] font-mono text-[#d97757] dark:text-[#e08264] bg-[#d97757]/10 px-1.5 py-0.5 rounded font-semibold">
                     Auto
                   </span>
                 </button>
@@ -286,15 +286,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onClick={() => handleLibrarySelect('all', false, false)}
                   className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] transition-colors ${
                     isLibraryActive('all', false, false)
-                      ? 'bg-[#d97757]/10 text-[#d97757] dark:bg-[#e08264]/15 dark:text-[#e08264] font-medium'
-                      : 'text-[#1a1a18]/80 dark:text-[#f7f6f3]/80 hover:bg-black/5 dark:hover:bg-white/5'
+                      ? 'bg-[#d97757]/10 text-[#d97757] dark:bg-[#e08264]/15 dark:text-[#e08264] font-semibold'
+                      : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
                     <Inbox className="w-3.5 h-3.5 opacity-75" />
                     <span>All Links</span>
                   </div>
-                  <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/5 text-slate-500 dark:text-slate-400">
+                  <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-medium">
                     {totalLinksCount}
                   </span>
                 </button>
@@ -303,15 +303,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onClick={() => handleLibrarySelect('unread', false, false)}
                   className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] transition-colors ${
                     isLibraryActive('unread', false, false)
-                      ? 'bg-[#d97757]/10 text-[#d97757] dark:bg-[#e08264]/15 dark:text-[#e08264] font-medium'
-                      : 'text-[#1a1a18]/80 dark:text-[#f7f6f3]/80 hover:bg-black/5 dark:hover:bg-white/5'
+                      ? 'bg-[#d97757]/10 text-[#d97757] dark:bg-[#e08264]/15 dark:text-[#e08264] font-semibold'
+                      : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
                     <Circle className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
                     <span>Reading Queue</span>
                   </div>
-                  <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/5 text-slate-500 dark:text-slate-400">
+                  <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-medium">
                     {unreadCount}
                   </span>
                 </button>
@@ -320,15 +320,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onClick={() => handleLibrarySelect('reading', false, false)}
                   className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] transition-colors ${
                     isLibraryActive('reading', false, false)
-                      ? 'bg-[#d97757]/10 text-[#d97757] dark:bg-[#e08264]/15 dark:text-[#e08264] font-medium'
-                      : 'text-[#1a1a18]/80 dark:text-[#f7f6f3]/80 hover:bg-black/5 dark:hover:bg-white/5'
+                      ? 'bg-[#d97757]/10 text-[#d97757] dark:bg-[#e08264]/15 dark:text-[#e08264] font-semibold'
+                      : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
                     <Circle className="w-2.5 h-2.5 fill-cyan-500 text-cyan-500" />
                     <span>In Progress</span>
                   </div>
-                  <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/5 text-slate-500 dark:text-slate-400">
+                  <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-medium">
                     {readingCount}
                   </span>
                 </button>
@@ -337,15 +337,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onClick={() => handleLibrarySelect('read', false, false)}
                   className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] transition-colors ${
                     isLibraryActive('read', false, false)
-                      ? 'bg-[#d97757]/10 text-[#d97757] dark:bg-[#e08264]/15 dark:text-[#e08264] font-medium'
-                      : 'text-[#1a1a18]/80 dark:text-[#f7f6f3]/80 hover:bg-black/5 dark:hover:bg-white/5'
+                      ? 'bg-[#d97757]/10 text-[#d97757] dark:bg-[#e08264]/15 dark:text-[#e08264] font-semibold'
+                      : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
                     <span>Reviewed</span>
                   </div>
-                  <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/5 text-slate-500 dark:text-slate-400">
+                  <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-medium">
                     {readCount}
                   </span>
                 </button>
@@ -354,15 +354,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onClick={() => handleLibrarySelect('all', true, false)}
                   className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] transition-colors ${
                     isLibraryActive('all', true, false)
-                      ? 'bg-[#d97757]/10 text-[#d97757] dark:bg-[#e08264]/15 dark:text-[#e08264] font-medium'
-                      : 'text-[#1a1a18]/80 dark:text-[#f7f6f3]/80 hover:bg-black/5 dark:hover:bg-white/5'
+                      ? 'bg-[#d97757]/10 text-[#d97757] dark:bg-[#e08264]/15 dark:text-[#e08264] font-semibold'
+                      : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
                     <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                     <span>Starred</span>
                   </div>
-                  <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/5 text-slate-500 dark:text-slate-400">
+                  <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-medium">
                     {favoritesCount}
                   </span>
                 </button>
@@ -371,15 +371,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onClick={() => handleLibrarySelect('all', false, true)}
                   className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] transition-colors ${
                     isLibraryActive('all', false, true)
-                      ? 'bg-[#d97757]/10 text-[#d97757] dark:bg-[#e08264]/15 dark:text-[#e08264] font-medium'
-                      : 'text-[#1a1a18]/80 dark:text-[#f7f6f3]/80 hover:bg-black/5 dark:hover:bg-white/5'
+                      ? 'bg-[#d97757]/10 text-[#d97757] dark:bg-[#e08264]/15 dark:text-[#e08264] font-semibold'
+                      : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
                     <Archive className="w-3.5 h-3.5 opacity-75" />
                     <span>Archived</span>
                   </div>
-                  <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/5 text-slate-500 dark:text-slate-400">
+                  <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-medium">
                     {archivedCount}
                   </span>
                 </button>
@@ -391,7 +391,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     if (onOpenRssFeeds) onOpenRssFeeds();
                     if (onCloseMobile) onCloseMobile();
                   }}
-                  className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] text-[#1a1a18]/80 dark:text-[#f7f6f3]/80 hover:bg-black/5 dark:hover:bg-white/5 transition-colors group"
+                  className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors group"
                 >
                   <div className="flex items-center gap-2.5">
                     <Rss className="w-3.5 h-3.5 text-amber-500 group-hover:scale-110 transition-transform" />
@@ -399,11 +399,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   </div>
                   <div className="flex items-center gap-1">
                     {rssUnreadCount > 0 && (
-                      <span className="font-mono text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-500 border border-amber-500/30">
+                      <span className="font-mono text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30">
                         {rssUnreadCount}
                       </span>
                     )}
-                    <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/5 text-slate-500 dark:text-slate-400">
+                    <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-medium">
                       {rssFeedsCount}
                     </span>
                   </div>
@@ -445,8 +445,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       }}
                       className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] transition-colors ${
                         isSelected
-                          ? 'bg-[#d97757]/10 text-[#d97757] dark:bg-[#e08264]/15 dark:text-[#e08264] font-medium'
-                          : 'text-[#1a1a18]/80 dark:text-[#f7f6f3]/80 hover:bg-black/5 dark:hover:bg-white/5'
+                          ? 'bg-[#d97757]/10 text-[#d97757] dark:bg-[#e08264]/15 dark:text-[#e08264] font-semibold'
+                          : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
                       }`}
                     >
                       <div className="flex items-center gap-2.5 truncate">
@@ -454,7 +454,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         <span className="truncate">{item.label}</span>
                       </div>
                       {count > 0 && (
-                        <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/5 text-slate-500 dark:text-slate-400">
+                        <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-medium">
                           {count}
                         </span>
                       )}
@@ -492,8 +492,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         }}
                         className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] transition-colors ${
                           isSelected
-                            ? 'bg-[#d97757]/10 text-[#d97757] dark:bg-[#e08264]/15 dark:text-[#e08264] font-medium'
-                            : 'text-[#1a1a18]/80 dark:text-[#f7f6f3]/80 hover:bg-black/5 dark:hover:bg-white/5'
+                            ? 'bg-[#d97757]/10 text-[#d97757] dark:bg-[#e08264]/15 dark:text-[#e08264] font-semibold'
+                            : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
                         }`}
                       >
                         <div className="flex items-center gap-2 truncate">
@@ -501,7 +501,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           <span className="truncate">{cat}</span>
                         </div>
                         {count > 0 && (
-                          <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/5 text-slate-500 dark:text-slate-400">
+                          <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-medium">
                             {count}
                           </span>
                         )}

@@ -150,21 +150,21 @@ export const ClusterView: React.FC<ClusterViewProps> = ({
                     }`}
                   >
                     <div className="flex items-start justify-between gap-2 mb-1.5">
-                      <h4 className="font-newsreader text-base font-medium text-slate-900 dark:text-[#f7f6f3]">
+                      <h4 className="font-newsreader text-base font-medium text-slate-900 dark:text-slate-100">
                         {c.title}
                       </h4>
-                      <span className="font-mono text-[10px] font-semibold px-2 py-0.5 rounded bg-black/5 dark:bg-white/5 text-slate-600 dark:text-slate-400">
+                      <span className="font-mono text-[10px] font-semibold px-2 py-0.5 rounded bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300">
                         {count} links
                       </span>
                     </div>
-                    <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 mb-2.5">
+                    <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 mb-2.5">
                       {c.description}
                     </p>
                     <div className="flex flex-wrap gap-1">
                       {c.keywords.map((k) => (
                         <span
                           key={k}
-                          className="font-mono text-[10px] px-1.5 py-0.2 rounded bg-[#d97757]/10 text-[#d97757] dark:text-[#e08264] font-medium"
+                          className="font-mono text-[10px] px-1.5 py-0.2 rounded bg-[#d97757]/10 text-[#c25e3e] dark:text-[#e08264] font-medium"
                         >
                           #{k}
                         </span>
@@ -187,19 +187,19 @@ export const ClusterView: React.FC<ClusterViewProps> = ({
                 }}
               >
                 <div>
-                  <div className="font-mono text-[11px] text-[#d97757] dark:text-[#e08264] font-semibold uppercase tracking-wider mb-1">
+                  <div className="font-mono text-[11px] text-[#c25e3e] dark:text-[#e08264] font-semibold uppercase tracking-wider mb-1">
                     Active Cluster Focus
                   </div>
-                  <h3 className="font-newsreader text-2xl font-medium text-slate-900 dark:text-[#f7f6f3]">
+                  <h3 className="font-newsreader text-2xl font-medium text-slate-900 dark:text-slate-100">
                     {activeCluster.title}
                   </h3>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-1.5 leading-relaxed">
+                  <p className="text-xs text-slate-600 dark:text-slate-300 mt-1.5 leading-relaxed">
                     {activeCluster.description}
                   </p>
                 </div>
 
                 <div className="space-y-3 pt-2">
-                  <div className="font-mono text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                  <div className="font-mono text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                     Links in this Domain ({activeClusterLinks.length})
                   </div>
 
@@ -208,21 +208,21 @@ export const ClusterView: React.FC<ClusterViewProps> = ({
                       <div
                         key={link.id}
                         onClick={() => onOpenDetail(link)}
-                        className="p-3.5 rounded-xl bg-white dark:bg-[#1f1e1c] border border-black/10 dark:border-white/10 hover:border-[#d97757]/40 dark:hover:border-[#e08264]/40 cursor-pointer transition-all space-y-2 shadow-2xs"
+                        className="p-3.5 rounded-xl bg-white dark:bg-[#1b1b1f] border border-slate-200 dark:border-white/10 hover:border-[#d97757] dark:hover:border-[#e08264] cursor-pointer transition-all space-y-2 shadow-xs"
                       >
                         <div className="flex items-center justify-between">
-                          <span className="font-mono text-[10px] uppercase font-semibold text-slate-400">
+                          <span className="font-mono text-[10px] uppercase font-semibold text-slate-500 dark:text-slate-400">
                             {link.platform.replace('_', ' ')}
                           </span>
-                          <span className="font-mono text-[10px] font-medium px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/5">
+                          <span className="font-mono text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300">
                             {link.readStatus}
                           </span>
                         </div>
-                        <h5 className="font-newsreader text-sm font-medium text-slate-900 dark:text-[#f7f6f3] line-clamp-2">
+                        <h5 className="font-newsreader text-sm font-medium text-slate-900 dark:text-slate-100 line-clamp-2">
                           {link.title || link.url}
                         </h5>
                         {(link.aiSummary?.tldr || link.description) && (
-                          <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2">
+                          <p className="text-[11px] text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed">
                             {link.aiSummary?.tldr || link.description}
                           </p>
                         )}

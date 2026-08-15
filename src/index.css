@@ -1,34 +1,44 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   :root {
-    --bg: #fbfaf8;
-    --sidebar-bg: #f4f2ee;
+    --bg: #f8f9fa;
+    --sidebar-bg: #f1f3f5;
     --card-bg: #ffffff;
-    --card-border: rgba(26, 26, 24, 0.08);
+    --card-border: #e9ecef;
     --card-hover-border: #d97757;
-    --ink: #1a1a18;
-    --ink-muted: #6b6964;
-    --ink-faint: rgba(26, 26, 24, 0.08);
+    --ink: #111827;
+    --ink-muted: #4b5563;
+    --ink-faint: #9ca3af;
     --accent: #d97757;
     --accent-hover: #c46243;
-    --accent-subtle: rgba(217, 119, 87, 0.1);
-    --tag-bg: #f0eee9;
+    --accent-subtle: rgba(217, 119, 87, 0.12);
+    --tag-bg: #f3f4f6;
+    --tag-text: #374151;
+    --tag-border: #e5e7eb;
+    --input-bg: #ffffff;
+    --input-border: #d1d5db;
   }
 
   .dark {
-    --bg: #141413;
-    --sidebar-bg: #1a1918;
-    --card-bg: #1f1e1c;
+    --bg: #0e0e10;
+    --sidebar-bg: #151518;
+    --card-bg: #1b1b1f;
     --card-border: rgba(255, 255, 255, 0.08);
-    --card-hover-border: rgba(224, 130, 100, 0.5);
-    --ink: #f7f6f3;
-    --ink-muted: #a3a19b;
-    --ink-faint: rgba(255, 255, 255, 0.08);
+    --card-hover-border: rgba(224, 130, 100, 0.6);
+    --ink: #f9fafb;
+    --ink-muted: #9ca3af;
+    --ink-faint: #6b7280;
     --accent: #e08264;
     --accent-hover: #e9957a;
-    --accent-subtle: rgba(224, 130, 100, 0.15);
-    --tag-bg: #272522;
+    --accent-subtle: rgba(224, 130, 100, 0.18);
+    --tag-bg: #26262b;
+    --tag-text: #d1d5db;
+    --tag-border: rgba(255, 255, 255, 0.08);
+    --input-bg: #18181c;
+    --input-border: rgba(255, 255, 255, 0.12);
   }
 
   body {
@@ -37,6 +47,7 @@
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 
   ::selection {
@@ -67,8 +78,9 @@
   font-size: 0.65rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  opacity: 0.55;
-  font-weight: 500;
+  color: var(--ink-muted);
+  opacity: 0.8;
+  font-weight: 600;
 }
 
 .badge-ai {
@@ -83,8 +95,8 @@
 
 /* Custom crisp scrollbars */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -92,10 +104,14 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(107, 105, 100, 0.2);
+  background: rgba(156, 163, 175, 0.3);
   border-radius: 9999px;
 }
 
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.2);
+}
+
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(217, 119, 87, 0.4);
+  background: rgba(217, 119, 87, 0.6);
 }

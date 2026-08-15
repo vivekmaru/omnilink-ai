@@ -76,10 +76,10 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
               }}
             >
               {/* Column Header */}
-              <div className="flex items-center justify-between pb-3 border-b border-black/10 dark:border-white/10 mb-4">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-white/10 mb-4">
                 <div className="flex items-center gap-2">
                   {col.icon}
-                  <span className="font-semibold text-xs text-slate-900 dark:text-[#f7f6f3]">
+                  <span className="font-semibold text-xs text-slate-900 dark:text-slate-100">
                     {col.title}
                   </span>
                 </div>
@@ -98,10 +98,10 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
                     <div
                       key={link.id}
                       onClick={() => onOpenDetail(link)}
-                      className="group bg-white dark:bg-[#1f1e1c] border border-black/10 dark:border-white/10 hover:border-[#d97757]/40 dark:hover:border-[#e08264]/40 rounded-xl p-3.5 shadow-2xs cursor-pointer transition-all hover:-translate-y-0.5 space-y-2.5"
+                      className="group bg-white dark:bg-[#1b1b1f] border border-slate-200 dark:border-white/10 hover:border-[#d97757] dark:hover:border-[#e08264] rounded-xl p-3.5 shadow-xs cursor-pointer transition-all hover:-translate-y-0.5 space-y-2.5"
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <span className="font-mono text-[10px] uppercase font-semibold text-slate-500 dark:text-slate-400 bg-black/5 dark:bg-white/5 px-2 py-0.5 rounded">
+                        <span className="font-mono text-[10px] uppercase font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-white/5 px-2 py-0.5 rounded">
                           {link.platform.replace('_', ' ')}
                         </span>
                         <button
@@ -109,7 +109,7 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
                             e.stopPropagation();
                             onToggleFavorite(link.id, !!link.isFavorite);
                           }}
-                          className="text-slate-300 hover:text-amber-500 dark:text-slate-600 dark:hover:text-amber-400 transition-colors"
+                          className="text-slate-400 hover:text-amber-500 dark:text-slate-500 dark:hover:text-amber-400 transition-colors"
                         >
                           <Star
                             className={`w-3.5 h-3.5 ${
@@ -119,12 +119,12 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
                         </button>
                       </div>
 
-                      <h4 className="font-newsreader text-base font-medium text-slate-900 dark:text-[#f7f6f3] line-clamp-2 group-hover:text-[#d97757] dark:group-hover:text-[#e08264] transition-colors leading-snug">
+                      <h4 className="font-newsreader text-base font-medium text-slate-900 dark:text-slate-100 line-clamp-2 group-hover:text-[#d97757] dark:group-hover:text-[#e08264] transition-colors leading-snug">
                         {link.title || link.url}
                       </h4>
 
                       {tldr && (
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                        <p className="text-[11px] text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed">
                           {tldr}
                         </p>
                       )}

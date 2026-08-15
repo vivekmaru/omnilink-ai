@@ -171,7 +171,7 @@ export const LinkCard: React.FC<LinkCardProps> = ({
     <div
       id={`link-card-${link.id}`}
       onClick={() => onSelect(link)}
-      className={`group relative flex flex-col justify-between p-5 sm:p-6 rounded-xl border transition-all duration-200 cursor-pointer bg-white dark:bg-[#1f1e1c] border-black/10 dark:border-white/10 hover:border-[#d97757] dark:hover:border-[#e08264] hover:shadow-md hover:-translate-y-0.5 min-h-[250px] ${
+      className={`group relative flex flex-col justify-between p-5 sm:p-6 rounded-xl border transition-all duration-200 cursor-pointer bg-white dark:bg-[#1b1b1f] border-slate-200/80 dark:border-white/10 hover:border-[#d97757] dark:hover:border-[#e08264] hover:shadow-md hover:-translate-y-0.5 min-h-[250px] ${
         link.isArchived ? 'opacity-60' : ''
       }`}
       style={{
@@ -183,11 +183,11 @@ export const LinkCard: React.FC<LinkCardProps> = ({
         {/* Card Meta & Quick Controls */}
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5 min-w-0">
-            <span className="font-mono text-[0.65rem] uppercase tracking-wider text-[#d97757] dark:text-[#e08264] truncate font-medium">
+            <span className="font-mono text-[0.65rem] uppercase tracking-wider text-[#c25e3e] dark:text-[#e08264] truncate font-semibold">
               {platformMeta.name} {link.category ? `• ${link.category}` : ''}
             </span>
             {(link.isRssFeedItem || link.feedTitle) && (
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[9.5px] font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0">
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[9.5px] font-medium bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 shrink-0">
                 <Rss className="w-2.5 h-2.5" />
                 <span className="truncate max-w-[90px]">{link.feedTitle || 'RSS'}</span>
               </span>
@@ -233,7 +233,7 @@ export const LinkCard: React.FC<LinkCardProps> = ({
 
               {menuOpen && (
                 <div
-                  className="absolute right-0 top-7 z-20 w-40 py-1 rounded-lg bg-white dark:bg-[#1a1918] border border-black/10 dark:border-white/10 shadow-lg text-xs"
+                  className="absolute right-0 top-7 z-20 w-40 py-1 rounded-lg bg-white dark:bg-[#151518] border border-slate-200 dark:border-white/10 shadow-lg text-xs"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <button
@@ -265,7 +265,7 @@ export const LinkCard: React.FC<LinkCardProps> = ({
                       <span>Re-extract AI</span>
                     </button>
                   )}
-                  <div className="my-1 border-t border-black/5 dark:border-white/5" />
+                  <div className="my-1 border-t border-slate-100 dark:border-white/5" />
                   <button
                     onClick={handleDelete}
                     className="w-full px-3 py-1.5 flex items-center gap-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors"
@@ -280,7 +280,7 @@ export const LinkCard: React.FC<LinkCardProps> = ({
         </div>
 
         {/* Serif Editorial Title */}
-        <h3 className="font-newsreader text-xl sm:text-[1.3rem] font-medium leading-snug text-slate-900 dark:text-[#f7f6f3] group-hover:text-[#d97757] dark:group-hover:text-[#e08264] transition-colors line-clamp-2">
+        <h3 className="font-newsreader text-xl sm:text-[1.3rem] font-medium leading-snug text-slate-900 dark:text-slate-100 group-hover:text-[#d97757] dark:group-hover:text-[#e08264] transition-colors line-clamp-2">
           {link.title || link.url}
         </h3>
 
@@ -310,7 +310,7 @@ export const LinkCard: React.FC<LinkCardProps> = ({
 
           {((link.summary?.keyTakeaways && link.summary.keyTakeaways.length > 0) ||
             (link.aiSummary?.takeaways && link.aiSummary.takeaways.length > 0)) && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-[#d97757]/10 text-[#d97757] dark:text-[#e08264] border border-[#d97757]/20">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-[#d97757]/10 text-[#c25e3e] dark:text-[#e08264] border border-[#d97757]/20 font-semibold">
               <Sparkles className="w-3 h-3" />
               <span>
                 {(link.summary?.keyTakeaways || link.aiSummary?.takeaways || []).length} Insights
@@ -321,13 +321,13 @@ export const LinkCard: React.FC<LinkCardProps> = ({
       </div>
 
       {/* Tag Row & Footer Link */}
-      <div className="mt-4 pt-3 border-t border-black/5 dark:border-white/5 flex items-center justify-between gap-2">
+      <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/5 flex items-center justify-between gap-2">
         <div className="tag-row flex flex-wrap gap-1.5 overflow-hidden">
           {link.tags && link.tags.length > 0 ? (
             link.tags.slice(0, 3).map((tag) => (
               <span
                 key={tag}
-                className="font-mono text-[0.65rem] px-2 py-0.5 bg-[#f0eee9] dark:bg-[#272522] text-slate-700 dark:text-slate-300 rounded"
+                className="font-mono text-[0.65rem] px-2 py-0.5 bg-slate-100 dark:bg-[#26262b] text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-white/5 rounded font-medium"
               >
                 #{tag}
               </span>
@@ -336,7 +336,7 @@ export const LinkCard: React.FC<LinkCardProps> = ({
             <span className="font-mono text-[0.65rem] text-slate-400 opacity-60">#curated</span>
           )}
           {link.tags && link.tags.length > 3 && (
-            <span className="font-mono text-[0.65rem] text-slate-400 self-center">
+            <span className="font-mono text-[0.65rem] text-slate-500 dark:text-slate-400 self-center">
               +{link.tags.length - 3}
             </span>
           )}
@@ -344,7 +344,7 @@ export const LinkCard: React.FC<LinkCardProps> = ({
 
         <div className="flex items-center gap-2 shrink-0">
           {link.aiSummary?.estimatedReadTimeMinutes && (
-            <span className="flex items-center gap-1 font-mono text-[0.65rem] text-slate-400">
+            <span className="flex items-center gap-1 font-mono text-[0.65rem] text-slate-500 dark:text-slate-400">
               <Clock className="w-3 h-3 opacity-60" />
               <span>{link.aiSummary.estimatedReadTimeMinutes}m</span>
             </span>
