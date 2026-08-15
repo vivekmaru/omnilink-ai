@@ -1,63 +1,180 @@
-# OmniLink AI - Smart Link Repository & Knowledge Hub
+# OmniLink AI - Personal Knowledge Repository & Intelligent Link Hub
 
-OmniLink AI is an intelligent, searchable link repository and knowledge management desktop SaaS application designed for organizing links from **Instagram Shorts/Reels**, **Reddit posts & comments**, **GitHub projects**, **YouTube videos**, **Twitter/X**, **ArXiv papers**, and technical articles.
+OmniLink AI is an intelligent, searchable personal link repository, knowledge base, and AI context engine designed for collecting, indexing, and querying links from **GitHub repositories**, **ArXiv & academic papers**, **Reddit discussions & comments**, **Instagram Reels**, **YouTube videos**, **Twitter/X**, and technical articles.
 
-Engineered with a refined **Linear × Raycast × Arc** dark developer aesthetic, OmniLink AI balances high information density with exceptional visual clarity, keyboard-driven navigation, and Google Gemini 3.7 Flash AI extraction.
-
----
-
-## Key Capabilities
-
-- 🎨 **Linear × Raycast × Arc Desktop SaaS UI**:
-  - High-contrast, near-black technical canvas with semantic accent hierarchy (Blue/Periwinkle primary actions, Amber unread/starred, Cyan reading, Emerald reviewed/code insights, Slate metadata).
-  - Spacious 3-column card grid at desktop widths with consistent visual hierarchy and zero AI-slop gradients.
-  - Collapsible left sidebar navigation categorized into Views, Library States, Platforms, and Categories.
-  - Unified header and consolidated filter toolbar with instant status toggles, category/tag selectors, and active filter counters.
-  - Full keyboard shortcut support (`⌘K` / `/` search, `⌘J` Ask Repo AI, `N` new link, `1-4` view switchers, `?` / `⌘/` searchable shortcuts help dialog, `Esc` clear/close).
-- 🤖 **Intelligent Multi-Tier Model Orchestration Layer**:
-  - **Dynamic Task Routing**: Automatically selects the most cost-effective and accurate Gemini model based on content complexity:
-    - *Quick Metadata & Real-Time Auto-Tagging*: `gemini-3.1-flash-lite` for sub-second, low-latency keystroke tagging.
-    - *Standard Link Extraction & Summaries*: `gemini-3.7-flash` for high-fidelity structured JSON summaries and code extraction.
-    - *Repository Clustering & Deep Q&A*: `gemini-3.7-flash` with `ThinkingLevel.HIGH` (and `gemini-3.1-pro-preview`) for multi-hop synthesis and reasoning.
-  - **Automatic Fallback Chain**: Multi-tier failover (`gemini-3.7-flash` → `gemini-flash-latest` → `gemini-3.1-flash-lite`) with exponential backoff and jitter to mitigate rate limits (429) or transient spikes (503).
-  - **Orchestrator Inspector & Telemetry**: Live metrics on model routing, latency (ms), token complexity, and execution logs.
-- 🏷️ **Smart Auto-Tagging & Duplicate Prevention**:
-  - Real-time keyword extraction suggesting high-confidence tags and categories before saving.
-  - **Background Duplicate Detection & Smart Merge**: Continuous validation checking URLs against existing repository bookmarks; provides instant warnings with options to smart-merge tags & notes or update existing entries without creating clutter.
-- 🧠 **AI-Powered Ingestion & Summarization (Multi-Tier Gemini)**:
-  - Multi-level summarization: 1-sentence TL;DR + 3-5 bullet point takeaways.
-  - Automatic code snippet and community quote extraction with specialized insight chips.
-  - Granular tag discovery and depth/reading time estimation.
-- 🗂️ **Multi-View Knowledge Engine**:
-  - **Card Grid View**: Refined 3-column cards with source badges, insight chips, quiet tags, and hover actions.
-  - **Compact List View**: High-density engineering table for rapid batch triage.
-  - **Kanban Board**: Drag-and-drop workflow across Unread, Reading, and Reviewed lanes.
-  - **AI Semantic Clusters**: Automatic topic groupings powered by Gemini embeddings.
-- 💬 **Ask Your Repository AI**: Conversational natural language RAG search grounded over your entire bookmark library.
-- 📰 **RSS & Atom Feed Subscriptions & Auto-Ingestion**:
-  - Subscribe to any RSS, Atom, or developer blog URL with automatic feed discovery from standard website URLs.
-  - Curated developer catalog featuring Cloudflare, Netflix Tech, Uber Engineering, GitHub Blog, Hacker News, ByteByteGo, Vercel, and Google AI.
-  - Automatically fetches new blog posts and articles directly into the **Unread** repository queue with deduplication and metadata parsing.
-  - Configurable auto-AI extraction (Gemini 3.7 Flash TL;DR and key takeaways) per feed.
-  - OPML Import and Export for seamless migration from Feedly, NetNewsWire, Readwise Reader, or Inoreader.
-  - Background periodic polling, manual on-demand feed synchronization, and source attribution badges.
-- 📝 **Markdown Export for Obsidian & Notion**:
-  - One-click copy and `.md` file generation formatted with Obsidian callouts (`> [!abstract]`, `> [!tip]`, `> [!quote]`), YAML frontmatter, and Notion block structures.
-  - Multi-select batch export or single-card quick export including AI summaries, bullet-point key insights, fenced code snippets, and custom tags.
-  - Flexible grouping (by Category, Platform, Reading Status) and real-time live Markdown preview.
-- 📊 **Knowledge Analytics & Usage Pattern Insights**:
-  - Deep visual breakdown of reading habits, platform distribution, tag frequencies, and category allocations using high-contrast CSS/SVG charts.
-  - Interactive read/unread/reading ratio bar, total estimated reading time, AI knowledge density scores, and 1-click drill-down filtering by platform, category, or tag.
-- 🔌 **Companion Chrome Extension & Bookmarklet**: Manifest V3 extension with 1-click tab saving, tag autofill, and direct backend sync.
-- 📱 **Mobile Quick Share**: Web Share Target support for seamless iOS/Android sharing sheet integration and live QR connect.
-- 🔄 **Cloud Sync & Offline-First**: Server-side REST API + offline localStorage/IndexedDB caching.
-- 🔐 **Encrypted Backups & Security**: Client-side AES-GCM 256-bit passphrase encryption for zero-knowledge vault backups.
+Engineered with a refined **Linear × Raycast × Arc** dark developer aesthetic, OmniLink AI pairs high information density and keyboard-driven navigation with a native **SQLite WAL + FTS5 BM25 + Gemini Dense Vector Embeddings + Reciprocal Rank Fusion (RRF) Hybrid Search Engine** and a **Model Context Protocol (MCP)** server for Claude Desktop, Cursor, and AI agents.
 
 ---
 
-## Tech Stack
-- **Frontend**: React 19, TypeScript, Tailwind CSS, Motion, Lucide Icons, JSZip
-- **Backend**: Node.js, Express, TypeScript (TSX/esbuild)
-- **AI**: Google GenAI SDK (`@google/genai`) with `gemini-3.7-flash`
-- **Security**: Web Crypto API (AES-GCM, PBKDF2)
+## ⚡ Core Highlights & Capabilities
 
+### 🔍 1. Native SQLite + Hybrid Search Engine (BM25 + Dense Vectors + RRF)
+- **High-Performance SQLite Backend**: Backed by `better-sqlite3` with `PRAGMA journal_mode = WAL`, synchronous writes, foreign key cascading, and ACID durability.
+- **FTS5 Lexical Search**: Full-text BM25 index across `title`, `url`, `category`, `tags`, `notes`, and `summary` with automated SQLite synchronization triggers.
+- **Dense Vector Semantic Embeddings**: 768-dimensional dense vector embeddings generated via Gemini `text-embedding-004` (with offline term-hash fallback).
+- **Reciprocal Rank Fusion (RRF)**: Merges lexical full-text rankings and dense vector semantic similarities using the formula:
+  $$\text{RRF}(d) = \frac{1}{60 + \text{rank}_{\text{FTS}}(d)} + \frac{1}{60 + \text{rank}_{\text{Vector}}(d)}$$
+- **Background Indexing Worker**: Automatically calculates and persists vector embeddings for newly ingested links without blocking UI threads.
+
+### 📖 2. Full-Page Readability & Offline Reader Mode
+- **DOM Sanitization & Main Body Extraction**: Powered by Mozilla `@mozilla/readability` and `JSDOM` to strip ads, paywalls, analytics trackers, and scripts.
+- **Markdown Archiving**: Automatically transforms articles into clean GitHub Flavored Markdown using `turndown` and stores snapshots directly in SQLite (`reader_snapshot`).
+- **Distraction-Free Reader View**: In-app reading interface with editorial serif typography, word count, estimated reading time, and 1-click Markdown copy for Obsidian/Notion.
+
+### 🤖 3. Model Context Protocol (MCP) Server for AI Agents
+- **Native STDIO Transport**: Runs via `@modelcontextprotocol/sdk` (`npm run mcp`), allowing **Claude Desktop**, **Cursor**, **Antigravity**, **Zed**, and autonomous AI agents to query and save knowledge directly to OmniLink.
+- **Exposed Agent Tools**:
+  - `search_repository`: Hybrid search across personal bookmarks with RRF ranking.
+  - `save_bookmark`: Save URLs, auto-extract metadata, and index embeddings in real-time.
+  - `get_article_snapshot`: Retrieve clean, distraction-free Markdown article snapshots.
+  - `ask_repository`: Grounded RAG synthesis with source citations over your library.
+  - `list_recent_bookmarks`: Browse bookmarks by reading status and category.
+  - `get_repository_stats`: Inspect repository health, unread inbox, and vector index status.
+- **Exposed MCP Resources**: `omnilink://library/stats`, `omnilink://library/unread`.
+
+### 📱 4. Mobile Quick Share & Apple Shortcuts Ingress Hub
+- **W3C Web Share Target API**: PWA manifest (`manifest.json`) and Service Worker (`sw.js`) enable native iOS and Android Share Sheet integration when added to your home screen.
+- **Apple Shortcuts Endpoint (`POST /api/share/quick`)**: 1-tap capture from iPhone, iPad, Apple Watch, or Mac with automatic AI analysis and OS notifications.
+- **Multi-Surface Setup Hub**: Interactive in-app guide with live camera QR code scanner, cURL automation snippets, and webhook integrations.
+
+### 🌐 5. Production Chrome Extension (Manifest V3)
+- **Load Unpacked (`extension/`)**: Ready-to-use Manifest V3 extension with active tab reader, auto-tagging suggestions, and right-click context menus.
+- **Omnibox Address Bar Search (`ol <keyword>`)**: Type `ol <query>` in Chrome's URL bar (e.g. `ol sqlite` or `ol rag`) to perform live hybrid search and navigate directly from browser suggestions.
+- **Chrome Native Side Panel**: Embedded companion panel (`sidepanel.html`) with instant search, recent feed, and 1-click **"+ Save Current Tab"** action.
+
+### 🗂️ 6. Multi-View Knowledge Engine & Developer Workflows
+- **Card Grid View**: Refined 3-column cards with source badges, insight chips, quiet tags, and hover actions.
+- **Compact List View**: High-density engineering table for rapid batch triage.
+- **Kanban Board**: Drag-and-drop workflow across Unread, Reading, and Reviewed lanes.
+- **Semantic Topic Clusters**: Automatic semantic clustering powered by vector embeddings.
+- **Conversational Ask Repo AI**: Natural language RAG synthesis grounded over your library with similarity badges.
+- **RSS & Atom Feed Ingestion**: Auto-discover and subscribe to developer blogs with OPML import/export.
+- **Zero-Knowledge Encrypted Backups**: Client-side AES-GCM 256-bit passphrase vault encryption.
+
+---
+
+## 🛠️ Quick Start & Installation
+
+### 1. Prerequisites
+- **Node.js**: v18.0.0 or higher
+- **npm** or **bun** / **pnpm**
+- *(Optional)* **Gemini API Key**: For Gemini Flash AI summaries and 768-dim embeddings (`GEMINI_API_KEY` in `.env`).
+
+### 2. Setup & Run Locally
+
+```bash
+# Clone the repository
+git clone https://github.com/your-username/omnilink-ai.git
+cd omnilink-ai
+
+# Install dependencies
+npm install
+
+# Configure environment variables
+cp .env.example .env
+# Add your GEMINI_API_KEY to .env (optional: offline heuristic fallback works without an API key)
+
+# Start the full-stack dev server (Vite + Express + SQLite WAL)
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+---
+
+## 🧪 Testing & Verification
+
+OmniLink AI features a comprehensive **Vitest** automated testing suite covering all architectural layers:
+
+```bash
+# Run unit & integration test suites
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run TypeScript typecheck & production build
+npm run lint && npm run build
+```
+
+---
+
+## 🔌 Connecting to Claude Desktop / Cursor (MCP)
+
+Add OmniLink to your `claude_desktop_config.json` (on macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "omnilink": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "tsx",
+        "/absolute/path/to/OmniLink-AI---Smart-Link-Repository/server/mcpServer.ts"
+      ],
+      "env": {
+        "GEMINI_API_KEY": "YOUR_GEMINI_API_KEY"
+      }
+    }
+  }
+}
+```
+
+Restart Claude Desktop, and Claude will now have direct access to `search_repository`, `save_bookmark`, `get_article_snapshot`, and `ask_repository`!
+
+---
+
+## 📚 Documentation & Integration Guides
+
+- 📖 [**Architecture & Technical Specification**](file:///Users/vivek/antigravity/OmniLink-AI---Smart-Link-Repository/ARCHITECTURE.md)
+- 🤖 [**Model Context Protocol (MCP) Integration Guide**](file:///Users/vivek/antigravity/OmniLink-AI---Smart-Link-Repository/docs/MCP_INTEGRATION_GUIDE.md)
+- 📱 [**Mobile Quick Share & Apple Shortcuts Guide**](file:///Users/vivek/antigravity/OmniLink-AI---Smart-Link-Repository/docs/MOBILE_QUICK_SHARE_GUIDE.md)
+- 🌐 [**Chrome Extension Setup & Omnibox Guide**](file:///Users/vivek/antigravity/OmniLink-AI---Smart-Link-Repository/docs/CHROME_EXTENSION_GUIDE.md)
+- 📡 [**REST API Reference & Zod Schemas**](file:///Users/vivek/antigravity/OmniLink-AI---Smart-Link-Repository/docs/API_REFERENCE.md)
+
+---
+
+## 🏗️ Project Structure
+
+```
+OmniLink-AI/
+├── data/                      # SQLite database storage (omnilink.db, WAL, backups)
+├── docs/                      # Comprehensive integration & usage guides
+│   ├── API_REFERENCE.md
+│   ├── CHROME_EXTENSION_GUIDE.md
+│   ├── MCP_INTEGRATION_GUIDE.md
+│   └── MOBILE_QUICK_SHARE_GUIDE.md
+├── extension/                 # Manifest V3 Chrome Extension package
+│   ├── icons/                 # Distinct PNG & SVG extension icons
+│   ├── background.js          # Service worker (Context menus & Omnibox 'ol')
+│   ├── popup.html / popup.js  # 1-click active tab saver
+│   ├── sidepanel.html / .js   # Native Chrome Side Panel dashboard
+│   └── manifest.json          # Manifest V3 configuration
+├── public/                    # PWA static assets & web manifest
+│   ├── icon.svg               # Scalable vector logo
+│   ├── manifest.json          # W3C Web Share Target manifest
+│   └── sw.js                  # PWA Service Worker
+├── server/                    # Node.js Express & Backend Services
+│   ├── db.ts                  # SQLite WAL + FTS5 + Embeddings database engine
+│   ├── hybridSearch.ts        # FTS5 BM25 + Gemini text-embedding-004 + RRF
+│   ├── mcpServer.ts           # Official Model Context Protocol (MCP) STDIO server
+│   ├── readabilityService.ts  # Mozilla Readability DOM parsing & Markdown archiver
+│   ├── modelOrchestrator.ts   # Multi-tier Gemini model routing & fallback chain
+│   └── validators.ts          # Strict Zod schemas & XSS sanitizers
+├── src/                       # React 19 Frontend Application
+│   ├── components/            # UI components, modals, and views
+│   ├── services/              # API clients, crypto vault, tag heuristics
+│   ├── utils/                 # URL normalization, share parsers
+│   ├── App.tsx                # Code-split application root
+│   └── index.css              # Dark theme CSS tokens & variables
+├── tests/                     # Vitest automated test suites
+├── server.ts                  # Main Express REST backend server
+├── vite.config.ts             # Vite build & Rollup chunking configuration
+└── package.json               # Scripts and dependencies
+```
+
+---
+
+## 📄 License
+MIT License. Built for high-leverage research, knowledge archiving, and AI-assisted workflows.
