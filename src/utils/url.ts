@@ -190,3 +190,37 @@ export function detectPlatform(url: string): PlatformType {
   }
   return 'article';
 }
+
+/**
+ * Parses mobile Share Target query parameters (handles cases where URL is passed in url, text, or title).
+ */
+export function parseShareTargetParams(search: string): { url?: string; title?: string; notes?: string } {
+  if (!search) return {};
+  const params = new URLSearchParams(search);
+  let rawUrl = params.get('url') || params.get('link') || '';
+  let rawTitle = params.get('title') || '';
+  let rawText = params.get('text') || params.get('notes') || '';
+
+  // If url param is empty, extract first http/https URL from text or title
+  if (!rawUrl) {
+    const combined = `${rawText} ${rawTitle}`;
+    const match = combined.match(/https?:\/\/[^\s]+/i);
+    if (match) {
+      rawUrl = match[0];
+      // Strip URL from text so notes contain only the commentary
+      rawText = rawText.replace(rawUrl, '').trim();
+    }
+  }
+
+  // If title was actually a raw URL and url is empty, fix mapping
+  if (!rawUrl && /^https?:\/\//i.test(rawTitle)) {
+    rawUrl = rawTitle;
+    rawTitle = '';
+  }
+
+  return {
+    url: rawUrl.trim() || undefined,
+    title: rawTitle.trim() || undefined,
+    notes: rawText.trim() || undefined,
+  };
+}

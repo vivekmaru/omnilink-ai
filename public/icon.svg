@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e1c1a"/>
+      <stop offset="100%" stop-color="#121110"/>
+    </linearGradient>
+    <linearGradient id="brand-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f08866"/>
+      <stop offset="100%" stop-color="#d97757"/>
+    </linearGradient>
+    <linearGradient id="accent-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#d1d5db"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background rounded squircle -->
+  <rect width="512" height="512" rx="112" fill="url(#bg-grad)" stroke="#33302c" stroke-width="8"/>
+
+  <!-- Subtle glow backdrop -->
+  <circle cx="256" cy="256" r="160" fill="#d97757" opacity="0.12" filter="blur(30px)"/>
+
+  <!-- Interlocking Smart Link Chain Rings -->
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- First Link Loop -->
+    <path d="M210 160 H160 C126.86 160 100 186.86 100 220 V292 C100 325.14 126.86 352 160 352 H210" stroke="url(#brand-grad)" stroke-width="36"/>
+
+    <!-- Second Link Loop -->
+    <path d="M302 352 H352 C385.14 352 412 325.14 412 292 V220 C412 186.86 385.14 160 352 160 H302" stroke="url(#accent-grad)" stroke-width="36"/>
+
+    <!-- Central Neural AI Sparkle Node -->
+    <line x1="180" y1="256" x2="332" y2="256" stroke="url(#brand-grad)" stroke-width="36"/>
+  </g>
+
+  <!-- Sparkling Diamond Highlights -->
+  <path d="M256 120 L264 144 L288 152 L264 160 L256 184 L248 160 L224 152 L248 144 Z" fill="#f08866"/>
+  <path d="M380 340 L385 355 L400 360 L385 365 L380 380 L375 365 L360 360 L375 355 Z" fill="#ffffff" opacity="0.85"/>
+</svg>

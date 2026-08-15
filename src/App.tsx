@@ -41,6 +41,7 @@ import {
   SystemStats,
   ViewMode,
 } from './types';
+import { parseShareTargetParams } from './utils/url';
 
 export default function App() {
   // Theme state - default to dark mode for the developer aesthetic with seamless toggle
@@ -345,20 +346,18 @@ export default function App() {
     loadData();
     loadRssFeeds();
 
-    // Check for incoming share params: ?url=...&title=...&text=...
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search);
-      const incomingUrl = urlParams.get('url') || urlParams.get('link');
-      const incomingTitle = urlParams.get('title');
-      const incomingNotes = urlParams.get('text') || urlParams.get('notes');
+    // Check for incoming share params: ?url=...&title=...&text=... (from Web Share Target or Apple Shortcuts)
+    if (typeof window !== 'undefined' && window.location.search) {
+      const shareData = parseShareTargetParams(window.location.search);
 
-      if (incomingUrl) {
+      if (shareData.url) {
         setPrefillData({
-          url: incomingUrl,
-          title: incomingTitle || '',
-          notes: incomingNotes || '',
+          url: shareData.url,
+          title: shareData.title || '',
+          notes: shareData.notes || '',
         });
         setAddModalOpen(true);
+        addToast('ai', `Captured link from mobile share: ${shareData.url.slice(0, 35)}...`);
         window.history.replaceState({}, document.title, window.location.pathname);
       }
     }

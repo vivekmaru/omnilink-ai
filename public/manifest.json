@@ -1,0 +1,29 @@
+{
+  "name": "OmniLink AI - Knowledge Repository",
+  "short_name": "OmniLink",
+  "description": "Intelligent personal link repository with Gemini Flash AI extraction, hybrid search, and offline reader mode.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#151413",
+  "theme_color": "#d97757",
+  "orientation": "portrait-primary",
+  "categories": ["productivity", "utilities", "education"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "share_target": {
+    "action": "/",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  }
+}

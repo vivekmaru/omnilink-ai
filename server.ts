@@ -500,6 +500,187 @@ app.post('/api/links', validateBody(CreateLinkSchema), async (req, res) => {
   }
 });
 
+// Helper to extract clean URL and text from mobile share payloads
+function extractUrlAndText(rawUrl?: string, rawText?: string, rawTitle?: string): { url: string; title: string; notes: string } {
+  let url = (rawUrl || '').trim();
+  let text = (rawText || '').trim();
+  let title = (rawTitle || '').trim();
+
+  if (!url) {
+    const match = (text + ' ' + title).match(/https?:\/\/[^\s]+/i);
+    if (match) {
+      url = match[0].trim();
+      text = text.replace(url, '').trim();
+    }
+  }
+
+  // If title was actually a URL, swap
+  if (!url && /^https?:\/\//i.test(title)) {
+    url = title;
+    title = '';
+  }
+
+  return { url, title, notes: text };
+}
+
+// POST /api/share/quick - Instant ingress from iOS Shortcuts, Android Tasker, Raycast, or Webhooks
+app.post('/api/share/quick', async (req, res) => {
+  try {
+    const rawUrl = req.body?.url || req.query?.url;
+    const rawText = req.body?.text || req.body?.notes || req.query?.text || req.query?.notes;
+    const rawTitle = req.body?.title || req.query?.title;
+    const rawTags = req.body?.tags;
+
+    const { url, title, notes } = extractUrlAndText(String(rawUrl || ''), String(rawText || ''), String(rawTitle || ''));
+
+    if (!url || !/^https?:\/\//i.test(url)) {
+      res.status(400).json({ error: 'A valid http/https URL could not be found in the shared payload.' });
+      return;
+    }
+
+    // Check duplicate
+    const existing = omniDb.getLinkByUrl(url);
+    if (existing) {
+      res.json({
+        success: true,
+        isDuplicate: true,
+        message: `Already in repository: "${existing.title}"`,
+        link: existing,
+      });
+      return;
+    }
+
+    const platform = detectPlatform(url);
+    const faviconUrl = getFaviconUrl(url);
+
+    let extractedTitle = title || url;
+    let extractedCategory = 'Dev & Tech';
+    let extractedTags: string[] = Array.isArray(rawTags) ? rawTags : [];
+    let extractedAuthor = '';
+    let extractedSummary: LinkSummary = {
+      tldr: 'Saved from Mobile Quick Share & AI Extracted.',
+      keyTakeaways: ['Ingested via Mobile Share Sheet / Apple Shortcut'],
+    };
+    let readingTime = 3;
+    let aiScore = 85;
+    let thumbnailUrl = '';
+
+    // Fast AI Extraction
+    try {
+      const ai = getGenAI();
+      if (ai) {
+        const aiData = await extractWithGemini(url, title, notes, platform);
+        if (aiData) {
+          extractedTitle = aiData.title || extractedTitle;
+          extractedCategory = aiData.category || extractedCategory;
+          extractedTags = Array.from(new Set([...extractedTags, ...(aiData.tags || [])]));
+          extractedAuthor = aiData.author || extractedAuthor;
+          extractedSummary = aiData.summary || extractedSummary;
+          readingTime = aiData.readingTimeMinutes || readingTime;
+          aiScore = aiData.aiScore || aiScore;
+          thumbnailUrl = aiData.thumbnailUrl || thumbnailUrl;
+        }
+      }
+    } catch (e) {
+      console.warn('[MobileQuickShare] AI extraction notice:', e);
+    }
+
+    const newLink: LinkItem = {
+      id: 'link-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7),
+      url,
+      title: extractedTitle,
+      description: notes || '',
+      author: extractedAuthor,
+      platform,
+      category: extractedCategory,
+      tags: extractedTags.length > 0 ? extractedTags : ['mobile-share', 'inbox'],
+      summary: extractedSummary,
+      thumbnailUrl: thumbnailUrl || getRandomThumbnail(platform),
+      faviconUrl,
+      notes: notes || '',
+      isFavorite: false,
+      isArchived: false,
+      readStatus: 'unread',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      readingTimeMinutes: readingTime,
+      aiScore,
+    };
+
+    omniDb.insertLink(newLink);
+    refreshLinksCache();
+    saveLinks();
+
+    // Trigger background vector indexing & full article snapshot
+    hybridSearchEngine.indexLink(newLink, getGenAI()).catch(() => {});
+    ReadabilityService.extractFromUrl(newLink.url).then((snapshot) => {
+      if (snapshot) {
+        omniDb.updateLink(newLink.id, { readerSnapshot: snapshot });
+        refreshLinksCache();
+      }
+    }).catch(() => {});
+
+    res.status(201).json({
+      success: true,
+      message: `Saved: "${newLink.title}"`,
+      link: newLink,
+    });
+  } catch (err: any) {
+    console.error('Quick share error:', err);
+    res.status(500).json({ error: err.message || 'Quick share processing failed.' });
+  }
+});
+
+// GET /api/share/quick - Bookmarklet or simple GET ingress
+app.get('/api/share/quick', async (req, res) => {
+  req.body = req.query;
+  const rawUrl = req.query.url;
+  const rawText = req.query.text || req.query.notes;
+  const rawTitle = req.query.title;
+  const { url, title, notes } = extractUrlAndText(String(rawUrl || ''), String(rawText || ''), String(rawTitle || ''));
+
+  if (!url || !/^https?:\/\//i.test(url)) {
+    res.status(400).json({ error: 'A valid http/https URL could not be found in the query params.' });
+    return;
+  }
+
+  // Redirect or JSON
+  const existing = omniDb.getLinkByUrl(url);
+  if (existing) {
+    res.json({ success: true, isDuplicate: true, message: `Already in repository: "${existing.title}"`, link: existing });
+    return;
+  }
+
+  const platform = detectPlatform(url);
+  const newLink: LinkItem = {
+    id: 'link-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7),
+    url,
+    title: title || url,
+    description: notes || '',
+    platform,
+    category: 'Dev & Tech',
+    tags: ['mobile-share', 'inbox'],
+    summary: { tldr: 'Saved via Quick Ingress', keyTakeaways: ['Ingested via quick share'] },
+    thumbnailUrl: getRandomThumbnail(platform),
+    faviconUrl: getFaviconUrl(url),
+    notes: notes || '',
+    isFavorite: false,
+    isArchived: false,
+    readStatus: 'unread',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    readingTimeMinutes: 3,
+    aiScore: 85,
+  };
+
+  omniDb.insertLink(newLink);
+  refreshLinksCache();
+  saveLinks();
+  hybridSearchEngine.indexLink(newLink, getGenAI()).catch(() => {});
+
+  res.status(201).json({ success: true, message: `Saved: "${newLink.title}"`, link: newLink });
+});
+
 // PUT /api/links/:id - Update link
 app.put('/api/links/:id', validateBody(UpdateLinkSchema), (req, res) => {
   const { id } = req.params;
