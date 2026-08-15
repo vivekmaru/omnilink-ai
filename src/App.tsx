@@ -14,21 +14,23 @@ import { Navbar } from './components/Navbar';
 import { FilterBar } from './components/FilterBar';
 import { LinkCard } from './components/LinkCard';
 import { LinkListView } from './components/LinkListView';
-import { KanbanView } from './components/KanbanView';
-import { ClusterView } from './components/ClusterView';
 import { AddLinkModal } from './components/AddLinkModal';
-import { LinkDetailModal } from './components/LinkDetailModal';
-import { AskRepoModal } from './components/AskRepoModal';
-import { ExtensionModal } from './components/ExtensionModal';
-import { MobileShareModal } from './components/MobileShareModal';
-import { BackupModal } from './components/BackupModal';
-import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
-import { ExportModal } from './components/ExportModal';
-import { RssFeedsModal } from './components/RssFeedsModal';
-import { ModelOrchestratorModal } from './components/ModelOrchestratorModal';
-import { AnalyticsModal } from './components/AnalyticsModal';
 import { ToastContainer, ToastMessage } from './components/Toast';
 import { ApiService } from './services/api';
+
+// Code-splitting heavy secondary views and modal bundles via React.lazy
+const KanbanView = React.lazy(() => import('./components/KanbanView').then((m) => ({ default: m.KanbanView })));
+const ClusterView = React.lazy(() => import('./components/ClusterView').then((m) => ({ default: m.ClusterView })));
+const LinkDetailModal = React.lazy(() => import('./components/LinkDetailModal').then((m) => ({ default: m.LinkDetailModal })));
+const AskRepoModal = React.lazy(() => import('./components/AskRepoModal').then((m) => ({ default: m.AskRepoModal })));
+const ExtensionModal = React.lazy(() => import('./components/ExtensionModal').then((m) => ({ default: m.ExtensionModal })));
+const MobileShareModal = React.lazy(() => import('./components/MobileShareModal').then((m) => ({ default: m.MobileShareModal })));
+const BackupModal = React.lazy(() => import('./components/BackupModal').then((m) => ({ default: m.BackupModal })));
+const KeyboardShortcutsModal = React.lazy(() => import('./components/KeyboardShortcutsModal').then((m) => ({ default: m.KeyboardShortcutsModal })));
+const ExportModal = React.lazy(() => import('./components/ExportModal').then((m) => ({ default: m.ExportModal })));
+const RssFeedsModal = React.lazy(() => import('./components/RssFeedsModal').then((m) => ({ default: m.RssFeedsModal })));
+const ModelOrchestratorModal = React.lazy(() => import('./components/ModelOrchestratorModal').then((m) => ({ default: m.ModelOrchestratorModal })));
+const AnalyticsModal = React.lazy(() => import('./components/AnalyticsModal').then((m) => ({ default: m.AnalyticsModal })));
 import {
   ClusterGroup,
   FilterState,
@@ -859,24 +861,28 @@ export default function App() {
                 />
               )}
 
-              {/* View 3: Kanban Columns */}
+              {/* View 3: Kanban Columns (Lazy) */}
               {currentView === 'kanban' && (
-                <KanbanView
-                  links={filteredLinks}
-                  onOpenDetail={handleOpenDetail}
-                  onUpdateStatus={handleUpdateStatus}
-                  onToggleFavorite={handleToggleFavorite}
-                />
+                <React.Suspense fallback={<div className="p-8 text-center text-xs text-slate-400">Loading Kanban board...</div>}>
+                  <KanbanView
+                    links={filteredLinks}
+                    onOpenDetail={handleOpenDetail}
+                    onUpdateStatus={handleUpdateStatus}
+                    onToggleFavorite={handleToggleFavorite}
+                  />
+                </React.Suspense>
               )}
 
-              {/* View 4: AI Semantic Clusters */}
+              {/* View 4: AI Semantic Clusters (Lazy) */}
               {currentView === 'cluster' && (
-                <ClusterView
-                  links={links}
-                  clusters={clusters}
-                  onClustersUpdated={setClusters}
-                  onOpenDetail={handleOpenDetail}
-                />
+                <React.Suspense fallback={<div className="p-8 text-center text-xs text-slate-400">Synthesizing semantic clusters...</div>}>
+                  <ClusterView
+                    links={links}
+                    clusters={clusters}
+                    onClustersUpdated={setClusters}
+                    onOpenDetail={handleOpenDetail}
+                  />
+                </React.Suspense>
               )}
             </>
           )}
@@ -896,7 +902,7 @@ export default function App() {
         </footer>
       </div>
 
-      {/* Modals */}
+      {/* Lazy Loaded Modals */}
       <AddLinkModal
         isOpen={addModalOpen}
         onClose={() => setAddModalOpen(false)}
@@ -909,153 +915,175 @@ export default function App() {
         initialNotes={prefillData.notes}
       />
 
-      <LinkDetailModal
-        link={selectedLink}
-        isOpen={detailModalOpen}
-        onClose={() => {
-          setDetailModalOpen(false);
-          setSelectedLink(null);
-        }}
-        onUpdateLink={handleLinkUpdated}
-        onOpenExportModal={(link) => {
-          setExportSingleLink(link);
-          setExportModalOpen(true);
-        }}
-      />
+      <React.Suspense fallback={null}>
+        {detailModalOpen && (
+          <LinkDetailModal
+            link={selectedLink}
+            isOpen={detailModalOpen}
+            onClose={() => {
+              setDetailModalOpen(false);
+              setSelectedLink(null);
+            }}
+            onUpdateLink={handleLinkUpdated}
+            onOpenExportModal={(link) => {
+              setExportSingleLink(link);
+              setExportModalOpen(true);
+            }}
+          />
+        )}
 
-      <AskRepoModal
-        isOpen={askRepoModalOpen}
-        onClose={() => setAskRepoModalOpen(false)}
-        links={links}
-        onOpenLinkDetail={(link) => {
-          setAskRepoModalOpen(false);
-          handleOpenDetail(link);
-        }}
-        onOpenModelOrchestrator={() => setModelOrchestratorModalOpen(true)}
-      />
+        {askRepoModalOpen && (
+          <AskRepoModal
+            isOpen={askRepoModalOpen}
+            onClose={() => setAskRepoModalOpen(false)}
+            links={links}
+            onOpenLinkDetail={(link) => {
+              setAskRepoModalOpen(false);
+              handleOpenDetail(link);
+            }}
+            onOpenModelOrchestrator={() => setModelOrchestratorModalOpen(true)}
+          />
+        )}
 
-      <ExtensionModal
-        isOpen={extensionModalOpen}
-        onClose={() => setExtensionModalOpen(false)}
-      />
+        {extensionModalOpen && (
+          <ExtensionModal
+            isOpen={extensionModalOpen}
+            onClose={() => setExtensionModalOpen(false)}
+          />
+        )}
 
-      <MobileShareModal
-        isOpen={mobileShareModalOpen}
-        onClose={() => setMobileShareModalOpen(false)}
-        onSimulateShare={handleSimulateMobileShare}
-      />
+        {mobileShareModalOpen && (
+          <MobileShareModal
+            isOpen={mobileShareModalOpen}
+            onClose={() => setMobileShareModalOpen(false)}
+            onSimulateShare={handleSimulateMobileShare}
+          />
+        )}
 
-      <BackupModal
-        isOpen={backupModalOpen}
-        onClose={() => setBackupModalOpen(false)}
-        links={links}
-        onLinksRestored={(restored) => {
-          setLinks(restored);
-          ApiService.fetchStats().then(setStats).catch(() => {});
-          addToast('success', `Restored ${restored.length} links from backup`);
-        }}
-      />
+        {backupModalOpen && (
+          <BackupModal
+            isOpen={backupModalOpen}
+            onClose={() => setBackupModalOpen(false)}
+            links={links}
+            onLinksRestored={(restored) => {
+              setLinks(restored);
+              ApiService.fetchStats().then(setStats).catch(() => {});
+              addToast('success', `Restored ${restored.length} links from backup`);
+            }}
+          />
+        )}
 
-      <ExportModal
-        isOpen={exportModalOpen}
-        onClose={() => {
-          setExportModalOpen(false);
-          setExportSingleLink(null);
-        }}
-        allLinks={links}
-        filteredLinks={filteredLinks}
-        selectedIds={selectedIds}
-        initialSelectedLink={exportSingleLink}
-        onToast={addToast}
-      />
+        {exportModalOpen && (
+          <ExportModal
+            isOpen={exportModalOpen}
+            onClose={() => {
+              setExportModalOpen(false);
+              setExportSingleLink(null);
+            }}
+            allLinks={links}
+            filteredLinks={filteredLinks}
+            selectedIds={selectedIds}
+            initialSelectedLink={exportSingleLink}
+            onToast={addToast}
+          />
+        )}
 
-      <KeyboardShortcutsModal
-        isOpen={shortcutsModalOpen}
-        onClose={() => setShortcutsModalOpen(false)}
-        onSelectView={(v) => {
-          setCurrentView(v);
-          addToast('info', `Switched to ${v} view`);
-        }}
-        onOpenAddModal={() => {
-          setPrefillData({});
-          setAddModalOpen(true);
-        }}
-        onOpenAskRepo={() => setAskRepoModalOpen(true)}
-        onOpenExtension={() => setExtensionModalOpen(true)}
-        onOpenMobileShare={() => setMobileShareModalOpen(true)}
-        onOpenBackup={() => setBackupModalOpen(true)}
-        onOpenExportMarkdown={() => {
-          setExportSingleLink(null);
-          setExportModalOpen(true);
-        }}
-        onOpenRssFeeds={() => setRssModalOpen(true)}
-        onOpenModelOrchestrator={() => setModelOrchestratorModalOpen(true)}
-        onOpenAnalytics={() => setAnalyticsModalOpen(true)}
-        onToggleTheme={() => {
-          setDarkMode((prev) => !prev);
-          addToast('info', `Switched to ${!darkMode ? 'Dark' : 'Light'} theme`);
-        }}
-        onFocusSearch={() => {
-          const el = document.getElementById('navbar-search-input') as HTMLInputElement;
-          el?.focus();
-        }}
-        onFilterStatus={(status, onlyFav, archived) => {
-          setFilters((f) => ({
-            ...f,
-            readStatus: status,
-            onlyFavorites: onlyFav ?? false,
-            includeArchived: archived ?? false,
-          }));
-          addToast('info', 'Filter updated');
-        }}
-      />
+        {shortcutsModalOpen && (
+          <KeyboardShortcutsModal
+            isOpen={shortcutsModalOpen}
+            onClose={() => setShortcutsModalOpen(false)}
+            onSelectView={(v) => {
+              setCurrentView(v);
+              addToast('info', `Switched to ${v} view`);
+            }}
+            onOpenAddModal={() => {
+              setPrefillData({});
+              setAddModalOpen(true);
+            }}
+            onOpenAskRepo={() => setAskRepoModalOpen(true)}
+            onOpenExtension={() => setExtensionModalOpen(true)}
+            onOpenMobileShare={() => setMobileShareModalOpen(true)}
+            onOpenBackup={() => setBackupModalOpen(true)}
+            onOpenExportMarkdown={() => {
+              setExportSingleLink(null);
+              setExportModalOpen(true);
+            }}
+            onOpenRssFeeds={() => setRssModalOpen(true)}
+            onOpenModelOrchestrator={() => setModelOrchestratorModalOpen(true)}
+            onOpenAnalytics={() => setAnalyticsModalOpen(true)}
+            onToggleTheme={() => {
+              setDarkMode((prev) => !prev);
+              addToast('info', `Switched to ${!darkMode ? 'Dark' : 'Light'} theme`);
+            }}
+            onFocusSearch={() => {
+              const el = document.getElementById('navbar-search-input') as HTMLInputElement;
+              el?.focus();
+            }}
+            onFilterStatus={(status, onlyFav, archived) => {
+              setFilters((f) => ({
+                ...f,
+                readStatus: status,
+                onlyFavorites: onlyFav ?? false,
+                includeArchived: archived ?? false,
+              }));
+              addToast('info', 'Filter updated');
+            }}
+          />
+        )}
 
-      <RssFeedsModal
-        isOpen={rssModalOpen}
-        onClose={() => setRssModalOpen(false)}
-        onFeedsUpdated={() => {
-          loadRssFeeds();
-          loadData();
-        }}
-        onToast={addToast}
-        onFilterByFeed={(feedId, feedTitle) => {
-          setFilters((f) => ({
-            ...f,
-            searchQuery: feedTitle,
-            readStatus: 'unread',
-            includeArchived: false,
-          }));
-          addToast('info', `Filtered inbox to ${feedTitle}`);
-        }}
-      />
+        {rssModalOpen && (
+          <RssFeedsModal
+            isOpen={rssModalOpen}
+            onClose={() => setRssModalOpen(false)}
+            onFeedsUpdated={() => {
+              loadRssFeeds();
+              loadData();
+            }}
+            onToast={addToast}
+            onFilterByFeed={(feedId, feedTitle) => {
+              setFilters((f) => ({
+                ...f,
+                searchQuery: feedTitle,
+                readStatus: 'unread',
+                includeArchived: false,
+              }));
+              addToast('info', `Filtered inbox to ${feedTitle}`);
+            }}
+          />
+        )}
 
-      <ModelOrchestratorModal
-        isOpen={modelOrchestratorModalOpen}
-        onClose={() => setModelOrchestratorModalOpen(false)}
-      />
+        {modelOrchestratorModalOpen && (
+          <ModelOrchestratorModal
+            isOpen={modelOrchestratorModalOpen}
+            onClose={() => setModelOrchestratorModalOpen(false)}
+          />
+        )}
 
-      <AnalyticsModal
-        isOpen={analyticsModalOpen}
-        onClose={() => setAnalyticsModalOpen(false)}
-        stats={stats}
-        links={links}
-        onFilterByPlatform={(platform) => {
-          setFilters((f) => ({ ...f, platform }));
-          addToast('info', `Filtered by platform: ${platform}`);
-        }}
-        onFilterByCategory={(category) => {
-          setFilters((f) => ({ ...f, category }));
-          addToast('info', `Filtered by category: ${category}`);
-        }}
-        onFilterByTag={(tag) => {
-          setFilters((f) => ({ ...f, tag }));
-          addToast('info', `Filtered by tag: #${tag}`);
-        }}
-        onFilterByStatus={(status) => {
-          setFilters((f) => ({ ...f, readStatus: status }));
-          addToast('info', `Filtered by status: ${status}`);
-        }}
-      />
+        {analyticsModalOpen && (
+          <AnalyticsModal
+            isOpen={analyticsModalOpen}
+            onClose={() => setAnalyticsModalOpen(false)}
+            stats={stats}
+            links={links}
+            onFilterByPlatform={(platform) => {
+              setFilters((f) => ({ ...f, platform }));
+              addToast('info', `Filtered by platform: ${platform}`);
+            }}
+            onFilterByCategory={(category) => {
+              setFilters((f) => ({ ...f, category }));
+              addToast('info', `Filtered by category: ${category}`);
+            }}
+            onFilterByTag={(tag) => {
+              setFilters((f) => ({ ...f, tag }));
+              addToast('info', `Filtered by tag: #${tag}`);
+            }}
+            onFilterByStatus={(status) => {
+              setFilters((f) => ({ ...f, readStatus: status }));
+              addToast('info', `Filtered by status: ${status}`);
+            }}
+          />
+        )}
+      </React.Suspense>
 
       {/* Micro-Interaction Toast Dispatcher */}
       <ToastContainer toasts={toasts} onDismiss={removeToast} />
