@@ -301,6 +301,7 @@ export class ModelOrchestrator {
           }
 
           const latencyMs = Date.now() - startTime;
+          const estimatedCost = ModelOrchestrator.calculateCost(currentModel, prompt.length, rawText?.length || 0);
 
           // Record success telemetry
           this.recordTelemetry({
@@ -314,6 +315,7 @@ export class ModelOrchestrator {
             fallbackHops,
             thinkingLevel: decision.thinkingLevel,
             success: true,
+            estimatedCostUsd: estimatedCost,
             targetUrlOrPrompt: options.url || prompt.slice(0, 100),
           });
 
@@ -370,6 +372,7 @@ export class ModelOrchestrator {
       fallbackHops,
       thinkingLevel: decision.thinkingLevel,
       success: false,
+      estimatedCostUsd: 0,
       error: lastError || 'All models in fallback chain failed.',
       targetUrlOrPrompt: options.url || prompt.slice(0, 100),
     });
@@ -384,6 +387,29 @@ export class ModelOrchestrator {
       latencyMs: totalLatency,
       error: lastError || 'Orchestration execution failed across all tiers.',
     };
+  }
+
+  /**
+   * Approximate cost in USD for a given Gemini call based on published Google GenAI token pricing
+   */
+  private static calculateCost(model: GeminiModelId, inputChars: number, outputChars: number): number {
+    const inputTokens = Math.ceil(inputChars / 4);
+    const outputTokens = Math.ceil(outputChars / 4);
+
+    switch (model) {
+      case 'gemini-3.1-flash-lite':
+        // Input: $0.075 / 1M tokens, Output: $0.30 / 1M tokens
+        return (inputTokens * 0.075 + outputTokens * 0.30) / 1_000_000;
+      case 'gemini-3.7-flash':
+      case 'gemini-flash-latest':
+        // Input: $0.15 / 1M tokens, Output: $0.60 / 1M tokens
+        return (inputTokens * 0.15 + outputTokens * 0.60) / 1_000_000;
+      case 'gemini-3.1-pro-preview':
+        // Input: $1.25 / 1M tokens, Output: $5.00 / 1M tokens
+        return (inputTokens * 1.25 + outputTokens * 5.00) / 1_000_000;
+      default:
+        return 0.0002;
+    }
   }
 
   /**
@@ -412,14 +438,20 @@ export class ModelOrchestrator {
     let totalLatency = 0;
     let totalFails = 0;
     let totalFallbacks = 0;
+    let totalCostUsd = 0;
     const modelBreakdown: Record<string, number> = {};
     const taskBreakdown: Record<string, number> = {};
+    const modelCostBreakdown: Record<string, number> = {};
 
     for (const log of this.telemetryLogs) {
       totalReqs++;
       totalLatency += log.latencyMs;
       if (!log.success) totalFails++;
       if (log.fallbackUsed) totalFallbacks++;
+
+      const cost = log.estimatedCostUsd || 0;
+      totalCostUsd += cost;
+      modelCostBreakdown[log.executedModel] = (modelCostBreakdown[log.executedModel] || 0) + cost;
 
       modelBreakdown[log.executedModel] = (modelBreakdown[log.executedModel] || 0) + 1;
       taskBreakdown[log.taskType] = (taskBreakdown[log.taskType] || 0) + 1;
@@ -430,9 +462,12 @@ export class ModelOrchestrator {
         id: 'gemini-3.1-flash-lite',
         name: 'Gemini 3.1 Flash Lite',
         role: 'Quick Metadata, Real-Time Tagging & Batch RSS Ingestion',
+        whenUsed: 'Triggered for instant URL previews, real-time tag auto-suggestions, and high-throughput RSS background feed parsing.',
         tier: 'Fast Lite',
         status: (this.modelStats['gemini-3.1-flash-lite']?.errors || 0) > 3 ? 'degraded' : 'healthy',
         usageCount: modelBreakdown['gemini-3.1-flash-lite'] || 0,
+        estimatedCostUsd: modelCostBreakdown['gemini-3.1-flash-lite'] || 0,
+        costPer1kTokens: '$0.0001 / 1k tokens',
         avgLatencyMs:
           (this.modelStats['gemini-3.1-flash-lite']?.requests || 0) > 0
             ? Math.round(
@@ -445,9 +480,12 @@ export class ModelOrchestrator {
         id: 'gemini-3.7-flash',
         name: 'Gemini 3.7 Flash',
         role: 'Standard Link Extraction, Summaries & Deep Thinking RAG',
+        whenUsed: 'Triggered for single link deep extraction, structured TL;DR summaries, key takeaway bullets, code blocks, and Ask Repo conversational queries.',
         tier: 'Balanced Flash',
         status: (this.modelStats['gemini-3.7-flash']?.errors || 0) > 3 ? 'degraded' : 'healthy',
         usageCount: modelBreakdown['gemini-3.7-flash'] || 0,
+        estimatedCostUsd: modelCostBreakdown['gemini-3.7-flash'] || 0,
+        costPer1kTokens: '$0.00025 / 1k tokens',
         avgLatencyMs:
           (this.modelStats['gemini-3.7-flash']?.requests || 0) > 0
             ? Math.round(
@@ -460,9 +498,12 @@ export class ModelOrchestrator {
         id: 'gemini-flash-latest',
         name: 'Gemini Flash Latest',
         role: 'High-Demand & Failover Secondary Tier',
+        whenUsed: 'Triggered automatically as a resilient secondary fallback when primary Flash instances encounter temporary rate limits or 503 load.',
         tier: 'Balanced Flash',
         status: 'standby',
         usageCount: modelBreakdown['gemini-flash-latest'] || 0,
+        estimatedCostUsd: modelCostBreakdown['gemini-flash-latest'] || 0,
+        costPer1kTokens: '$0.00025 / 1k tokens',
         avgLatencyMs:
           (this.modelStats['gemini-flash-latest']?.requests || 0) > 0
             ? Math.round(
@@ -475,9 +516,12 @@ export class ModelOrchestrator {
         id: 'gemini-3.1-pro-preview',
         name: 'Gemini 3.1 Pro Preview',
         role: 'Advanced Multi-Document Synthesis & Mathematical Logic',
+        whenUsed: 'Triggered for complex multi-repository clustering, research paper cross-citation extraction, and advanced reasoning tasks.',
         tier: 'Deep Reasoning Pro',
         status: 'healthy',
         usageCount: modelBreakdown['gemini-3.1-pro-preview'] || 0,
+        estimatedCostUsd: modelCostBreakdown['gemini-3.1-pro-preview'] || 0,
+        costPer1kTokens: '$0.0025 / 1k tokens',
         avgLatencyMs:
           (this.modelStats['gemini-3.1-pro-preview']?.requests || 0) > 0
             ? Math.round(
@@ -494,6 +538,7 @@ export class ModelOrchestrator {
       failureCount: totalFails,
       fallbackCount: totalFallbacks,
       avgLatencyMs: totalReqs > 0 ? Math.round(totalLatency / totalReqs) : 480,
+      totalEstimatedCostUsd: totalCostUsd,
       modelBreakdown,
       taskBreakdown,
       activeModels,

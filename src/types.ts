@@ -257,6 +257,7 @@ export interface OrchestrationExecutionTelemetry {
   thinkingLevel?: string;
   success: boolean;
   tokenEstimate?: number;
+  estimatedCostUsd?: number;
   error?: string;
   targetUrlOrPrompt?: string;
 }
@@ -267,16 +268,20 @@ export interface ModelOrchestratorStats {
   failureCount: number;
   fallbackCount: number;
   avgLatencyMs: number;
+  totalEstimatedCostUsd: number;
   modelBreakdown: Record<string, number>;
   taskBreakdown: Record<string, number>;
   activeModels: {
     id: GeminiModelId;
     name: string;
     role: string;
+    whenUsed: string;
     tier: 'Fast Lite' | 'Balanced Flash' | 'Deep Reasoning Pro';
     status: 'healthy' | 'degraded' | 'standby';
     usageCount: number;
     avgLatencyMs: number;
+    estimatedCostUsd: number;
+    costPer1kTokens?: string;
   }[];
   recentLogs: OrchestrationExecutionTelemetry[];
 }
