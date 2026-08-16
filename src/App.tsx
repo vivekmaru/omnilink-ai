@@ -845,24 +845,27 @@ export default function App() {
             </div>
           ) : filteredLinks.length === 0 && currentView !== 'cluster' ? (
             <div
-              className="p-12 text-center border border-black/10 dark:border-white/10 rounded-xl space-y-4 max-w-md mx-auto shadow-2xs mt-8"
+              className="p-10 sm:p-12 text-center border border-black/10 dark:border-white/10 rounded-2xl space-y-5 max-w-lg mx-auto shadow-sm mt-8 animate-card-entrance"
               style={{ backgroundColor: 'var(--card-bg)' }}
             >
-              <div className="w-12 h-12 rounded-xl bg-black/5 dark:bg-white/5 flex items-center justify-center mx-auto text-slate-400">
+              <div className="w-14 h-14 rounded-2xl bg-[#d97757]/10 dark:bg-[#e08264]/10 flex items-center justify-center mx-auto text-[#d97757] dark:text-[#e08264]">
                 <Search className="w-6 h-6" />
               </div>
-              <div>
-                <h3 className="font-newsreader font-medium text-xl text-slate-900 dark:text-slate-100">
-                  No Matching Links Found
+              <div className="space-y-1.5">
+                <h3 className="font-newsreader font-medium text-2xl text-slate-900 dark:text-slate-100">
+                  {filters.searchQuery || filters.platform !== 'all' || filters.category !== 'all' || filters.tag !== 'all'
+                    ? 'No Matching Links'
+                    : 'Your Repository is Ready'}
                 </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto leading-relaxed">
                   {filters.searchQuery
-                    ? `No items matched "${filters.searchQuery}". Try clearing search or resetting active filters.`
-                    : 'Your repository is empty. Curate your first GitHub repo, Reddit post, Instagram reel, or paper.'}
+                    ? `No bookmarks match "${filters.searchQuery}". Try clearing search or resetting active filters.`
+                    : 'Start curating research papers, GitHub repositories, articles, and discussions with Gemini 3.7 Flash AI extraction.'}
                 </p>
               </div>
-              <div className="pt-2 flex items-center justify-center gap-2">
-                {filters.searchQuery || filters.platform !== 'all' || filters.category !== 'all' ? (
+
+              <div className="pt-2 flex flex-wrap items-center justify-center gap-2.5">
+                {filters.searchQuery || filters.platform !== 'all' || filters.category !== 'all' || filters.tag !== 'all' || filters.onlyFavorites || filters.includeArchived ? (
                   <button
                     onClick={() =>
                       setFilters({
@@ -876,21 +879,36 @@ export default function App() {
                         sortBy: 'newest',
                       })
                     }
-                    className="px-4 py-2 bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 rounded-lg font-mono text-xs font-medium text-slate-700 dark:text-slate-300"
+                    className="px-4 py-2 bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 rounded-xl font-mono text-xs font-semibold text-slate-800 dark:text-slate-200 transition-colors"
                   >
-                    Reset Filters
+                    Reset All Filters
                   </button>
                 ) : (
-                  <button
-                    onClick={() => {
-                      setPrefillData({});
-                      setAddModalOpen(true);
-                    }}
-                    className="flex items-center gap-1.5 px-4 py-2 bg-[#d97757] hover:bg-[#c66a4d] text-white text-xs font-medium rounded-lg shadow-2xs transition-colors"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Save First Link</span>
-                  </button>
+                  <>
+                    <button
+                      onClick={() => {
+                        setPrefillData({});
+                        setAddModalOpen(true);
+                      }}
+                      className="flex items-center gap-1.5 px-4 py-2 bg-[#d97757] hover:bg-[#c46243] dark:bg-[#e08264] dark:hover:bg-[#e9957a] text-white text-xs font-semibold rounded-xl shadow-xs transition-all active:scale-95"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add New Link (N)</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setPrefillData({
+                          url: 'https://github.com/google/gemini-api',
+                          title: 'Google Gemini API Official Repository',
+                          notes: 'Official SDKs and examples for Gemini multimodal models',
+                        });
+                        setAddModalOpen(true);
+                      }}
+                      className="px-3 py-2 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 border border-black/5 dark:border-white/5 rounded-xl font-mono text-[11px] text-slate-700 dark:text-slate-300 transition-colors"
+                    >
+                      + Sample GitHub Repo
+                    </button>
+                  </>
                 )}
               </div>
             </div>

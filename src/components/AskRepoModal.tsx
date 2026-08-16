@@ -187,7 +187,7 @@ export const AskRepoModal: React.FC<AskRepoModalProps> = ({
                         <div
                           key={refLink.id}
                           onClick={() => onOpenLinkDetail(refLink)}
-                          className="p-3 bg-white dark:bg-[#1c1b18] border border-black/10 dark:border-white/10 rounded-xl hover:border-[#d97757]/40 transition-colors cursor-pointer flex items-center justify-between gap-2 group"
+                          className="p-3 bg-white dark:bg-[#18181b] border border-black/10 dark:border-white/10 rounded-xl hover:border-[#d97757]/40 transition-colors cursor-pointer flex items-center justify-between gap-2 group"
                         >
                           <div className="truncate">
                             <div className="font-semibold text-xs text-slate-900 dark:text-slate-100 truncate font-newsreader group-hover:text-[#d97757] dark:group-hover:text-[#e08264] transition-colors">
@@ -270,12 +270,12 @@ export const AskRepoModal: React.FC<AskRepoModalProps> = ({
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
               placeholder="Ask anything about your saved links, code snippets, or notes..."
-              className="flex-1 px-4 py-2 text-xs bg-white dark:bg-[#1f1e1c] border border-black/10 dark:border-white/10 rounded-xl focus:outline-none focus:border-[#d97757] text-slate-900 dark:text-slate-100 placeholder:text-slate-400 font-mono"
+              className="flex-1 px-4 py-2.5 text-xs bg-white dark:bg-[#18181b] border border-black/10 dark:border-white/10 rounded-xl focus:outline-none focus:border-[#d97757] text-slate-900 dark:text-slate-100 placeholder:text-slate-400 font-mono transition-colors"
             />
             <button
               type="submit"
               disabled={loading || !question.trim()}
-              className="px-4 py-2 bg-[#d97757] hover:bg-[#c46243] text-white text-xs font-semibold rounded-xl shadow-xs disabled:opacity-50 transition-all flex items-center gap-1.5 shrink-0"
+              className="px-5 py-2.5 bg-[#d97757] hover:bg-[#c46243] dark:bg-[#e08264] dark:hover:bg-[#e9957a] text-white text-xs font-semibold rounded-xl shadow-xs disabled:opacity-50 transition-all flex items-center gap-1.5 shrink-0 active:scale-[0.98]"
             >
               {loading ? (
                 <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />

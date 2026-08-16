@@ -286,33 +286,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     {archivedCount}
                   </span>
                 </button>
-
-                {/* RSS Feeds Direct Access */}
-                {onOpenRssFeeds && (
-                  <button
-                    id="sidebar-btn-rss-feeds"
-                    onClick={() => {
-                      onOpenRssFeeds();
-                      if (onCloseMobile) onCloseMobile();
-                    }}
-                    className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors group"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <Rss className="w-3.5 h-3.5 text-amber-500 group-hover:scale-110 transition-transform" />
-                      <span>RSS Feeds</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      {rssUnreadCount > 0 && (
-                        <span className="font-mono text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30">
-                          {rssUnreadCount}
-                        </span>
-                      )}
-                      <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-medium">
-                        {rssFeedsCount}
-                      </span>
-                    </div>
-                  </button>
-                )}
               </div>
             )}
           </div>
@@ -329,12 +302,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {platformsOpen && (
               <div className="mt-1.5 space-y-0.5">
                 {[
-                  { id: 'github', label: 'GitHub', icon: <Github className="w-3.5 h-3.5" /> },
-                  { id: 'reddit_post', label: 'Reddit', icon: <MessageSquare className="w-3.5 h-3.5 text-amber-500" /> },
-                  { id: 'instagram_short', label: 'Instagram', icon: <Instagram className="w-3.5 h-3.5 text-rose-500" /> },
-                  { id: 'youtube', label: 'YouTube', icon: <Youtube className="w-3.5 h-3.5 text-red-500" /> },
-                  { id: 'twitter_x', label: 'X / Twitter', icon: <Twitter className="w-3.5 h-3.5 text-sky-500" /> },
-                  { id: 'paper', label: 'Papers & Docs', icon: <FileText className="w-3.5 h-3.5 text-emerald-500" /> },
+                  { id: 'github', label: 'GitHub', icon: <Github className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" /> },
+                  { id: 'reddit_post', label: 'Reddit', icon: <MessageSquare className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" /> },
+                  { id: 'instagram_short', label: 'Instagram', icon: <Instagram className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" /> },
+                  { id: 'youtube', label: 'YouTube', icon: <Youtube className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" /> },
+                  { id: 'twitter_x', label: 'X / Twitter', icon: <Twitter className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" /> },
+                  { id: 'paper', label: 'Papers & Docs', icon: <FileText className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" /> },
                 ].map((item) => {
                   const count = getPlatformCount(item.id as PlatformType);
                   const isSelected = filters.platform === item.id;
@@ -418,13 +391,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
           )}
 
-          {/* Section 4: Workspace Utilities (Full-Width Collapsible) */}
+          {/* Section 4: Workspace Utilities (Only Analytics, Vault, Shortcuts) */}
           <div className="nav-section">
             <button
               onClick={() => setUtilitiesOpen(!utilitiesOpen)}
               className="w-full flex items-center justify-between px-1 py-1 nav-label hover:opacity-90 transition-opacity"
             >
-              <span>Workspace Tools</span>
+              <span>Workspace</span>
               {utilitiesOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
             </button>
             {utilitiesOpen && (
@@ -445,54 +418,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   </button>
                 )}
 
-                {onOpenModelOrchestrator && (
-                  <button
-                    onClick={() => {
-                      onOpenModelOrchestrator();
-                      if (onCloseMobile) onCloseMobile();
-                    }}
-                    className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors group"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <Cpu className="w-3.5 h-3.5 text-emerald-500" />
-                      <span>Gemini Router</span>
-                    </div>
-                    <span className="font-mono text-[10px] text-slate-400">⌘O</span>
-                  </button>
-                )}
-
-                {onOpenExtension && (
-                  <button
-                    onClick={() => {
-                      onOpenExtension();
-                      if (onCloseMobile) onCloseMobile();
-                    }}
-                    className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors group"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <Chrome className="w-3.5 h-3.5 text-[#d97757] dark:text-[#e08264]" />
-                      <span>Chrome Extension</span>
-                    </div>
-                    <span className="font-mono text-[10px] text-slate-400">⌘E</span>
-                  </button>
-                )}
-
-                {onOpenMobileShare && (
-                  <button
-                    onClick={() => {
-                      onOpenMobileShare();
-                      if (onCloseMobile) onCloseMobile();
-                    }}
-                    className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors group"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <Share2 className="w-3.5 h-3.5 text-[#d97757] dark:text-[#e08264]" />
-                      <span>Mobile Share Hub</span>
-                    </div>
-                    <span className="font-mono text-[10px] text-slate-400">⌘M</span>
-                  </button>
-                )}
-
                 {onOpenBackup && (
                   <button
                     onClick={() => {
@@ -502,7 +427,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors group"
                   >
                     <div className="flex items-center gap-2.5">
-                      <ShieldCheck className="w-3.5 h-3.5 text-[#d97757] dark:text-[#e08264]" />
+                      <ShieldCheck className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                       <span>Encrypted Vault</span>
                     </div>
                     <span className="font-mono text-[10px] text-slate-400">⌘B</span>

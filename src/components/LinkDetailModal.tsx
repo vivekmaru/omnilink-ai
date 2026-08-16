@@ -341,7 +341,7 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
           )}
 
           {/* Status & Categorization Controls */}
-          <div className="p-5 rounded-[20px] bg-black/[0.02] dark:bg-white/[0.02] border border-black/10 dark:border-white/10 space-y-4">
+          <div className="p-5 rounded-2xl bg-black/[0.02] dark:bg-white/[0.02] border border-black/10 dark:border-white/10 space-y-4">
             <h4 className="font-newsreader font-medium text-base text-slate-900 dark:text-[#f7f6f3]">
               Repository Meta & Organization
             </h4>
@@ -354,7 +354,7 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
                 <select
                   value={readStatus}
                   onChange={(e) => setReadStatus(e.target.value as ReadStatus)}
-                  className="w-full px-3 py-2 text-xs bg-white dark:bg-[#1f1e1c] border border-black/10 dark:border-white/10 rounded-full font-mono focus:outline-none text-slate-900 dark:text-[#f7f6f3]"
+                  className="w-full px-3.5 py-2 text-xs bg-white dark:bg-[#18181b] border border-black/10 dark:border-white/10 rounded-xl font-mono focus:outline-none focus:border-[#d97757] text-slate-900 dark:text-[#f7f6f3] transition-colors"
                 >
                   <option value="unread">Unread</option>
                   <option value="reading">Currently Reading</option>
@@ -370,7 +370,7 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
                   type="text"
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full px-3 py-2 text-xs bg-white dark:bg-[#1f1e1c] border border-black/10 dark:border-white/10 rounded-full focus:outline-none text-slate-900 dark:text-[#f7f6f3]"
+                  className="w-full px-3.5 py-2 text-xs bg-white dark:bg-[#18181b] border border-black/10 dark:border-white/10 rounded-xl focus:outline-none focus:border-[#d97757] text-slate-900 dark:text-[#f7f6f3] transition-colors"
                 />
               </div>
             </div>
@@ -407,7 +407,7 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
                 {tags.map((t) => (
                   <span
                     key={t}
-                    className="font-mono text-xs px-2.5 py-1 rounded-full bg-white dark:bg-[#1f1e1c] border border-black/10 dark:border-white/10 flex items-center gap-1.5 text-slate-700 dark:text-slate-300"
+                    className="font-mono text-xs px-2.5 py-1 rounded-lg bg-white dark:bg-[#18181b] border border-black/10 dark:border-white/10 flex items-center gap-1.5 text-slate-700 dark:text-slate-300"
                   >
                     <span>#{t}</span>
                     <button
@@ -431,12 +431,12 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
                     }
                   }}
                   placeholder="Add a new tag and press Enter"
-                  className="flex-1 px-3 py-1.5 text-xs bg-white dark:bg-[#1f1e1c] border border-black/10 dark:border-white/10 rounded-full focus:outline-none font-mono text-slate-900 dark:text-[#f7f6f3]"
+                  className="flex-1 px-3.5 py-2 text-xs bg-white dark:bg-[#18181b] border border-black/10 dark:border-white/10 rounded-xl focus:outline-none focus:border-[#d97757] font-mono text-slate-900 dark:text-[#f7f6f3] transition-colors"
                 />
                 <button
                   type="button"
                   onClick={handleAddTag}
-                  className="px-4 py-1.5 bg-black/5 dark:bg-white/10 rounded-full font-mono text-xs font-semibold hover:bg-black/10 transition-colors"
+                  className="px-4 py-2 bg-black/5 dark:bg-white/10 rounded-xl font-mono text-xs font-semibold hover:bg-black/10 dark:hover:bg-white/15 transition-colors"
                 >
                   Add
                 </button>
@@ -453,7 +453,7 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Add custom learnings, code notes, or next steps..."
-                className="w-full px-4 py-3 text-xs bg-white dark:bg-[#1f1e1c] border border-black/10 dark:border-white/10 rounded-2xl focus:outline-none text-slate-900 dark:text-[#f7f6f3]"
+                className="w-full px-4 py-3 text-xs bg-white dark:bg-[#18181b] border border-black/10 dark:border-white/10 rounded-xl focus:outline-none focus:border-[#d97757] text-slate-900 dark:text-[#f7f6f3] transition-colors"
               />
             </div>
 
@@ -461,7 +461,7 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
               <button
                 onClick={handleSave}
                 disabled={isSaving}
-                className="flex items-center gap-2 px-5 py-2 bg-[#d97757] hover:bg-[#c46243] text-white text-xs font-semibold rounded-full shadow-xs transition-colors disabled:opacity-50 active:scale-[0.99]"
+                className="flex items-center gap-2 px-5 py-2 bg-[#d97757] hover:bg-[#c46243] dark:bg-[#e08264] dark:hover:bg-[#e9957a] text-white text-xs font-semibold rounded-xl shadow-xs transition-all disabled:opacity-50 active:scale-[0.98]"
               >
                 <Save className="w-3.5 h-3.5" />
                 <span>{isSaving ? 'Saving...' : 'Save Meta Changes'}</span>
@@ -470,7 +470,7 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
           </div>
 
           {/* Deep AI Q&A for this Link */}
-          <div className="p-5 rounded-[20px] bg-[#d97757]/10 border border-[#d97757]/20 space-y-3">
+          <div className="p-5 rounded-2xl bg-black/[0.02] dark:bg-white/[0.02] border border-[#d97757]/20 space-y-3">
             <div className="flex items-center gap-2 font-mono text-xs font-bold text-[#d97757] dark:text-[#e08264] uppercase tracking-wider">
               <MessageSquare className="w-4 h-4" />
               <span>Ask AI About This Specific Source</span>
@@ -481,12 +481,12 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
                 value={aiQuestion}
                 onChange={(e) => setAiQuestion(e.target.value)}
                 placeholder="Ask specific question about this repo, post, or article..."
-                className="flex-1 px-4 py-2.5 text-xs bg-white dark:bg-[#1f1e1c] border border-black/10 dark:border-white/10 rounded-full focus:outline-none text-slate-900 dark:text-[#f7f6f3]"
+                className="flex-1 px-4 py-2.5 text-xs bg-white dark:bg-[#18181b] border border-black/10 dark:border-white/10 rounded-xl focus:outline-none focus:border-[#d97757] text-slate-900 dark:text-[#f7f6f3] transition-colors"
               />
               <button
                 type="submit"
                 disabled={aiLoading || !aiQuestion.trim()}
-                className="px-4 py-2.5 bg-[#d97757] hover:bg-[#c46243] text-white text-xs font-semibold rounded-full disabled:opacity-50 flex items-center gap-1.5 transition-colors"
+                className="px-4 py-2.5 bg-[#d97757] hover:bg-[#c46243] dark:bg-[#e08264] dark:hover:bg-[#e9957a] text-white text-xs font-semibold rounded-xl disabled:opacity-50 flex items-center gap-1.5 transition-all active:scale-[0.98]"
               >
                 {aiLoading ? (
                   <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -500,7 +500,7 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
             </form>
 
             {aiAnswer && (
-              <div className="p-4 rounded-2xl bg-white dark:bg-[#1f1e1c] border border-black/5 dark:border-white/10 text-xs text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
+              <div className="p-4 rounded-xl bg-white dark:bg-[#18181b] border border-black/5 dark:border-white/10 text-xs text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
                 {aiAnswer}
               </div>
             )}

@@ -145,24 +145,24 @@ export const LinkListView: React.FC<LinkListViewProps> = ({
                         {/* Mini Insight Pills */}
                         <div className="flex items-center gap-1.5 pt-0.5">
                           {(link.isRssFeedItem || link.feedTitle) && (
-                            <span className="inline-flex items-center gap-0.5 text-[9px] text-amber-700 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.2 rounded font-medium">
-                              <Rss className="w-2.5 h-2.5" /> {link.feedTitle || 'RSS'}
+                            <span className="inline-flex items-center gap-1 text-[10px] text-slate-600 dark:text-slate-400 bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 px-1.5 py-0.2 rounded font-medium">
+                              <Rss className="w-2.5 h-2.5 text-slate-400" /> {link.feedTitle || 'RSS'}
                             </span>
                           )}
                           {((link.summary?.codeSnippets && link.summary.codeSnippets.length > 0) ||
                             (link.aiSummary?.codeSnippets && link.aiSummary.codeSnippets.length > 0)) && (
-                            <span className="inline-flex items-center gap-0.5 text-[9px] font-mono text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.2 rounded font-medium">
-                              <Code2 className="w-2.5 h-2.5" /> code
+                            <span className="inline-flex items-center gap-1 text-[10px] font-mono text-slate-600 dark:text-slate-400 bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 px-1.5 py-0.2 rounded font-medium">
+                              <Code2 className="w-2.5 h-2.5 text-slate-400" /> code
                             </span>
                           )}
                           {(link.summary?.quotes?.[0] || link.summary?.quote || link.aiSummary?.quote) && (
-                            <span className="inline-flex items-center gap-0.5 text-[9px] text-sky-700 dark:text-sky-400 bg-sky-500/10 px-1.5 py-0.2 rounded font-medium">
-                              <Quote className="w-2.5 h-2.5" /> quote
+                            <span className="inline-flex items-center gap-1 text-[10px] text-slate-600 dark:text-slate-400 bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 px-1.5 py-0.2 rounded font-medium">
+                              <Quote className="w-2.5 h-2.5 text-slate-400" /> quote
                             </span>
                           )}
                           {((link.summary?.keyTakeaways && link.summary.keyTakeaways.length > 0) ||
                             (link.aiSummary?.takeaways && link.aiSummary.takeaways.length > 0)) && (
-                            <span className="inline-flex items-center gap-0.5 text-[9px] text-[#c25e3e] dark:text-[#e08264] bg-[#d97757]/10 px-1.5 py-0.2 rounded font-semibold">
+                            <span className="inline-flex items-center gap-1 text-[10px] text-[#c25e3e] dark:text-[#e08264] bg-[#d97757]/10 border border-[#d97757]/20 px-1.5 py-0.2 rounded font-semibold">
                               <Sparkles className="w-2.5 h-2.5" /> insights
                             </span>
                           )}
@@ -201,16 +201,16 @@ export const LinkListView: React.FC<LinkListViewProps> = ({
 
                   <td className="p-3.5">
                     {link.readStatus === 'read' ? (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md">
+                      <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md">
                         <CheckCircle2 className="w-2.5 h-2.5" /> Reviewed
                       </span>
                     ) : link.readStatus === 'reading' ? (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-medium text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded-md">
-                        <Circle className="w-1.5 h-1.5 fill-cyan-500 text-cyan-500" /> Reading
+                      <span className="inline-flex items-center gap-1 text-[10px] font-medium text-[#c25e3e] dark:text-[#e08264] bg-[#d97757]/10 border border-[#d97757]/20 px-2 py-0.5 rounded-md">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#d97757] dark:bg-[#e08264]" /> Reading
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md">
-                        <Circle className="w-1.5 h-1.5 fill-amber-500 text-amber-500" /> Unread
+                      <span className="inline-flex items-center gap-1.5 text-[10px] font-medium text-slate-600 dark:text-slate-300 bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 px-2 py-0.5 rounded-md">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500/80" /> Unread
                       </span>
                     )}
                   </td>

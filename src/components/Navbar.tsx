@@ -240,31 +240,15 @@ export const Navbar: React.FC<HeaderProps> = ({
 
           {toolsOpen && (
             <div
-              className="absolute right-0 top-10 z-50 w-64 p-1.5 rounded-xl border shadow-xl animate-in fade-in zoom-in-95 duration-100"
+              className="absolute right-0 top-10 z-50 w-60 p-1.5 rounded-xl border shadow-xl animate-in fade-in zoom-in-95 duration-100"
               style={{
                 backgroundColor: 'var(--card-bg)',
                 borderColor: 'var(--card-border)',
               }}
             >
               <div className="px-2.5 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 border-b border-black/5 dark:border-white/5 mb-1">
-                Workspace Utilities
+                Tools & Integrations
               </div>
-
-              {onOpenAnalytics && (
-                <button
-                  onClick={() => {
-                    onOpenAnalytics();
-                    setToolsOpen(false);
-                  }}
-                  className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors group"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <BarChart3 className="w-3.5 h-3.5 text-[#d97757] dark:text-[#e08264] group-hover:scale-110 transition-transform" />
-                    <span>Analytics & Insights</span>
-                  </div>
-                  <span className="font-mono text-[10px] opacity-50">⌘⇧A</span>
-                </button>
-              )}
 
               {onOpenModelOrchestrator && (
                 <button
@@ -275,7 +259,7 @@ export const Navbar: React.FC<HeaderProps> = ({
                   className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors group"
                 >
                   <div className="flex items-center gap-2.5">
-                    <Cpu className="w-3.5 h-3.5 text-emerald-500 group-hover:scale-110 transition-transform" />
+                    <Cpu className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 group-hover:scale-110 transition-transform" />
                     <span>Gemini Model Router</span>
                   </div>
                   <span className="font-mono text-[10px] opacity-50">⌘O</span>
@@ -291,11 +275,11 @@ export const Navbar: React.FC<HeaderProps> = ({
                   className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors group"
                 >
                   <div className="flex items-center gap-2.5">
-                    <Rss className="w-3.5 h-3.5 text-amber-500 group-hover:scale-110 transition-transform" />
-                    <span>RSS Feeds & Subscriptions</span>
+                    <Rss className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 group-hover:scale-110 transition-transform" />
+                    <span>RSS Feeds</span>
                   </div>
                   {rssFeedsCount > 0 ? (
-                    <span className="font-mono text-[10px] px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 font-semibold">
+                    <span className="font-mono text-[10px] px-1.5 py-0.2 rounded bg-black/5 dark:bg-white/10 text-slate-600 dark:text-slate-300 font-semibold">
                       {rssFeedsCount}
                     </span>
                   ) : (
@@ -313,7 +297,7 @@ export const Navbar: React.FC<HeaderProps> = ({
                   className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors group"
                 >
                   <div className="flex items-center gap-2.5">
-                    <FileDown className="w-3.5 h-3.5 text-[#d97757] dark:text-[#e08264] group-hover:scale-110 transition-transform" />
+                    <FileDown className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 group-hover:scale-110 transition-transform" />
                     <span>Export Markdown (.md)</span>
                   </div>
                   <span className="font-mono text-[10px] opacity-50">⌘⇧E</span>
@@ -329,7 +313,7 @@ export const Navbar: React.FC<HeaderProps> = ({
                   className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors group"
                 >
                   <div className="flex items-center gap-2.5">
-                    <Chrome className="w-3.5 h-3.5 text-[#d97757] dark:text-[#e08264] group-hover:scale-110 transition-transform" />
+                    <Chrome className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 group-hover:scale-110 transition-transform" />
                     <span>Chrome Extension Hub</span>
                   </div>
                   <span className="font-mono text-[10px] opacity-50">⌘E</span>
@@ -345,46 +329,12 @@ export const Navbar: React.FC<HeaderProps> = ({
                   className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors group"
                 >
                   <div className="flex items-center gap-2.5">
-                    <Share2 className="w-3.5 h-3.5 text-[#d97757] dark:text-[#e08264] group-hover:scale-110 transition-transform" />
-                    <span>Mobile QR & Share Target</span>
+                    <Share2 className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 group-hover:scale-110 transition-transform" />
+                    <span>Mobile Share & QR</span>
                   </div>
                   <span className="font-mono text-[10px] opacity-50">⌘M</span>
                 </button>
               )}
-
-              {onOpenBackup && (
-                <button
-                  onClick={() => {
-                    onOpenBackup();
-                    setToolsOpen(false);
-                  }}
-                  className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors group"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <ShieldCheck className="w-3.5 h-3.5 text-[#d97757] dark:text-[#e08264] group-hover:scale-110 transition-transform" />
-                    <span>Encrypted Vault Backup</span>
-                  </div>
-                  <span className="font-mono text-[10px] opacity-50">⌘B</span>
-                </button>
-              )}
-
-              <div className="border-t border-black/5 dark:border-white/5 mt-1 pt-1">
-                {onOpenShortcutsHelp && (
-                  <button
-                    onClick={() => {
-                      onOpenShortcutsHelp();
-                      setToolsOpen(false);
-                    }}
-                    className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors group"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <Keyboard className="w-3.5 h-3.5 text-slate-400 group-hover:scale-110 transition-transform" />
-                      <span>Shortcuts Guide</span>
-                    </div>
-                    <span className="font-mono text-[10px] opacity-50">?</span>
-                  </button>
-                )}
-              </div>
             </div>
           )}
         </div>
