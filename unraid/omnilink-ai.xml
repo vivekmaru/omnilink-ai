@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>OmniLink-AI</Name>
+  <Repository>ghcr.io/YOUR_GITHUB_USERNAME/omnilink-ai:latest</Repository>
+  <Registry>https://ghcr.io</Registry>
+  <Network>bridge</Network>
+  <MyIP/>
+  <Shell>sh</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/YOUR_GITHUB_USERNAME/omnilink-ai/issues</Support>
+  <Project>https://github.com/YOUR_GITHUB_USERNAME/omnilink-ai</Project>
+  <Overview>OmniLink AI is an intelligent, self-hosted knowledge repository and link curation hub. Powered by Gemini 3.7 Flash, native SQLite with hybrid BM25 + dense vector semantic search, offline Readability markdown archiving, multi-platform scrapers (GitHub, Reddit, YouTube, X, Papers), Chrome Extension, PWA Mobile Quick Share, and built-in Model Context Protocol (MCP) server.</Overview>
+  <Category>Productivity: Tools: Other: AI: Network:Web</Category>
+  <WebUI>http://[IP]:[PORT:3000]/</WebUI>
+  <TemplateURL>https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/omnilink-ai/main/unraid/omnilink-ai.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/omnilink-ai/main/public/icon.svg</Icon>
+  <ExtraParams>--restart unless-stopped</ExtraParams>
+  <PostArgs/>
+  <CPUset/>
+  <DateInstalled/>
+  <DonateText/>
+  <DonateLink/>
+  <Description>Intelligent, private link repository with AI extraction, hybrid search, offline reader mode, and multi-device ingress.</Description>
+
+  <!-- Port Mapping -->
+  <Config Name="WebUI Port" Target="3000" Default="3000" Mode="tcp" Description="Host port mapped to OmniLink AI Web UI and REST API" Type="Port" Display="always" Required="true" Mask="false">3000</Config>
+
+  <!-- Persistent AppData Storage -->
+  <Config Name="AppData Storage Path" Target="/app/data" Default="/mnt/user/appdata/omnilink/data" Mode="rw" Description="Persistent directory for SQLite database (omnilink.db), WAL files, and vector indices" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/omnilink/data</Config>
+
+  <!-- Gemini API Key -->
+  <Config Name="Gemini API Key" Target="GEMINI_API_KEY" Default="" Mode="" Description="Google Gemini API Key for AI link parsing, auto-tagging, and RAG Q&amp;A (get a free key at https://aistudio.google.com)" Type="Variable" Display="always" Required="false" Mask="true"/>
+
+  <!-- Public Host / Domain URL -->
+  <Config Name="App Public URL" Target="APP_URL" Default="http://[IP]:[PORT:3000]" Mode="" Description="Public base URL or domain (e.g., https://links.yourdomain.com) for Web Share Target and mobile shortcuts" Type="Variable" Display="always" Required="false" Mask="false">http://[IP]:[PORT:3000]</Config>
+
+  <!-- Advanced: Container Environment -->
+  <Config Name="Node Environment" Target="NODE_ENV" Default="production" Mode="" Description="Node runtime environment mode" Type="Variable" Display="advanced" Required="false" Mask="false">production</Config>
+
+  <!-- Advanced: Internal Container Port -->
+  <Config Name="Internal Port" Target="PORT" Default="3000" Mode="" Description="Internal application listening port" Type="Variable" Display="advanced" Required="false" Mask="false">3000</Config>
+
+  <!-- Advanced: Auto-Backup Retention (Days) -->
+  <Config Name="Auto Backup Interval" Target="AUTO_BACKUP_DAYS" Default="7" Mode="" Description="Interval (in days) for automatic SQLite database backups in /app/data/backups" Type="Variable" Display="advanced" Required="false" Mask="false">7</Config>
+</Container>

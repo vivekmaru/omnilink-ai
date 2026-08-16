@@ -74,6 +74,9 @@ export const AskRepoModal: React.FC<AskRepoModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
       <div
         id="ask-repo-modal-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="ask-repo-modal-title"
         className="w-full max-w-3xl max-h-[85vh] border rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150"
         style={{
           backgroundColor: 'var(--card-bg)',
@@ -88,7 +91,7 @@ export const AskRepoModal: React.FC<AskRepoModalProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-newsreader text-lg font-medium text-slate-900 dark:text-[#f7f6f3]">
+                <h3 id="ask-repo-modal-title" className="font-newsreader text-lg font-medium text-slate-900 dark:text-[#f7f6f3]">
                   Ask Your Saved Repository
                 </h3>
                 {onOpenModelOrchestrator && (

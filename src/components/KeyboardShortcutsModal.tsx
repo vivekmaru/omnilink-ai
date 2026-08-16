@@ -155,7 +155,7 @@ const SHORTCUTS_DATA: ShortcutItem[] = [
     category: 'actions',
     title: 'Knowledge Analytics & Usage Insights',
     description: 'Inspect reading velocity, platform breakdown, tag frequencies, and completion ratios',
-    keys: [['⌘', 'A'], ['A']],
+    keys: [['⌘', '⇧', 'A'], ['⌘', 'A']],
     actionId: 'open-analytics',
   },
   {
@@ -405,6 +405,9 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
       onClick={onClose}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="shortcuts-modal-title"
         className="w-full max-w-2xl max-h-[85vh] flex flex-col rounded-2xl border border-black/10 dark:border-white/10 shadow-2xl overflow-hidden transition-all bg-white dark:bg-[#1f1e1d] text-slate-900 dark:text-slate-100"
         onClick={(e) => e.stopPropagation()}
       >
@@ -416,7 +419,7 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
                 <Keyboard className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="font-newsreader text-lg font-medium text-slate-900 dark:text-[#f7f6f3] flex items-center gap-2">
+                <h3 id="shortcuts-modal-title" className="font-newsreader text-lg font-medium text-slate-900 dark:text-[#f7f6f3] flex items-center gap-2">
                   Keyboard Shortcuts
                   <span className="font-mono text-[11px] font-normal px-2 py-0.5 rounded bg-black/5 dark:bg-white/5 text-slate-500 dark:text-slate-400">
                     {filteredShortcuts.length} of {SHORTCUTS_DATA.length}

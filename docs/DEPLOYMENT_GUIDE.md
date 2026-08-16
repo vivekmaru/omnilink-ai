@@ -1,6 +1,10 @@
 # OmniLink AI - Production Deployment Guide
 
-This guide covers production deployment strategies for OmniLink AI across **Docker & Docker Compose**, **Fly.io**, **Railway / Render**, and **Cloudflare Tunnels**.
+This guide covers production deployment strategies for OmniLink AI across **Unraid Server**, **Docker & Docker Compose**, **Fly.io**, **Railway / Render**, and **Cloudflare Tunnels**.
+
+> [!TIP]
+> **Running Unraid Server?**
+> See our dedicated [**Unraid Server Deployment & 1-Click Update Guide**](file:///Users/vivek/antigravity/OmniLink-AI---Smart-Link-Repository/docs/UNRAID_DEPLOYMENT_GUIDE.md) featuring native XML templates and automated GHCR workflows.
 
 ---
 

@@ -322,6 +322,9 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
     >
       <div
         id="rss-feeds-modal-container"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="rss-feeds-modal-title"
         className="relative w-full max-w-4xl border rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
         style={{
           backgroundColor: 'var(--card-bg)',
@@ -337,7 +340,7 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="font-newsreader text-xl font-medium text-slate-900 dark:text-[#f7f6f3]">
+                <h2 id="rss-feeds-modal-title" className="font-newsreader text-xl font-medium text-slate-900 dark:text-[#f7f6f3]">
                   RSS & Developer Blog Subscriptions
                 </h2>
                 <span className="px-2 py-0.5 font-mono text-[10px] uppercase font-bold rounded-full bg-amber-500/10 text-amber-500 dark:text-amber-400 border border-amber-500/20">

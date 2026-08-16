@@ -68,9 +68,7 @@ export const LinkCard: React.FC<LinkCardProps> = ({
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (window.confirm('Delete this bookmark?')) {
-      onDelete(link.id);
-    }
+    onDelete(link.id);
     setMenuOpen(false);
   };
 
@@ -203,17 +201,19 @@ export const LinkCard: React.FC<LinkCardProps> = ({
               className={`p-1.5 rounded transition-colors ${
                 link.isFavorite
                   ? 'text-amber-500 bg-amber-500/10'
-                  : 'text-slate-400 hover:text-amber-500 hover:bg-black/5 dark:hover:bg-white/5 opacity-0 group-hover:opacity-100'
+                  : 'text-slate-400 hover:text-amber-500 hover:bg-black/5 dark:hover:bg-white/5 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100'
               }`}
               title={link.isFavorite ? 'Remove Star' : 'Star Link'}
+              aria-label={link.isFavorite ? 'Remove Star' : 'Star Link'}
             >
               <Star className={`w-3.5 h-3.5 ${link.isFavorite ? 'fill-current' : ''}`} />
             </button>
 
             <button
               onClick={handleCopy}
-              className="p-1.5 rounded text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 opacity-0 group-hover:opacity-100 transition-all"
+              className="p-1.5 rounded text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 transition-all"
               title="Copy URL"
+              aria-label="Copy URL"
             >
               {copied ? (
                 <Check className="w-3.5 h-3.5 text-emerald-500" />
@@ -225,8 +225,9 @@ export const LinkCard: React.FC<LinkCardProps> = ({
             <div className="relative">
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
-                className="p-1.5 rounded text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 opacity-0 group-hover:opacity-100 transition-all"
+                className="p-1.5 rounded text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 transition-all"
                 title="More Actions"
+                aria-label="More Actions"
               >
                 <MoreVertical className="w-3.5 h-3.5" />
               </button>

@@ -97,6 +97,9 @@ export const MobileShareModal: React.FC<MobileShareModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-xs animate-in fade-in duration-150">
       <div
         id="mobile-share-modal-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="mobile-share-modal-title"
         className="w-full max-w-2xl bg-white dark:bg-[#1f1e1d] border border-black/10 dark:border-white/10 rounded-2xl shadow-2xl overflow-hidden transition-all text-slate-900 dark:text-[#f7f6f3]"
         style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }}
       >
@@ -107,7 +110,7 @@ export const MobileShareModal: React.FC<MobileShareModalProps> = ({
               <Smartphone className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-newsreader font-medium text-lg text-slate-900 dark:text-[#f7f6f3]">
+              <h3 id="mobile-share-modal-title" className="font-newsreader font-medium text-lg text-slate-900 dark:text-[#f7f6f3]">
                 Mobile Quick Share & Ingress Hub
               </h3>
               <p className="font-mono text-[11px] text-slate-500 dark:text-slate-400">

@@ -137,6 +137,9 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     >
       <div
         id="export-markdown-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="export-modal-title"
         className="relative w-full max-w-4xl max-h-[90vh] flex flex-col rounded-2xl border shadow-2xl overflow-hidden text-slate-900 dark:text-[#f7f6f3] transition-all"
         style={{
           backgroundColor: 'var(--card-bg)',
@@ -151,7 +154,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
               <FileText className="w-5 h-5" />
             </div>
             <div className="min-w-0">
-              <h3 className="font-newsreader text-xl font-medium tracking-tight flex items-center gap-2.5">
+              <h3 id="export-modal-title" className="font-newsreader text-xl font-medium tracking-tight flex items-center gap-2.5">
                 Export to Markdown
                 <span className="font-mono text-[10px] uppercase font-normal px-2 py-0.5 rounded bg-[#d97757]/10 text-[#d97757] dark:text-[#e08264] border border-[#d97757]/20">
                   {options.preset.toUpperCase()}

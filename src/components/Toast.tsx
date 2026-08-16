@@ -6,6 +6,10 @@ export interface ToastMessage {
   type: 'success' | 'info' | 'error' | 'ai';
   message: string;
   duration?: number;
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
 }
 
 interface ToastProps {
@@ -49,16 +53,30 @@ const ToastItem: React.FC<{ toast: ToastMessage; onDismiss: (id: string) => void
 
   return (
     <div className="pointer-events-auto flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl bg-[#121520] text-slate-100 border border-white/10 shadow-xl text-xs font-medium animate-in fade-in slide-in-from-bottom-2 duration-150">
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-2.5 min-w-0">
         {getIcon()}
-        <span>{toast.message}</span>
+        <span className="truncate">{toast.message}</span>
       </div>
-      <button
-        onClick={() => onDismiss(toast.id)}
-        className="text-slate-400 hover:text-slate-200 p-0.5 rounded transition-colors"
-      >
-        <X className="w-3.5 h-3.5" />
-      </button>
+      <div className="flex items-center gap-2 shrink-0">
+        {toast.action && (
+          <button
+            onClick={() => {
+              toast.action?.onClick();
+              onDismiss(toast.id);
+            }}
+            className="px-2 py-0.5 rounded bg-white/15 hover:bg-white/25 text-[#e08264] hover:text-white font-semibold font-mono text-[11px] transition-colors"
+          >
+            {toast.action.label}
+          </button>
+        )}
+        <button
+          onClick={() => onDismiss(toast.id)}
+          className="text-slate-400 hover:text-slate-200 p-0.5 rounded transition-colors"
+          aria-label="Dismiss notification"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
+      </div>
     </div>
   );
 };

@@ -98,6 +98,9 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-xs animate-in fade-in duration-150">
       <div
         id="model-orchestrator-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="model-orchestrator-modal-title"
         className="border rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden"
         style={{
           backgroundColor: 'var(--card-bg)',
@@ -112,7 +115,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="font-newsreader text-lg font-medium text-slate-900 dark:text-[#f7f6f3]">
+                <h2 id="model-orchestrator-modal-title" className="font-newsreader text-lg font-medium text-slate-900 dark:text-[#f7f6f3]">
                   Gemini Model Orchestration Layer
                 </h2>
                 <span className="px-2 py-0.5 text-[11px] font-mono font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-full flex items-center gap-1">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Plus,
   Search,
@@ -60,11 +60,26 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'offline' | 'error'>('synced');
 
-  // Toasts
+  // Toasts & Safe Undo Management
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
-  const addToast = (type: 'success' | 'info' | 'error' | 'ai', message: string) => {
+  const pendingDeletionsRef = useRef<Map<string, { timer: ReturnType<typeof setTimeout>; link: LinkItem }>>(new Map());
+
+  const addToast = (
+    type: 'success' | 'info' | 'error' | 'ai',
+    message: string,
+    options?: { duration?: number; action?: { label: string; onClick: () => void } }
+  ) => {
     const id = Math.random().toString(36).substring(2, 9);
-    setToasts((prev) => [...prev, { id, type, message }]);
+    setToasts((prev) => [
+      ...prev,
+      {
+        id,
+        type,
+        message,
+        duration: options?.duration,
+        action: options?.action,
+      },
+    ]);
   };
   const removeToast = (id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
@@ -176,8 +191,21 @@ export default function App() {
         return;
       }
 
-      // Analytics: Cmd/Ctrl + A
+      // List View: Cmd/Ctrl + A selects all rows
       if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === 'a') {
+        if (currentView === 'list' && !isInput) {
+          e.preventDefault();
+          if (selectedIds.length === filteredLinks.length && filteredLinks.length > 0) {
+            setSelectedIds([]);
+          } else {
+            setSelectedIds(filteredLinks.map((l) => l.id));
+          }
+          return;
+        }
+      }
+
+      // Analytics: Cmd/Ctrl + Shift + A (or Cmd/Ctrl + A when not in List view)
+      if ((e.metaKey || e.ctrlKey) && ((e.shiftKey && e.key.toLowerCase() === 'a') || (!e.shiftKey && e.key.toLowerCase() === 'a' && currentView !== 'list'))) {
         e.preventDefault();
         setAnalyticsModalOpen(true);
         return;
@@ -525,20 +553,45 @@ export default function App() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    try {
-      await ApiService.deleteLink(id);
-      setLinks((prev) => prev.filter((l) => l.id !== id));
-      if (selectedLink?.id === id) {
-        setDetailModalOpen(false);
-        setSelectedLink(null);
-      }
-      addToast('info', 'Bookmark deleted');
-      ApiService.fetchStats().then(setStats).catch(() => {});
-    } catch (e) {
-      console.error('Failed to delete link:', e);
-      addToast('error', 'Failed to delete link');
+  const handleDelete = (id: string) => {
+    const linkToDelete = links.find((l) => l.id === id);
+    if (!linkToDelete) return;
+
+    // Optimistically remove from state
+    setLinks((prev) => prev.filter((l) => l.id !== id));
+    if (selectedLink?.id === id) {
+      setDetailModalOpen(false);
+      setSelectedLink(null);
     }
+
+    // Hold deletion in buffer for 6 seconds before persisting to backend
+    const timer = setTimeout(async () => {
+      try {
+        await ApiService.deleteLink(id);
+        pendingDeletionsRef.current.delete(id);
+        ApiService.fetchStats().then(setStats).catch(() => {});
+      } catch (e) {
+        console.error('Failed to permanently delete link:', e);
+      }
+    }, 6000);
+
+    pendingDeletionsRef.current.set(id, { timer, link: linkToDelete });
+
+    addToast('info', 'Bookmark deleted', {
+      duration: 6000,
+      action: {
+        label: 'Undo',
+        onClick: () => {
+          const pending = pendingDeletionsRef.current.get(id);
+          if (pending) {
+            clearTimeout(pending.timer);
+            pendingDeletionsRef.current.delete(id);
+            setLinks((prev) => [pending.link, ...prev]);
+            addToast('success', 'Bookmark restored');
+          }
+        },
+      },
+    });
   };
 
   const handleUpdateStatus = async (id: string, newStatus: ReadStatus) => {
@@ -598,16 +651,34 @@ export default function App() {
     }
   };
 
-  // Batch actions
-  const handleBatchDelete = async () => {
-    if (!window.confirm(`Delete ${selectedIds.length} selected bookmarks?`)) return;
-    for (const id of selectedIds) {
-      await ApiService.deleteLink(id).catch(() => {});
-    }
-    setLinks((prev) => prev.filter((l) => !selectedIds.includes(l.id)));
-    addToast('info', `Deleted ${selectedIds.length} bookmarks`);
+  // Batch actions with Undo
+  const handleBatchDelete = () => {
+    if (selectedIds.length === 0) return;
+    const linksToDelete = links.filter((l) => selectedIds.includes(l.id));
+    if (linksToDelete.length === 0) return;
+
+    const batchIds = [...selectedIds];
     setSelectedIds([]);
-    ApiService.fetchStats().then(setStats).catch(() => {});
+    setLinks((prev) => prev.filter((l) => !batchIds.includes(l.id)));
+
+    const batchTimer = setTimeout(async () => {
+      for (const id of batchIds) {
+        await ApiService.deleteLink(id).catch(() => {});
+      }
+      ApiService.fetchStats().then(setStats).catch(() => {});
+    }, 6000);
+
+    addToast('info', `Deleted ${batchIds.length} bookmarks`, {
+      duration: 6000,
+      action: {
+        label: 'Undo',
+        onClick: () => {
+          clearTimeout(batchTimer);
+          setLinks((prev) => [...linksToDelete, ...prev.filter((l) => !batchIds.includes(l.id))]);
+          addToast('success', `Restored ${batchIds.length} bookmarks`);
+        },
+      },
+    });
   };
 
   const handleBatchMarkRead = async () => {
@@ -701,6 +772,9 @@ export default function App() {
           onOpenRssFeeds={() => setRssModalOpen(true)}
           onOpenModelOrchestrator={() => setModelOrchestratorModalOpen(true)}
           onOpenAnalytics={() => setAnalyticsModalOpen(true)}
+          onOpenBackup={() => setBackupModalOpen(true)}
+          onOpenMobileShare={() => setMobileShareModalOpen(true)}
+          onOpenExtension={() => setExtensionModalOpen(true)}
           rssFeedsCount={rssFeeds.length}
           onToggleMobileSidebar={() => setMobileSidebarOpen(!mobileSidebarOpen)}
           currentView={currentView}

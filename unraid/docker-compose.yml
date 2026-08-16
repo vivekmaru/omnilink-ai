@@ -1,0 +1,36 @@
+# ==============================================================================
+# OmniLink AI - Unraid Docker Compose Stack
+# ==============================================================================
+# Perfect for Unraid users running the "Docker Compose Manager" plugin.
+#
+# Storage:
+#   Database and snapshots persist in /mnt/user/appdata/omnilink/data
+#
+# Updates:
+#   Click "Update Stack" in Unraid or run: docker compose pull && docker compose up -d
+
+services:
+  omnilink-ai:
+    image: ghcr.io/YOUR_GITHUB_USERNAME/omnilink-ai:latest
+    # Or build locally on Unraid:
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
+    container_name: omnilink-ai
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - APP_URL=${APP_URL:-http://localhost:3000}
+      - AUTO_BACKUP_DAYS=7
+    volumes:
+      - /mnt/user/appdata/omnilink/data:/app/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s

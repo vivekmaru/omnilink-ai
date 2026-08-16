@@ -1,21 +1,11 @@
 import React, { useState } from 'react';
 import {
-  Bookmark,
-  Sparkles,
-  LayoutGrid,
-  List,
-  Columns3,
-  Network,
-  ShieldCheck,
-  Share2,
-  Chrome,
-  Sun,
-  Moon,
+  Inbox,
+  Circle,
+  CheckCircle2,
   Star,
   Archive,
-  CheckCircle2,
-  BookOpen,
-  Inbox,
+  Rss,
   Github,
   MessageSquare,
   Instagram,
@@ -25,15 +15,15 @@ import {
   ChevronDown,
   ChevronRight,
   Folder,
-  Layers,
-  Circle,
-  RefreshCw,
+  BarChart3,
+  Cpu,
   Keyboard,
   FileDown,
-  Rss,
-  Radio,
-  Cpu,
-  BarChart3,
+  Chrome,
+  Share2,
+  ShieldCheck,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { FilterState, PlatformType, ReadStatus, SystemStats, ViewMode } from '../types';
 
@@ -68,8 +58,6 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
-  currentView,
-  onViewChange,
   filters,
   onFilterChange,
   stats,
@@ -97,10 +85,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onCloseMobile,
 }) => {
   // Collapsible section states
-  const [viewsOpen, setViewsOpen] = useState(true);
   const [libraryOpen, setLibraryOpen] = useState(true);
   const [platformsOpen, setPlatformsOpen] = useState(true);
   const [categoriesOpen, setCategoriesOpen] = useState(true);
+  const [utilitiesOpen, setUtilitiesOpen] = useState(true);
 
   const getCategoryCount = (cat: string) => {
     if (stats?.categoriesBreakdown?.[cat] !== undefined) {
@@ -162,7 +150,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         borderColor: 'var(--card-border)',
       }}
     >
-      <div className="flex flex-col h-full overflow-y-auto pr-1 space-y-6">
+      <div className="flex flex-col h-full overflow-y-auto pr-1 space-y-5">
         {/* Brand Header */}
         <div className="flex items-center justify-between px-1 pt-1">
           <div className="flex items-baseline gap-2">
@@ -177,6 +165,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <button
               onClick={onCloseMobile}
               className="md:hidden p-1.5 rounded-lg text-slate-400 hover:text-slate-200"
+              aria-label="Close sidebar"
             >
               ✕
             </button>
@@ -184,94 +173,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* Navigation Sections */}
-        <nav className="space-y-6 flex-1 text-xs">
-          {/* Section 1: Views */}
-          <div className="nav-section">
-            <button
-              onClick={() => setViewsOpen(!viewsOpen)}
-              className="w-full flex items-center justify-between px-1 py-1 nav-label hover:opacity-90 transition-opacity"
-            >
-              <span>Views</span>
-              {viewsOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-            </button>
-            {viewsOpen && (
-              <div className="mt-1.5 space-y-0.5">
-                <button
-                  onClick={() => {
-                    onViewChange('grid');
-                    if (onCloseMobile) onCloseMobile();
-                  }}
-                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] transition-colors ${
-                    currentView === 'grid'
-                      ? 'bg-[#d97757]/10 text-[#d97757] dark:bg-[#e08264]/15 dark:text-[#e08264] font-semibold'
-                      : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <LayoutGrid className="w-3.5 h-3.5" />
-                    <span>Card Grid</span>
-                  </div>
-                  <span className="text-[10px] font-mono text-slate-400">3-Col</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    onViewChange('list');
-                    if (onCloseMobile) onCloseMobile();
-                  }}
-                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] transition-colors ${
-                    currentView === 'list'
-                      ? 'bg-[#d97757]/10 text-[#d97757] dark:bg-[#e08264]/15 dark:text-[#e08264] font-semibold'
-                      : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <List className="w-3.5 h-3.5" />
-                    <span>Compact List</span>
-                  </div>
-                </button>
-
-                <button
-                  onClick={() => {
-                    onViewChange('kanban');
-                    if (onCloseMobile) onCloseMobile();
-                  }}
-                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] transition-colors ${
-                    currentView === 'kanban'
-                      ? 'bg-[#d97757]/10 text-[#d97757] dark:bg-[#e08264]/15 dark:text-[#e08264] font-semibold'
-                      : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Columns3 className="w-3.5 h-3.5" />
-                    <span>Kanban Lanes</span>
-                  </div>
-                </button>
-
-                <button
-                  onClick={() => {
-                    onViewChange('cluster');
-                    if (onCloseMobile) onCloseMobile();
-                  }}
-                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] transition-colors ${
-                    currentView === 'cluster'
-                      ? 'bg-[#d97757]/10 text-[#d97757] dark:bg-[#e08264]/15 dark:text-[#e08264] font-semibold'
-                      : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Network className="w-3.5 h-3.5" />
-                    <span>AI Clusters</span>
-                  </div>
-                  <span className="text-[10px] font-mono text-[#d97757] dark:text-[#e08264] bg-[#d97757]/10 px-1.5 py-0.5 rounded font-semibold">
-                    Auto
-                  </span>
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Section 2: Repository / Library */}
+        <nav className="space-y-5 flex-1 text-xs">
+          {/* Section 1: Repository / Triage Stages */}
           <div className="nav-section">
             <button
               onClick={() => setLibraryOpen(!libraryOpen)}
@@ -385,34 +288,36 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </button>
 
                 {/* RSS Feeds Direct Access */}
-                <button
-                  id="sidebar-btn-rss-feeds"
-                  onClick={() => {
-                    if (onOpenRssFeeds) onOpenRssFeeds();
-                    if (onCloseMobile) onCloseMobile();
-                  }}
-                  className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors group"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Rss className="w-3.5 h-3.5 text-amber-500 group-hover:scale-110 transition-transform" />
-                    <span>RSS Feeds</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    {rssUnreadCount > 0 && (
-                      <span className="font-mono text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30">
-                        {rssUnreadCount}
+                {onOpenRssFeeds && (
+                  <button
+                    id="sidebar-btn-rss-feeds"
+                    onClick={() => {
+                      onOpenRssFeeds();
+                      if (onCloseMobile) onCloseMobile();
+                    }}
+                    className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors group"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Rss className="w-3.5 h-3.5 text-amber-500 group-hover:scale-110 transition-transform" />
+                      <span>RSS Feeds</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {rssUnreadCount > 0 && (
+                        <span className="font-mono text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                          {rssUnreadCount}
+                        </span>
+                      )}
+                      <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-medium">
+                        {rssFeedsCount}
                       </span>
-                    )}
-                    <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-medium">
-                      {rssFeedsCount}
-                    </span>
-                  </div>
-                </button>
+                    </div>
+                  </button>
+                )}
               </div>
             )}
           </div>
 
-          {/* Section 3: Platforms */}
+          {/* Section 2: Platforms */}
           <div className="nav-section">
             <button
               onClick={() => setPlatformsOpen(!platformsOpen)}
@@ -465,7 +370,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             )}
           </div>
 
-          {/* Section 4: Categories */}
+          {/* Section 3: Categories */}
           {availableCategories.length > 0 && (
             <div className="nav-section">
               <button
@@ -512,113 +417,143 @@ export const Sidebar: React.FC<SidebarProps> = ({
               )}
             </div>
           )}
+
+          {/* Section 4: Workspace Utilities (Full-Width Collapsible) */}
+          <div className="nav-section">
+            <button
+              onClick={() => setUtilitiesOpen(!utilitiesOpen)}
+              className="w-full flex items-center justify-between px-1 py-1 nav-label hover:opacity-90 transition-opacity"
+            >
+              <span>Workspace Tools</span>
+              {utilitiesOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+            </button>
+            {utilitiesOpen && (
+              <div className="mt-1.5 space-y-0.5">
+                {onOpenAnalytics && (
+                  <button
+                    onClick={() => {
+                      onOpenAnalytics();
+                      if (onCloseMobile) onCloseMobile();
+                    }}
+                    className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors group"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <BarChart3 className="w-3.5 h-3.5 text-[#d97757] dark:text-[#e08264]" />
+                      <span>Analytics</span>
+                    </div>
+                    <span className="font-mono text-[10px] text-slate-400">⌘⇧A</span>
+                  </button>
+                )}
+
+                {onOpenModelOrchestrator && (
+                  <button
+                    onClick={() => {
+                      onOpenModelOrchestrator();
+                      if (onCloseMobile) onCloseMobile();
+                    }}
+                    className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors group"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Cpu className="w-3.5 h-3.5 text-emerald-500" />
+                      <span>Gemini Router</span>
+                    </div>
+                    <span className="font-mono text-[10px] text-slate-400">⌘O</span>
+                  </button>
+                )}
+
+                {onOpenExtension && (
+                  <button
+                    onClick={() => {
+                      onOpenExtension();
+                      if (onCloseMobile) onCloseMobile();
+                    }}
+                    className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors group"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Chrome className="w-3.5 h-3.5 text-[#d97757] dark:text-[#e08264]" />
+                      <span>Chrome Extension</span>
+                    </div>
+                    <span className="font-mono text-[10px] text-slate-400">⌘E</span>
+                  </button>
+                )}
+
+                {onOpenMobileShare && (
+                  <button
+                    onClick={() => {
+                      onOpenMobileShare();
+                      if (onCloseMobile) onCloseMobile();
+                    }}
+                    className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors group"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Share2 className="w-3.5 h-3.5 text-[#d97757] dark:text-[#e08264]" />
+                      <span>Mobile Share Hub</span>
+                    </div>
+                    <span className="font-mono text-[10px] text-slate-400">⌘M</span>
+                  </button>
+                )}
+
+                {onOpenBackup && (
+                  <button
+                    onClick={() => {
+                      onOpenBackup();
+                      if (onCloseMobile) onCloseMobile();
+                    }}
+                    className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors group"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <ShieldCheck className="w-3.5 h-3.5 text-[#d97757] dark:text-[#e08264]" />
+                      <span>Encrypted Vault</span>
+                    </div>
+                    <span className="font-mono text-[10px] text-slate-400">⌘B</span>
+                  </button>
+                )}
+
+                {onOpenShortcutsHelp && (
+                  <button
+                    onClick={() => {
+                      onOpenShortcutsHelp();
+                      if (onCloseMobile) onCloseMobile();
+                    }}
+                    className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors group"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Keyboard className="w-3.5 h-3.5 text-slate-400" />
+                      <span>Keyboard Shortcuts</span>
+                    </div>
+                    <span className="font-mono text-[10px] text-slate-400">?</span>
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </nav>
 
-        {/* Sidebar Utilities Footer */}
-        <div className="pt-3 border-t border-black/10 dark:border-white/10 space-y-2">
-          {/* Quick Access Tools */}
-          <div className="grid grid-cols-4 gap-1">
-            <button
-              id="sidebar-btn-analytics"
-              onClick={onOpenAnalytics}
-              title="Knowledge Analytics & Usage Insights (⌘A)"
-              className="p-1.5 rounded-lg flex flex-col items-center justify-center gap-1 text-[9.5px] font-medium text-[#d97757] dark:text-[#e08264] hover:bg-[#d97757]/10 transition-colors group"
-            >
-              <BarChart3 className="w-3.5 h-3.5 text-[#d97757] dark:text-[#e08264] group-hover:scale-110 transition-transform" />
-              <span>Stats</span>
-            </button>
-
-            <button
-              id="sidebar-btn-model-orchestrator"
-              onClick={onOpenModelOrchestrator}
-              title="Gemini Multi-Tier Model Orchestrator & Telemetry (⌘O)"
-              className="p-1.5 rounded-lg flex flex-col items-center justify-center gap-1 text-[9.5px] font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 transition-colors group"
-            >
-              <Cpu className="w-3.5 h-3.5 text-emerald-500 group-hover:scale-110 transition-transform" />
-              <span>Router</span>
-            </button>
-
-            <button
-              id="sidebar-btn-shortcuts"
-              onClick={onOpenShortcutsHelp}
-              title="Keyboard Shortcuts Guide (? or ⌘/)"
-              className="p-1.5 rounded-lg flex flex-col items-center justify-center gap-1 text-[9.5px] font-medium text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-100 transition-colors group"
-            >
-              <Keyboard className="w-3.5 h-3.5 text-[#d97757] dark:text-[#e08264] group-hover:scale-110 transition-transform" />
-              <span>Keys</span>
-            </button>
-
-            <button
-              id="sidebar-btn-rss-manage"
-              onClick={onOpenRssFeeds}
-              title="RSS Feeds & Dev Blogs Subscriptions (⌘R)"
-              className="p-1.5 rounded-lg flex flex-col items-center justify-center gap-1 text-[9.5px] font-medium text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-100 transition-colors group"
-            >
-              <Rss className="w-3.5 h-3.5 text-amber-500 group-hover:scale-110 transition-transform" />
-              <span>RSS</span>
-            </button>
-
-            <button
-              id="sidebar-btn-export-markdown"
-              onClick={onOpenExportMarkdown}
-              title="Export Markdown for Obsidian & Notion (⌘⇧E)"
-              className="p-1.5 rounded-lg flex flex-col items-center justify-center gap-1 text-[9.5px] font-medium text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-100 transition-colors group"
-            >
-              <FileDown className="w-3.5 h-3.5 text-[#d97757] dark:text-[#e08264] group-hover:scale-110 transition-transform" />
-              <span>Export</span>
-            </button>
-
-            <button
-              onClick={onOpenExtension}
-              title="Chrome Extension Generator & Guide (⌘E)"
-              className="p-1.5 rounded-lg flex flex-col items-center justify-center gap-1 text-[9.5px] font-medium text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
-            >
-              <Chrome className="w-3.5 h-3.5 text-[#d97757] dark:text-[#e08264]" />
-              <span>Ext</span>
-            </button>
-
-            <button
-              onClick={onOpenMobileShare}
-              title="Mobile Quick Share & QR Connect (⌘M)"
-              className="p-1.5 rounded-lg flex flex-col items-center justify-center gap-1 text-[9.5px] font-medium text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
-            >
-              <Share2 className="w-3.5 h-3.5 text-[#d97757] dark:text-[#e08264]" />
-              <span>Mobile</span>
-            </button>
-
-            <button
-              onClick={onOpenBackup}
-              title="AES Encrypted Backups & Export (⌘B)"
-              className="p-1.5 rounded-lg flex flex-col items-center justify-center gap-1 text-[9.5px] font-medium text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
-            >
-              <ShieldCheck className="w-3.5 h-3.5 text-[#d97757] dark:text-[#e08264]" />
-              <span>Vault</span>
-            </button>
+        {/* Sidebar Footer */}
+        <div className="pt-3 border-t border-black/10 dark:border-white/10 flex items-center justify-between px-1 text-[11px] font-mono text-slate-500 dark:text-slate-400">
+          {/* Sync status */}
+          <div className="flex items-center gap-1.5">
+            <div
+              className={`w-1.5 h-1.5 rounded-full ${
+                syncStatus === 'synced'
+                  ? 'bg-emerald-500'
+                  : syncStatus === 'syncing'
+                  ? 'bg-[#d97757] animate-ping'
+                  : 'bg-rose-500'
+              }`}
+            />
+            <span className="capitalize">{syncStatus}</span>
           </div>
 
-          {/* Theme Switch & Sync Status */}
-          <div className="flex items-center justify-between px-1 pt-1 text-[11px] font-mono text-slate-500 dark:text-slate-400">
-            <div className="flex items-center gap-1.5">
-              <div
-                className={`w-1.5 h-1.5 rounded-full ${
-                  syncStatus === 'synced'
-                    ? 'bg-emerald-500'
-                    : syncStatus === 'syncing'
-                    ? 'bg-[#d97757] animate-ping'
-                    : 'bg-rose-500'
-                }`}
-              />
-              <span className="capitalize">{syncStatus}</span>
-            </div>
-
-            <button
-              onClick={onToggleDarkMode}
-              className="p-1 rounded-md text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-              title={darkMode ? 'Switch to Light mode' : 'Switch to Dark mode'}
-            >
-              {darkMode ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
-            </button>
-          </div>
+          {/* Dark mode toggle */}
+          <button
+            onClick={onToggleDarkMode}
+            className="p-1.5 rounded-md text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+            title={darkMode ? 'Switch to Light mode' : 'Switch to Dark mode'}
+            aria-label={darkMode ? 'Switch to Light mode' : 'Switch to Dark mode'}
+          >
+            {darkMode ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+          </button>
         </div>
       </div>
     </aside>

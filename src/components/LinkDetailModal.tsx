@@ -140,6 +140,9 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-xs">
       <div
         id="link-detail-modal-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="link-detail-modal-title"
         className="w-full max-w-3xl max-h-[90vh] border rounded-[24px] shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150"
         style={{
           backgroundColor: 'var(--card-bg)',
@@ -225,7 +228,7 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
         <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-6">
           {/* Main Title & Author Header */}
           <div>
-            <h2 className="font-newsreader font-medium text-2xl sm:text-3xl text-slate-900 dark:text-[#f7f6f3] leading-tight">
+            <h2 id="link-detail-modal-title" className="font-newsreader font-medium text-2xl sm:text-3xl text-slate-900 dark:text-[#f7f6f3] leading-tight">
               {link.title}
             </h2>
             <div className="flex flex-wrap items-center gap-3 mt-2 font-mono text-xs text-slate-500 dark:text-slate-400">

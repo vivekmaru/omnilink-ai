@@ -177,6 +177,9 @@ export const BackupModal: React.FC<BackupModalProps> = ({
     >
       <div
         id="backup-modal-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="backup-modal-title"
         className="w-full max-w-2xl max-h-[90vh] rounded-2xl border shadow-2xl flex flex-col overflow-hidden text-slate-900 dark:text-[#f7f6f3] transition-all"
         style={{
           backgroundColor: 'var(--card-bg)',
@@ -191,7 +194,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-newsreader text-xl font-medium tracking-tight">
+              <h3 id="backup-modal-title" className="font-newsreader text-xl font-medium tracking-tight">
                 AES-256 Vault Encryption & Backup
               </h3>
               <p className="font-mono text-xs text-slate-500 dark:text-slate-400 mt-0.5">

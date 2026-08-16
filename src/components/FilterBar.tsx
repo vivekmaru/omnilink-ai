@@ -6,11 +6,9 @@ import {
   Tag,
   Folder,
   X,
-  SlidersHorizontal,
-  Circle,
   CheckCircle2,
 } from 'lucide-react';
-import { FilterState, ReadStatus } from '../types';
+import { FilterState } from '../types';
 
 interface FilterBarProps {
   filters: FilterState;
@@ -52,19 +50,19 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
   return (
     <div
-      className="px-6 py-2.5 border-b flex flex-wrap items-center justify-between gap-3 text-xs transition-colors"
+      className="px-4 sm:px-8 py-2 border-b flex items-center justify-between gap-3 text-xs transition-colors overflow-x-auto"
       style={{
         backgroundColor: 'var(--sidebar-bg)',
         borderColor: 'var(--card-border)',
       }}
     >
-      {/* Left: Consolidated Filter Controls */}
-      <div className="flex flex-wrap items-center gap-2">
+      {/* Left: Consolidated Filter Controls with horizontal scroll on mobile */}
+      <div className="flex items-center gap-2 shrink-0">
         {/* Status Segmented Pills */}
-        <div className="flex items-center p-0.5 rounded-md bg-slate-200/60 dark:bg-white/5 border border-slate-300/60 dark:border-white/5">
+        <div className="flex items-center p-0.5 rounded-lg bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5">
           <button
             onClick={() => onFilterChange({ readStatus: 'all' })}
-            className={`px-2.5 py-1 rounded text-[11px] font-medium transition-all ${
+            className={`px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all ${
               filters.readStatus === 'all'
                 ? 'bg-white dark:bg-[#1b1b1f] shadow-xs text-slate-900 dark:text-slate-100 font-semibold'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
@@ -74,7 +72,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           </button>
           <button
             onClick={() => onFilterChange({ readStatus: 'unread' })}
-            className={`px-2.5 py-1 rounded text-[11px] font-medium transition-all flex items-center gap-1.5 ${
+            className={`px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all flex items-center gap-1.5 ${
               filters.readStatus === 'unread'
                 ? 'bg-white dark:bg-[#1b1b1f] shadow-xs text-amber-700 dark:text-amber-400 font-semibold'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
@@ -85,7 +83,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           </button>
           <button
             onClick={() => onFilterChange({ readStatus: 'reading' })}
-            className={`px-2.5 py-1 rounded text-[11px] font-medium transition-all flex items-center gap-1.5 ${
+            className={`px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all flex items-center gap-1.5 ${
               filters.readStatus === 'reading'
                 ? 'bg-white dark:bg-[#1b1b1f] shadow-xs text-cyan-700 dark:text-cyan-400 font-semibold'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
@@ -96,7 +94,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           </button>
           <button
             onClick={() => onFilterChange({ readStatus: 'read' })}
-            className={`px-2.5 py-1 rounded text-[11px] font-medium transition-all flex items-center gap-1.5 ${
+            className={`px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all flex items-center gap-1.5 ${
               filters.readStatus === 'read'
                 ? 'bg-white dark:bg-[#1b1b1f] shadow-xs text-emerald-700 dark:text-emerald-400 font-semibold'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
@@ -112,7 +110,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           <select
             value={filters.category}
             onChange={(e) => onFilterChange({ category: e.target.value })}
-            className="pl-3 pr-7 py-1.5 rounded-md text-xs font-medium border transition-all cursor-pointer text-slate-800 dark:text-slate-200 bg-white dark:bg-[#18181c] border-slate-300 dark:border-white/10 hover:border-slate-400 dark:hover:border-white/20 focus:outline-none focus:ring-1 focus:ring-[#d97757] appearance-none shadow-xs"
+            className="pl-3 pr-7 py-1.5 rounded-lg text-xs font-medium border transition-all cursor-pointer text-slate-800 dark:text-slate-200 bg-white dark:bg-[#18181c] border-black/10 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20 focus:outline-none focus:ring-1 focus:ring-[#d97757] appearance-none shadow-xs"
+            aria-label="Filter by category"
           >
             <option value="all">All Categories</option>
             {availableCategories.map((cat) => (
@@ -130,7 +129,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             <select
               value={filters.tag}
               onChange={(e) => onFilterChange({ tag: e.target.value })}
-              className="pl-3 pr-7 py-1.5 rounded-md text-xs font-mono font-medium border transition-all cursor-pointer text-slate-800 dark:text-slate-200 bg-white dark:bg-[#18181c] border-slate-300 dark:border-white/10 hover:border-slate-400 dark:hover:border-white/20 focus:outline-none focus:ring-1 focus:ring-[#d97757] appearance-none shadow-xs"
+              className="pl-3 pr-7 py-1.5 rounded-lg text-xs font-mono font-medium border transition-all cursor-pointer text-slate-800 dark:text-slate-200 bg-white dark:bg-[#18181c] border-black/10 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20 focus:outline-none focus:ring-1 focus:ring-[#d97757] appearance-none shadow-xs"
+              aria-label="Filter by tag"
             >
               <option value="all">All Tags</option>
               {availableTags.map((tag) => (
@@ -146,12 +146,13 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         {/* Starred Toggle */}
         <button
           onClick={() => onFilterChange({ onlyFavorites: !filters.onlyFavorites })}
-          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border text-xs font-medium transition-all shadow-xs ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all shadow-xs ${
             filters.onlyFavorites
               ? 'bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-400 font-semibold'
-              : 'bg-white dark:bg-[#18181c] border-slate-300 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white'
+              : 'bg-white dark:bg-[#18181c] border-black/10 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white'
           }`}
           title="Filter by starred links"
+          aria-label="Filter by starred links"
         >
           <Star
             className={`w-3.5 h-3.5 ${
@@ -164,12 +165,13 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         {/* Archived Toggle */}
         <button
           onClick={() => onFilterChange({ includeArchived: !filters.includeArchived })}
-          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border text-xs font-medium transition-all shadow-xs ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all shadow-xs ${
             filters.includeArchived
-              ? 'bg-slate-200 dark:bg-white/10 border-slate-400 dark:border-white/20 text-slate-900 dark:text-slate-100 font-semibold'
-              : 'bg-white dark:bg-[#18181c] border-slate-300 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white'
+              ? 'bg-black/10 dark:bg-white/10 border-black/20 dark:border-white/20 text-slate-900 dark:text-slate-100 font-semibold'
+              : 'bg-white dark:bg-[#18181c] border-black/10 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white'
           }`}
           title="View archived links"
+          aria-label="View archived links"
         >
           <Archive className="w-3.5 h-3.5 text-slate-400" />
           <span>Archived</span>
@@ -179,7 +181,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         {isFiltered && (
           <button
             onClick={handleClearFilters}
-            className="flex items-center gap-1 px-2 py-1 rounded text-[11px] font-mono font-semibold text-rose-500 dark:text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 transition-colors"
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-mono font-semibold text-rose-500 dark:text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 transition-colors"
+            aria-label="Clear active filters"
           >
             <X className="w-3 h-3" />
             <span>Clear filters</span>
@@ -188,7 +191,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
       </div>
 
       {/* Right: Sorters & Result Count */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 shrink-0">
         {activeCount !== undefined && totalCount !== undefined && (
           <span className="font-mono text-[11px] text-slate-400 dark:text-slate-500">
             {activeCount} of {totalCount}
@@ -206,6 +209,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               })
             }
             className="bg-transparent border-none text-xs font-mono font-semibold text-slate-800 dark:text-slate-200 outline-none cursor-pointer hover:text-[#d97757] dark:hover:text-[#e08264] transition-colors"
+            aria-label="Sort bookmarks by"
           >
             <option value="newest" className="bg-white dark:bg-[#1f1e1c]">Newest</option>
             <option value="oldest" className="bg-white dark:bg-[#1f1e1c]">Oldest</option>
