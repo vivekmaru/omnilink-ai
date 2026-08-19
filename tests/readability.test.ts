@@ -38,4 +38,12 @@ describe('Readability & Content Archiver Suite', () => {
     expect(article?.wordCount).toBeGreaterThan(20);
     expect(article?.readingTimeMinutes).toBeGreaterThanOrEqual(1);
   });
+
+  it('exposes extractReddit, extractGitHub, extractYouTube, and extractArXiv methods', () => {
+    expect(typeof ReadabilityService.extractReddit).toBe('function');
+    expect(typeof ReadabilityService.extractGitHub).toBe('function');
+    expect(typeof ReadabilityService.extractYouTube).toBe('function');
+    expect(typeof ReadabilityService.extractArXiv).toBe('function');
+    expect(typeof ReadabilityService.extractFromUrl).toBe('function');
+  });
 });

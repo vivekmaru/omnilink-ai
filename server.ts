@@ -955,43 +955,15 @@ app.post('/api/links/preview-metadata', async (req, res) => {
     const platform = detectPlatform(url);
     let scrapedTitle = '';
     let scrapedDescription = '';
+    let author = '';
 
-    // Fast network fetch with 3.5s timeout
+    // Fast extraction via ReadabilityService (covers Reddit, GitHub, YouTube, ArXiv, articles)
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3500);
-
-      const response = await fetch(url, {
-        signal: controller.signal,
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        },
-      });
-      clearTimeout(timeoutId);
-
-      if (response.ok) {
-        const html = await response.text();
-        // Extract <title>
-        const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-        if (titleMatch && titleMatch[1]) {
-          scrapedTitle = titleMatch[1].trim();
-        }
-
-        // Extract og:title
-        const ogTitleMatch = html.match(/<meta[^>]*property=["']og:title["'][^>]*content=["']([^"']+)["']/i)
-          || html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:title["']/i);
-        if (ogTitleMatch && ogTitleMatch[1]) {
-          scrapedTitle = ogTitleMatch[1].trim();
-        }
-
-        // Extract og:description or meta description
-        const ogDescMatch = html.match(/<meta[^>]*property=["']og:description["'][^>]*content=["']([^"']+)["']/i)
-          || html.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']+)["']/i)
-          || html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*name=["']description["']/i);
-        if (ogDescMatch && ogDescMatch[1]) {
-          scrapedDescription = ogDescMatch[1].trim();
-        }
+      const snapshot = await ReadabilityService.extractFromUrl(url, 4500);
+      if (snapshot) {
+        scrapedTitle = snapshot.title || '';
+        scrapedDescription = snapshot.excerpt || '';
+        author = snapshot.byline || '';
       }
     } catch (fetchErr) {
       // Network fetch skipped or timed out; will fallback to slug/domain analysis
@@ -1019,6 +991,7 @@ app.post('/api/links/preview-metadata', async (req, res) => {
       url,
       title: scrapedTitle,
       description: scrapedDescription,
+      author,
       platform,
     });
   } catch (err: any) {
@@ -1181,9 +1154,9 @@ async function extractWithGemini(
   let snapshot: any = null;
   if (/^https?:\/\//i.test(url)) {
     try {
-      snapshot = await ReadabilityService.extractFromUrl(url, 8000);
+      snapshot = await ReadabilityService.extractFromUrl(url, 10000);
       if (snapshot) {
-        articleText = snapshot.contentMarkdown?.slice(0, 4000) || snapshot.excerpt || '';
+        articleText = snapshot.contentMarkdown?.slice(0, 6000) || snapshot.excerpt || '';
         if (!cleanTitle && snapshot.title && snapshot.title.length > 5) {
           cleanTitle = snapshot.title;
         }
@@ -1193,24 +1166,45 @@ async function extractWithGemini(
     }
   }
 
-  const prompt = `Analyze this saved link URL and context to extract high-value metadata, a concise 1-sentence TL;DR summary, 3-5 bulleted actionable takeaways, category, 5-8 descriptive tags, estimated reading/watch time in minutes, code snippets (if technical/github/reddit), quotes, and an AI relevance score (1-100).
+  const prompt = `You are OmniLink AI's expert Knowledge Extraction Engine. Analyze the provided link, metadata, and extracted article/thread content to generate deep, authoritative, high-signal insights.
 
-URL: ${url}
-Title / Heading: ${cleanTitle || (snapshot?.title || 'None')}
-User Notes / Excerpt (if any): ${cleanNotes || 'None'}
-Detected Platform: ${platform || 'other'}
-${articleText ? `Article Content / Clean Excerpt:\n${articleText}` : ''}
+Target URL: ${url}
+Title / Heading: ${cleanTitle || snapshot?.title || 'None'}
+Detected Platform: ${platform || 'web_article'}
+${cleanNotes ? `User Notes / Context: ${cleanNotes}` : ''}
+${articleText ? `Full Content / Extracted Thread & Comments:\n${articleText}` : ''}
 
-Platform & Summarization Guidelines:
-- Write an insightful, punchy 1-2 sentence TL;DR summarizing the actual ideas, technical findings, or core story.
-- NEVER return raw URLs, HN comment URLs, or 'Article URL:' boilerplate as the summary.
-- GitHub: Extract the main library purpose, key architectural features, CLI commands or import syntax into codeSnippets.
-- Reddit post or comment: Extract the central discussion argument, community consensus, technical advice, or counterpoints into keyTakeaways.
-- Instagram Reel/Short: Identify the core tutorial takeaway, visual trick, lifehack, or product recommendation.
-- YouTube: Extract the core teaching thesis and step-by-step points.
-- ArXiv / Research paper: Summarize the novel contribution, methodology, and empirical findings.
+Platform-Specific Deep Extraction Rules:
 
-Return strictly valid JSON according to the schema.`;
+1. REDDIT DISCUSSIONS & COMMENTS:
+   - TL;DR: Clearly summarize the EXACT core problem/question asked by OP and the definitive consensus reached by the community. Do NOT use vague meta-summaries like "The community discusses trade-offs". State the specific concepts, tools, and conclusions!
+   - Key Takeaways (3-5 bullets):
+     * Bullet 1: The original problem, technical dilemma, bug, or question posted by the author.
+     * Bullets 2-3: The most upvoted, authoritative solutions or recommendations provided by top community commenters (name specific libraries, tools, configs, or techniques mentioned!).
+     * Bullet 4-5: Significant trade-offs, cautionary notes, bugs, or dissenting opinions highlighted in the thread.
+   - Code Snippets: Extract any relevant code blocks, shell commands, or configuration snippets shared in the post or top comments.
+   - Quotes: Extract 1-2 impactful direct quotes from top commenters that summarize key advice.
+
+2. GITHUB REPOSITORIES:
+   - TL;DR: Explain what the project does, its core differentiator or killer feature, and primary use-case.
+   - Key Takeaways: Key architectural features, supported integrations/frameworks, performance benchmarks, and getting started prerequisites.
+   - Code Snippets: Primary installation command (npm/pip/cargo/docker) and minimal quickstart usage code.
+
+3. RESEARCH PAPERS & ARXIV:
+   - TL;DR: State the primary novel methodology/architecture proposed and the headline empirical result or benchmark win.
+   - Key Takeaways: Mathematical formulation or architectural difference, benchmark dataset results compared to baselines, limitations and future research directions.
+
+4. TECHNICAL ARTICLES & DEV BLOGS:
+   - TL;DR: A punchy 1-2 sentence distillation of the main thesis, architectural decision, or postmortem learning.
+   - Key Takeaways: 3-5 concrete, actionable learnings, design patterns, or technical explanations.
+   - Code Snippets: Any key configuration, algorithm, or CLI snippet from the post.
+
+Strict Quality Requirements:
+- NO generic filler or superficial phrases like "In-depth discussion evaluating trade-offs". Always cite concrete tools, concepts, and techniques.
+- NEVER return raw URLs or 'Article URL:' boilerplate as summary.
+- Tags: 5-8 descriptive, lowercase tags covering language, framework, domain, and specific topic.
+
+Return strictly valid JSON matching the schema.`;
 
   const schema = {
     type: Type.OBJECT,
@@ -1229,11 +1223,11 @@ Return strictly valid JSON according to the schema.`;
       summary: {
         type: Type.OBJECT,
         properties: {
-          tldr: { type: Type.STRING, description: 'A punchy 1-2 sentence core summary' },
+          tldr: { type: Type.STRING, description: 'A punchy 1-2 sentence core summary of actual ideas and conclusions' },
           keyTakeaways: {
             type: Type.ARRAY,
             items: { type: Type.STRING },
-            description: '3-5 crisp bullet points of key insights',
+            description: '3-5 crisp bullet points of concrete insights, citing specific tools and arguments',
           },
           codeSnippets: {
             type: Type.ARRAY,
