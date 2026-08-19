@@ -39,7 +39,8 @@ describe('Readability & Content Archiver Suite', () => {
     expect(article?.readingTimeMinutes).toBeGreaterThanOrEqual(1);
   });
 
-  it('exposes extractReddit, extractGitHub, extractYouTube, and extractArXiv methods', () => {
+  it('exposes extractHackerNews, extractReddit, extractGitHub, extractYouTube, and extractArXiv methods', () => {
+    expect(typeof ReadabilityService.extractHackerNews).toBe('function');
     expect(typeof ReadabilityService.extractReddit).toBe('function');
     expect(typeof ReadabilityService.extractGitHub).toBe('function');
     expect(typeof ReadabilityService.extractYouTube).toBe('function');

@@ -287,12 +287,111 @@ export class ReadabilityService {
     return null;
   }
 
+  // 5. Hacker News Story & Comments Scraper (Algolia API)
+  static async extractHackerNews(url: string, timeoutMs: number = 8000): Promise<ReaderArticle | null> {
+    try {
+      const hnMatch = url.match(/news\.ycombinator\.com\/item\?id=([0-9]+)/i)
+        || url.match(/hnrss\.org\/.*id=([0-9]+)/i);
+
+      if (!hnMatch) return null;
+      const hnId = hnMatch[1];
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+      const res = await fetch(`https://hn.algolia.com/api/v1/items/${hnId}`, {
+        signal: controller.signal,
+        headers: { Accept: 'application/json' },
+      });
+
+      clearTimeout(timeoutId);
+
+      if (res.ok) {
+        const data = await res.json();
+        const title = data.title || `Hacker News Item #${hnId}`;
+        const author = data.author || 'HN User';
+        const points = data.points || 0;
+        const targetUrl = data.url;
+        const storyText = (data.text || '')
+          .replace(/<p>/g, '\n\n')
+          .replace(/<\/?[^>]+(>|$)/g, '')
+          .trim();
+
+        // Fetch top upvoted comments
+        const topComments = (data.children || [])
+          .slice(0, 10)
+          .map((c: any) => ({
+            author: c.author || 'commenter',
+            points: c.points || 0,
+            text: (c.text || '').replace(/<p>/g, '\n').replace(/<\/?[^>]+(>|$)/g, '').trim(),
+          }))
+          .filter((c: any) => c.text && c.text.length > 15);
+
+        let externalArticleText = '';
+        if (targetUrl && /^https?:\/\//i.test(targetUrl) && !targetUrl.includes('news.ycombinator.com')) {
+          try {
+            const extSnapshot = await this.extractFromUrl(targetUrl, 4000);
+            if (extSnapshot && extSnapshot.contentMarkdown) {
+              externalArticleText = extSnapshot.contentMarkdown.slice(0, 3000);
+            }
+          } catch {
+            // Non-blocking external article fetch
+          }
+        }
+
+        let markdown = `# ${title}\n\n`;
+        markdown += `**Hacker News Submission:** ${points} points | **Author:** ${author} | [View on Hacker News](https://news.ycombinator.com/item?id=${hnId})\n`;
+        if (targetUrl) {
+          markdown += `**Original Article URL:** [${targetUrl}](${targetUrl})\n\n`;
+        } else {
+          markdown += `\n`;
+        }
+
+        if (externalArticleText) {
+          markdown += `## Linked Article Summary & Excerpt:\n${externalArticleText}\n\n`;
+        } else if (storyText) {
+          markdown += `## Story Description:\n${storyText}\n\n`;
+        }
+
+        if (topComments.length > 0) {
+          markdown += `## Top Hacker News Community Comments & Technical Debate:\n`;
+          for (const c of topComments) {
+            markdown += `### ${c.author}:\n${c.text}\n\n`;
+          }
+        }
+
+        const wordCount = markdown.split(/\s+/).filter(Boolean).length;
+        const readingTime = Math.max(3, Math.ceil(wordCount / 200));
+
+        return {
+          title: `${title} (Hacker News)`,
+          byline: `${author} on Hacker News (${points} points)`,
+          excerpt: storyText.slice(0, 250) || (externalArticleText ? externalArticleText.slice(0, 250) : `Hacker News discussion on "${title}" with ${topComments.length} top comments.`),
+          siteName: 'Hacker News',
+          contentHtml: `<h1>${title}</h1><p>By ${author} (${points} points)</p><div>${storyText || externalArticleText}</div>`,
+          contentMarkdown: markdown,
+          readingTimeMinutes: readingTime,
+          wordCount,
+          extractedAt: new Date().toISOString(),
+        };
+      }
+    } catch (err: any) {
+      console.warn('[ReadabilityService] Hacker News extraction notice:', err.message);
+    }
+    return null;
+  }
+
   // Fetch full page and extract clean reader-mode text and markdown
   static async extractFromUrl(url: string, timeoutMs: number = 10000): Promise<ReaderArticle | null> {
     if (!url || typeof url !== 'string') return null;
     const lower = url.toLowerCase();
 
     // 1. Platform-Specific Scrapers for High-Density Extraction
+    if (lower.includes('news.ycombinator.com/item') || lower.includes('hnrss.org')) {
+      const hnData = await this.extractHackerNews(url, timeoutMs);
+      if (hnData) return hnData;
+    }
+
     if (lower.includes('reddit.com') || lower.includes('redd.it')) {
       const redditData = await this.extractReddit(url, timeoutMs);
       if (redditData) return redditData;
