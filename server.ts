@@ -1165,14 +1165,45 @@ async function extractWithGemini(
   platform?: PlatformType,
   preferredModel?: GeminiModelId
 ) {
+  // Clean any Hacker News metadata boilerplate from userNotes or userTitle
+  let cleanNotes = userNotes || '';
+  if (/Article URL:.*Comments URL:/is.test(cleanNotes)) {
+    cleanNotes = cleanNotes.replace(/Article URL:.*$/is, '').trim();
+  }
+
+  let cleanTitle = userTitle || '';
+  if (/Article URL:.*Comments URL:/is.test(cleanTitle)) {
+    cleanTitle = '';
+  }
+
+  // Attempt to fetch clean article content via ReadabilityService for deep analysis
+  let articleText = '';
+  let snapshot: any = null;
+  if (/^https?:\/\//i.test(url)) {
+    try {
+      snapshot = await ReadabilityService.extractFromUrl(url, 8000);
+      if (snapshot) {
+        articleText = snapshot.contentMarkdown?.slice(0, 4000) || snapshot.excerpt || '';
+        if (!cleanTitle && snapshot.title && snapshot.title.length > 5) {
+          cleanTitle = snapshot.title;
+        }
+      }
+    } catch (e) {
+      // Non-blocking
+    }
+  }
+
   const prompt = `Analyze this saved link URL and context to extract high-value metadata, a concise 1-sentence TL;DR summary, 3-5 bulleted actionable takeaways, category, 5-8 descriptive tags, estimated reading/watch time in minutes, code snippets (if technical/github/reddit), quotes, and an AI relevance score (1-100).
 
 URL: ${url}
-User provided Title (if any): ${userTitle || 'None'}
-User Notes / Excerpt (if any): ${userNotes || 'None'}
+Title / Heading: ${cleanTitle || (snapshot?.title || 'None')}
+User Notes / Excerpt (if any): ${cleanNotes || 'None'}
 Detected Platform: ${platform || 'other'}
+${articleText ? `Article Content / Clean Excerpt:\n${articleText}` : ''}
 
-Platform Specific Guidelines:
+Platform & Summarization Guidelines:
+- Write an insightful, punchy 1-2 sentence TL;DR summarizing the actual ideas, technical findings, or core story.
+- NEVER return raw URLs, HN comment URLs, or 'Article URL:' boilerplate as the summary.
 - GitHub: Extract the main library purpose, key architectural features, CLI commands or import syntax into codeSnippets.
 - Reddit post or comment: Extract the central discussion argument, community consensus, technical advice, or counterpoints into keyTakeaways.
 - Instagram Reel/Short: Identify the core tutorial takeaway, visual trick, lifehack, or product recommendation.
@@ -1224,7 +1255,7 @@ Return strictly valid JSON according to the schema.`;
   };
 
   const genAi = getGenAI();
-  const rawTextLength = (userTitle || '').length + (userNotes || '').length + url.length;
+  const rawTextLength = (cleanTitle || '').length + (cleanNotes || '').length + articleText.length + url.length;
 
   const orchResult = await ModelOrchestrator.executeStructuredPrompt<any>(
     genAi,
@@ -1242,6 +1273,7 @@ Return strictly valid JSON according to the schema.`;
   if (orchResult.data && orchResult.data.title && orchResult.data.summary) {
     return {
       ...orchResult.data,
+      readerSnapshot: snapshot || undefined,
       _orchestration: {
         model: orchResult.executedModel,
         fallbackUsed: orchResult.fallbackUsed,
@@ -1251,7 +1283,11 @@ Return strictly valid JSON according to the schema.`;
   }
 
   // Seamless heuristic fallback ensuring zero user-facing errors
-  return generateHeuristicExtraction(url, userTitle, userNotes, platform);
+  const fallbackRes = generateHeuristicExtraction(url, cleanTitle, cleanNotes, platform);
+  return {
+    ...fallbackRes,
+    readerSnapshot: snapshot || undefined,
+  };
 }
 
 // POST /api/ai/extract - Manual or programmatic AI extraction
@@ -1266,22 +1302,25 @@ app.post('/api/ai/extract', async (req, res) => {
     const platform = detectPlatform(url);
     const aiData = await extractWithGemini(url, title, notes, platform, preferredModel);
 
-    // If linkId is provided, auto-update the database item
+    // If linkId is provided, auto-update the database item in SQLite
     if (linkId && aiData) {
-      const idx = linksDatabase.findIndex((l) => l.id === linkId);
-      if (idx !== -1) {
-        linksDatabase[idx] = {
-          ...linksDatabase[idx],
-          title: aiData.title || linksDatabase[idx].title,
-          author: aiData.author || linksDatabase[idx].author,
-          category: aiData.category || linksDatabase[idx].category,
-          tags: Array.from(new Set([...linksDatabase[idx].tags, ...(aiData.tags || [])])),
-          summary: aiData.summary || linksDatabase[idx].summary,
-          readingTimeMinutes: aiData.readingTimeMinutes || linksDatabase[idx].readingTimeMinutes,
-          aiScore: aiData.aiScore || linksDatabase[idx].aiScore,
-          updatedAt: new Date().toISOString(),
-        };
-        saveLinks(linksDatabase);
+      const existing = omniDb.getLinkById(linkId);
+      if (existing) {
+        const updated = omniDb.updateLink(linkId, {
+          title: aiData.title || existing.title,
+          author: aiData.author || existing.author,
+          category: aiData.category || existing.category,
+          tags: Array.from(new Set([...existing.tags, ...(aiData.tags || [])])),
+          summary: aiData.summary || existing.summary,
+          readingTimeMinutes: aiData.readingTimeMinutes || existing.readingTimeMinutes,
+          aiScore: aiData.aiScore || existing.aiScore,
+          readerSnapshot: aiData.readerSnapshot || existing.readerSnapshot,
+        });
+        refreshLinksCache();
+        saveLinks();
+        if (updated) {
+          hybridSearchEngine.indexLink(updated, getGenAI()).catch(() => {});
+        }
       }
     }
 
@@ -1671,11 +1710,13 @@ app.post('/api/rss/feeds', validateBody(AddRssFeedSchema), async (req, res) => {
     let newItemsCount = 0;
     if (initialSync !== false) {
       try {
-        const syncResult = await RssFeedManager.syncFeed(createdFeed.id, linksDatabase, getGenAI());
+        const syncResult = await RssFeedManager.syncFeed(createdFeed.id, omniDb.getAllLinks(), getGenAI());
         if (syncResult.newLinks.length > 0) {
-          linksDatabase.unshift(...syncResult.newLinks);
-          saveLinks(linksDatabase);
+          omniDb.bulkInsert(syncResult.newLinks);
+          refreshLinksCache();
+          saveLinks();
           newItemsCount = syncResult.newLinks.length;
+          hybridSearchEngine.runBackgroundIndexing(getGenAI()).catch(() => {});
         }
       } catch (syncErr) {
         console.warn('Initial feed sync warning:', syncErr);
@@ -1721,8 +1762,10 @@ app.delete('/api/rss/feeds/:id', (req, res) => {
 
     // Optional purge of associated items
     if (deleteAssociatedLinks === 'true') {
-      linksDatabase = linksDatabase.filter((l) => l.feedId !== id);
-      saveLinks(linksDatabase);
+      const associatedLinks = omniDb.getAllLinks().filter((l) => l.feedId === id);
+      omniDb.batchDelete(associatedLinks.map((l) => l.id));
+      refreshLinksCache();
+      saveLinks();
     }
 
     res.json({ success: true, id });
@@ -1751,11 +1794,13 @@ app.post('/api/rss/discover', async (req, res) => {
 app.post('/api/rss/feeds/:id/sync', async (req, res) => {
   try {
     const { id } = req.params;
-    const result = await RssFeedManager.syncFeed(id, linksDatabase, getGenAI());
+    const result = await RssFeedManager.syncFeed(id, omniDb.getAllLinks(), getGenAI());
     
     if (result.newLinks.length > 0) {
-      linksDatabase.unshift(...result.newLinks);
-      saveLinks(linksDatabase);
+      omniDb.bulkInsert(result.newLinks);
+      refreshLinksCache();
+      saveLinks();
+      hybridSearchEngine.runBackgroundIndexing(getGenAI()).catch(() => {});
     }
 
     res.json({
@@ -1774,11 +1819,13 @@ app.post('/api/rss/feeds/:id/sync', async (req, res) => {
 // POST /api/rss/sync - Sync all enabled feeds
 app.post('/api/rss/sync', async (req, res) => {
   try {
-    const result = await RssFeedManager.syncAllEnabledFeeds(linksDatabase, getGenAI());
+    const result = await RssFeedManager.syncAllEnabledFeeds(omniDb.getAllLinks(), getGenAI());
     
     if (result.newLinks.length > 0) {
-      linksDatabase.unshift(...result.newLinks);
-      saveLinks(linksDatabase);
+      omniDb.bulkInsert(result.newLinks);
+      refreshLinksCache();
+      saveLinks();
+      hybridSearchEngine.runBackgroundIndexing(getGenAI()).catch(() => {});
     }
 
     res.json({
@@ -2015,8 +2062,9 @@ function generateHeuristicExtraction(
     keyTakeaways = ['Direct reference link stored in OmniLink AI repository'];
   }
 
-  if (userNotes) {
-    keyTakeaways.push(`User Note: "${userNotes.slice(0, 120)}"`);
+  const cleanUserNotes = userNotes && !/Article URL:.*Comments URL:/is.test(userNotes) ? userNotes.trim() : '';
+  if (cleanUserNotes) {
+    keyTakeaways.push(`User Note: "${cleanUserNotes.slice(0, 120)}"`);
   }
 
   return {
@@ -2227,6 +2275,53 @@ async function start() {
         console.warn('[HybridSearch] Initial indexing background notice:', err);
       });
     }, 1500);
+
+    // Auto-heal existing links with raw Hacker News RSS boilerplate in their summary
+    setTimeout(async () => {
+      try {
+        const all = omniDb.getAllLinks();
+        const brokenLinks = all.filter((l) =>
+          l.summary?.tldr && /Article URL:.*Comments URL:/is.test(l.summary.tldr)
+        );
+        if (brokenLinks.length > 0) {
+          console.log(`[AutoHeal] Found ${brokenLinks.length} items with raw HN boilerplate. Starting AI re-extraction...`);
+          const ai = getGenAI();
+          for (const bl of brokenLinks) {
+            try {
+              if (ai) {
+                const aiRes = await extractWithGemini(bl.url, bl.title, '', bl.platform);
+                if (aiRes && aiRes.summary) {
+                  omniDb.updateLink(bl.id, {
+                    title: aiRes.title || bl.title,
+                    author: aiRes.author || bl.author,
+                    category: aiRes.category || bl.category,
+                    tags: Array.from(new Set([...bl.tags, ...(aiRes.tags || [])])),
+                    summary: aiRes.summary,
+                    readingTimeMinutes: aiRes.readingTimeMinutes || bl.readingTimeMinutes,
+                    aiScore: aiRes.aiScore || bl.aiScore,
+                    readerSnapshot: aiRes.readerSnapshot || bl.readerSnapshot,
+                  });
+                }
+              } else {
+                omniDb.updateLink(bl.id, {
+                  summary: {
+                    tldr: `Curated tech discussion: "${bl.title}".`,
+                    keyTakeaways: [`Published via ${bl.feedTitle || 'Hacker News'}`],
+                  },
+                });
+              }
+            } catch (healErr) {
+              console.warn(`[AutoHeal] Skipped ${bl.id}:`, healErr);
+            }
+          }
+          refreshLinksCache();
+          saveLinks();
+          console.log(`[AutoHeal] Re-extraction complete for ${brokenLinks.length} items.`);
+        }
+      } catch (err) {
+        console.warn('[AutoHeal] Startup scan notice:', err);
+      }
+    }, 3000);
 
     // Auto-poll enabled RSS feeds every 15 minutes
     setInterval(async () => {

@@ -3,6 +3,7 @@ import path from 'path';
 import { GoogleGenAI, Type } from '@google/genai';
 import { RssFeed, RssFeedItem, RssDiscoveryResult, LinkItem, LinkSummary, PlatformType } from '../src/types';
 import { ModelOrchestrator } from './modelOrchestrator';
+import { ReadabilityService } from './readabilityService';
 
 // Storage paths
 const DATA_DIR = path.join(process.cwd(), 'data');
@@ -57,7 +58,7 @@ export const CURATED_DEV_FEEDS: Array<Omit<RssFeed, 'id' | 'createdAt' | 'update
     description: 'Top-rated tech news, computer science discussions, and startup breakthroughs from Hacker News.',
     category: 'Dev & Tech',
     defaultTags: ['hackernews', 'tech-news', 'startups', 'discussions'],
-    autoAiExtract: false,
+    autoAiExtract: true,
     pollIntervalMinutes: 15,
     enabled: true,
     faviconUrl: 'https://www.google.com/s2/favicons?domain=news.ycombinator.com&sz=128',
@@ -397,7 +398,12 @@ export class RssFeedManager {
         const raw = fs.readFileSync(RSS_FEEDS_FILE, 'utf-8');
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) {
-          this.feeds = parsed;
+          this.feeds = parsed.map((f) => {
+            if (f.url && f.url.includes('hnrss.org') && f.autoAiExtract === false) {
+              return { ...f, autoAiExtract: true };
+            }
+            return f;
+          });
           this.initialized = true;
           return this.feeds;
         }
@@ -682,14 +688,18 @@ export class RssFeedManager {
           continue; // Already in repository
         }
 
-        // Generate rich initial summary
+        // Detect if snippet is just Hacker News boilerplate (e.g. "Article URL: ... Comments URL: ... Points: 247")
+        const isHnBoilerplate = /Article URL:.*Comments URL:/is.test(item.contentSnippet || '');
+        const cleanSnippet = isHnBoilerplate ? '' : item.contentSnippet;
+
+        // Generate clean initial summary
         let summary: LinkSummary = {
-          tldr: item.contentSnippet
-            ? item.contentSnippet.slice(0, 200) + (item.contentSnippet.length > 200 ? '...' : '')
-            : `Article from ${feed.title} published on ${item.pubDate || 'recently'}.`,
+          tldr: cleanSnippet
+            ? (cleanSnippet.slice(0, 200) + (cleanSnippet.length > 200 ? '...' : ''))
+            : `Article from ${feed.title}: "${item.title}".`,
           keyTakeaways: [
-            `Published by ${item.author || feed.title} via RSS stream.`,
-            item.contentSnippet ? item.contentSnippet.slice(0, 140) : `Topic: ${feed.category}`,
+            `Curated from ${feed.title} stream.`,
+            `Category: ${feed.category}`,
           ],
         };
 
@@ -702,7 +712,7 @@ export class RssFeedManager {
           ])
         ).slice(0, 8);
 
-        let readingTime = Math.max(2, Math.min(25, Math.ceil((item.contentSnippet?.length || 500) / 300)));
+        let readingTime = Math.max(2, Math.min(25, Math.ceil((cleanSnippet?.length || 500) / 300)));
         let aiScore = 85;
 
         // Platform detection
@@ -728,7 +738,7 @@ export class RssFeedManager {
           id: `link-rss-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
           url: normalizedUrl,
           title: item.title || 'Untitled RSS Item',
-          description: item.contentSnippet || '',
+          description: cleanSnippet || '',
           author: item.author || feed.title,
           platform,
           category: feed.category || 'Dev & Tech',
@@ -755,21 +765,43 @@ export class RssFeedManager {
 
       // If autoAiExtract is enabled and AI client is available, run ModelOrchestrator on new items
       if (feed.autoAiExtract && genAiClient && newLinks.length > 0) {
-        const topItems = newLinks.slice(0, 5);
+        const topItems = newLinks.slice(0, 8);
         for (const link of topItems) {
           try {
-            const prompt = `Analyze this newly ingested RSS article from ${feed.title}:
+            // Attempt to fetch full article text for deep analysis
+            let articleExcerpt = link.description || '';
+            try {
+              const snapshot = await ReadabilityService.extractFromUrl(link.url, 8000);
+              if (snapshot) {
+                link.readerSnapshot = snapshot;
+                if (snapshot.byline && (!link.author || link.author === feed.title)) {
+                  link.author = snapshot.byline;
+                }
+                if (snapshot.readingTimeMinutes) {
+                  link.readingTimeMinutes = snapshot.readingTimeMinutes;
+                }
+                articleExcerpt = snapshot.contentMarkdown?.slice(0, 3500) || snapshot.excerpt || link.description || '';
+              }
+            } catch (snapErr) {
+              // Reader extraction fallback
+            }
+
+            const prompt = `Analyze this newly ingested technical article/link from ${feed.title}:
 Title: ${link.title}
 URL: ${link.url}
-Snippet: ${link.description || ''}
 Category: ${feed.category}
+${articleExcerpt ? `Article Content / Excerpt:\n${articleExcerpt}` : ''}
 
-Generate a punchy 1-sentence TL;DR summary, 3 actionable bullet takeaways, and 4-6 specific tags.`;
+Guidelines:
+- Write an insightful, punchy 1-2 sentence TL;DR summarizing the actual ideas, technical thesis, or core story.
+- NEVER return raw URLs, HN comment links, or 'Article URL:' boilerplate as the summary.
+- Provide 3 actionable, high-signal bullet takeaways explaining what was built, learned, or argued.
+- Provide 4-6 specific, descriptive lowercase tags.`;
 
             const schema = {
               type: Type.OBJECT,
               properties: {
-                tldr: { type: Type.STRING, description: '1-sentence punchy summary' },
+                tldr: { type: Type.STRING, description: '1-2 sentence punchy summary of article ideas' },
                 keyTakeaways: {
                   type: Type.ARRAY,
                   items: { type: Type.STRING },
@@ -794,7 +826,7 @@ Generate a punchy 1-sentence TL;DR summary, 3 actionable bullet takeaways, and 4
                 taskType: 'rss_ingestion',
                 url: link.url,
                 platform: link.platform,
-                contentLength: (link.description || '').length + link.title.length,
+                contentLength: articleExcerpt.length + link.title.length,
                 isBatchOperation: true,
               },
               prompt,
