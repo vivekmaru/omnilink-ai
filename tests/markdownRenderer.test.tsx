@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { renderInlineMarkdown } from '../src/components/MarkdownRenderer';
+import { renderInlineMarkdown, normalizeMarkdownContent } from '../src/components/MarkdownRenderer';
 
-describe('MarkdownRenderer Inline Parsing Suite', () => {
+describe('MarkdownRenderer Inline Parsing & Reader Suite', () => {
   it('parses bold, italic, and inline code properly', () => {
     const text = 'Out of the 8 retrieved bookmarks, **6 are focused on AI** and *Machine Learning* with `text-embedding-004`:';
     const nodes = renderInlineMarkdown(text);
@@ -31,9 +31,24 @@ describe('MarkdownRenderer Inline Parsing Suite', () => {
     expect(nodes.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('parses standard markdown links', () => {
-    const text = 'Check [Vercel Blog](https://vercel.com/blog) for details';
+  it('parses standard markdown links and links with arrows', () => {
+    const text = 'Check [Explore the roadmap ->](https://modelcontextprotocol.io/roadmap) for details';
     const nodes = renderInlineMarkdown(text);
     expect(nodes.length).toBe(3);
+  });
+
+  it('normalizes split links and images from Substack / Turndown exports', () => {
+    const raw = `[\n![] (https://substackcdn.com/image.png)\n](https://bytebytego.com)\n\n##Priority areas\n\n[roadmap] (https://modelcontextprotocol.io)`;
+    const clean = normalizeMarkdownContent(raw);
+
+    expect(clean).toContain('[![](https://substackcdn.com/image.png)](https://bytebytego.com)');
+    expect(clean).toContain('## Priority areas');
+    expect(clean).toContain('[roadmap](https://modelcontextprotocol.io)');
+  });
+
+  it('parses linked images into clickable elements', () => {
+    const text = '[![Datadog Banner](https://img.com/banner.png)](https://datadog.com)';
+    const nodes = renderInlineMarkdown(text);
+    expect(nodes.length).toBe(1);
   });
 });

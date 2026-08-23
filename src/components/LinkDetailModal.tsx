@@ -151,16 +151,18 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
         }}
       >
         {/* Modal Top Header */}
-        <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-3.5 border-b border-black/10 dark:border-white/10 shrink-0 bg-black/[0.01] dark:bg-white/[0.01]">
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-[10px] uppercase font-bold px-3 py-1 rounded-full bg-[#d97757]/10 text-[#d97757] dark:text-[#e08264] border border-[#d97757]/20">
+        <div className="flex items-center justify-between gap-3 px-5 sm:px-6 py-3 border-b border-black/10 dark:border-white/10 shrink-0 bg-black/[0.01] dark:bg-white/[0.01]">
+          {/* Left: Platform Badge & Tab Switcher */}
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar min-w-0">
+            <span className="font-mono text-[10px] uppercase font-bold px-2.5 py-1 rounded-full bg-[#d97757]/10 text-[#d97757] dark:text-[#e08264] border border-[#d97757]/20 shrink-0">
               {link.platform.replace('_', ' ')}
             </span>
             {/* View Mode Tab Switcher */}
-            <div className="flex items-center p-0.5 rounded-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5">
+            <div className="flex items-center p-0.5 rounded-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 shrink-0">
               <button
+                type="button"
                 onClick={() => setActiveTab('insights')}
-                className={`px-3 py-1 rounded-full font-mono text-[11px] font-medium transition-all ${
+                className={`px-3 py-1 rounded-full font-mono text-[11px] font-medium transition-all cursor-pointer ${
                   activeTab === 'insights'
                     ? 'bg-white dark:bg-[#1f1e1c] text-[#d97757] dark:text-[#e08264] shadow-xs'
                     : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
@@ -169,8 +171,9 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
                 AI Insights & Meta
               </button>
               <button
+                type="button"
                 onClick={() => setActiveTab('reader')}
-                className={`flex items-center gap-1 px-3 py-1 rounded-full font-mono text-[11px] font-medium transition-all ${
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-mono text-[11px] font-medium transition-all cursor-pointer ${
                   activeTab === 'reader'
                     ? 'bg-white dark:bg-[#1f1e1c] text-[#d97757] dark:text-[#e08264] shadow-xs'
                     : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
@@ -185,11 +188,13 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* Right: Actions & Fixed Top-Right Close Button */}
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <button
+              type="button"
               onClick={handleCopyUrl}
               title="Copy URL"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full font-mono text-xs bg-black/5 dark:bg-white/5 hover:bg-black/10 text-slate-700 dark:text-slate-300 transition-colors"
+              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full font-mono text-xs bg-black/5 dark:bg-white/5 hover:bg-black/10 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
             >
               {copiedUrl ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
               <span>{copiedUrl ? 'Copied' : 'Copy URL'}</span>
@@ -197,9 +202,10 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
 
             {onOpenExportModal && (
               <button
+                type="button"
                 onClick={() => onOpenExportModal(link)}
                 title="Export as Markdown for Obsidian or Notion"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full font-mono text-xs bg-[#d97757]/10 text-[#d97757] dark:text-[#e08264] hover:bg-[#d97757]/20 transition-colors border border-[#d97757]/30"
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full font-mono text-xs bg-[#d97757]/10 text-[#d97757] dark:text-[#e08264] hover:bg-[#d97757]/20 transition-colors border border-[#d97757]/30 cursor-pointer"
               >
                 <FileDown className="w-3.5 h-3.5" />
                 <span>Export .md</span>
@@ -216,9 +222,13 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
 
+            <div className="w-px h-5 bg-black/10 dark:border-white/10 mx-0.5" />
+
             <button
+              type="button"
               onClick={onClose}
-              className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+              className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
+              aria-label="Close dialog"
             >
               <X className="w-4 h-4" />
             </button>
@@ -551,9 +561,12 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
                 </div>
               </div>
 
-              {/* Distraction-Free Article Body */}
-              <article className="prose dark:prose-invert max-w-none text-slate-800 dark:text-slate-200 font-newsreader text-base sm:text-lg leading-relaxed whitespace-pre-wrap selection:bg-[#d97757]/20 p-2">
-                {link.readerSnapshot.contentMarkdown}
+              {/* Distraction-Free Article Body with Editorial Typography */}
+              <article className="max-w-3xl mx-auto py-2">
+                <MarkdownRenderer
+                  content={link.readerSnapshot.contentMarkdown}
+                  variant="article"
+                />
               </article>
             </div>
           ) : (
