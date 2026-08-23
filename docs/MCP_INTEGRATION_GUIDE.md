@@ -23,7 +23,7 @@ Add the `omnilink` server definition to `mcpServers`:
       "args": [
         "-y",
         "tsx",
-        "/Users/vivek/antigravity/OmniLink-AI---Smart-Link-Repository/server/mcpServer.ts"
+        "/absolute/path/to/omnilink-ai/server/mcpServer.ts"
       ],
       "env": {
         "GEMINI_API_KEY": "YOUR_GEMINI_API_KEY"
@@ -33,7 +33,7 @@ Add the `omnilink` server definition to `mcpServers`:
 }
 ```
 
-> **Note**: Replace `/Users/vivek/antigravity/OmniLink-AI---Smart-Link-Repository` with the absolute path to your OmniLink repository. If you don't have a Gemini API key, you can omit `GEMINI_API_KEY` (OmniLink's offline term-hash fallback will be used automatically).
+> **Note**: Replace `/absolute/path/to/omnilink-ai` with the absolute path to your OmniLink repository. If you don't have a Gemini API key, you can omit `GEMINI_API_KEY` (OmniLink's offline term-hash fallback will be used automatically). For advanced agent workflows, see [**AGENTS.md**](file:///Users/vivek/antigravity/OmniLink-AI---Smart-Link-Repository/AGENTS.md).
 
 Restart Claude Desktop. You will see a hammer icon (`🛠️`) indicating that OmniLink tools and resources are active.
 
