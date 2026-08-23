@@ -166,6 +166,8 @@ export interface RssFeed {
   lastFetchedAt?: string;
   lastError?: string;
   totalFetchedCount: number;
+  unreadCount?: number;
+  repoItemsCount?: number;
   createdAt: string;
   updatedAt: string;
 }

@@ -53,11 +53,11 @@ export default function App() {
   // Mobile Sidebar Drawer
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
-  // Core Data
-  const [links, setLinks] = useState<LinkItem[]>([]);
-  const [stats, setStats] = useState<SystemStats | null>(null);
+  // Core Data - Hydrated immediately from local storage cache for instant 0ms first paint
+  const [links, setLinks] = useState<LinkItem[]>(() => ApiService.getLocalCache());
+  const [stats, setStats] = useState<SystemStats | null>(() => ApiService.getLocalStats());
   const [clusters, setClusters] = useState<ClusterGroup[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => ApiService.getLocalCache().length === 0);
   const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'offline' | 'error'>('synced');
 
   // Toasts & Safe Undo Management
@@ -401,14 +401,19 @@ export default function App() {
   };
 
   const loadData = async () => {
-    setLoading(true);
+    // Only show full loading spinner if cache is empty
+    if (links.length === 0) {
+      setLoading(true);
+    }
     setSyncStatus('syncing');
     try {
       const [fetchedLinksRes, fetchedStats] = await Promise.all([
         ApiService.fetchLinks(),
         ApiService.fetchStats(),
       ]);
-      setLinks(fetchedLinksRes.links);
+      if (!fetchedLinksRes.notModified) {
+        setLinks(fetchedLinksRes.links);
+      }
       setStats(fetchedStats);
       setSyncStatus('synced');
     } catch (e) {
@@ -835,7 +840,7 @@ export default function App() {
         )}
 
         {/* Scrollable Main Content */}
-        <div className="flex-1 overflow-y-auto p-6 sm:p-8">
+        <div className="flex-1 overflow-y-auto p-3.5 sm:p-8">
           {loading ? (
             <div className="p-16 text-center space-y-3">
               <div className="w-8 h-8 border-2 border-[#d97757] border-t-transparent rounded-full animate-spin mx-auto" />
@@ -845,7 +850,7 @@ export default function App() {
             </div>
           ) : filteredLinks.length === 0 && currentView !== 'cluster' ? (
             <div
-              className="p-10 sm:p-12 text-center border border-black/10 dark:border-white/10 rounded-2xl space-y-5 max-w-lg mx-auto shadow-sm mt-8 animate-card-entrance"
+              className="p-8 sm:p-12 text-center border border-black/10 dark:border-white/10 rounded-2xl space-y-5 max-w-lg mx-auto shadow-sm mt-4 sm:mt-8 animate-card-entrance"
               style={{ backgroundColor: 'var(--card-bg)' }}
             >
               <div className="w-14 h-14 rounded-2xl bg-[#d97757]/10 dark:bg-[#e08264]/10 flex items-center justify-center mx-auto text-[#d97757] dark:text-[#e08264]">
@@ -858,17 +863,17 @@ export default function App() {
                     : 'Your Repository is Ready'}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto leading-relaxed">
-                  {filters.searchQuery
-                    ? `No bookmarks match "${filters.searchQuery}". Try clearing search or resetting active filters.`
-                    : 'Start curating research papers, GitHub repositories, articles, and discussions with Gemini 3.7 Flash AI extraction.'}
+                  {filters.searchQuery || filters.platform !== 'all' || filters.category !== 'all' || filters.tag !== 'all'
+                    ? 'No links match your active filters or query. Try resetting filters or adjusting terms.'
+                    : 'Extract web articles, GitHub repositories, Reddit threads, or YouTube videos with Gemini AI.'}
                 </p>
               </div>
 
-              <div className="pt-2 flex flex-wrap items-center justify-center gap-2.5">
-                {filters.searchQuery || filters.platform !== 'all' || filters.category !== 'all' || filters.tag !== 'all' || filters.onlyFavorites || filters.includeArchived ? (
+              <div className="flex items-center justify-center gap-3 pt-2">
+                {filters.searchQuery || filters.platform !== 'all' || filters.category !== 'all' || filters.tag !== 'all' ? (
                   <button
                     onClick={() =>
-                      setFilters({
+                      handleFilterChange({
                         searchQuery: '',
                         platform: 'all',
                         category: 'all',
@@ -876,7 +881,6 @@ export default function App() {
                         readStatus: 'all',
                         onlyFavorites: false,
                         includeArchived: false,
-                        sortBy: 'newest',
                       })
                     }
                     className="px-4 py-2 bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 rounded-xl font-mono text-xs font-semibold text-slate-800 dark:text-slate-200 transition-colors"
@@ -916,7 +920,7 @@ export default function App() {
             <>
               {/* View 1: 3-Column Card Grid */}
               {currentView === 'grid' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5 sm:gap-5">
                   {filteredLinks.map((link) => (
                     <LinkCard
                       key={link.id}
@@ -949,24 +953,37 @@ export default function App() {
                   onClearSelection={() => setSelectedIds([])}
                   onOpenDetail={handleOpenDetail}
                   onToggleFavorite={handleToggleFavorite}
+                  onToggleArchive={handleToggleArchive}
+                  onDelete={handleDelete}
                 />
               )}
 
-              {/* View 3: Kanban Columns (Lazy) */}
+              {/* View 3: Kanban Triaging Lanes */}
               {currentView === 'kanban' && (
-                <React.Suspense fallback={<div className="p-8 text-center text-xs text-slate-400">Loading Kanban board...</div>}>
+                <React.Suspense
+                  fallback={
+                    <div className="p-12 text-center font-mono text-xs text-slate-400">
+                      Loading Kanban Lanes...
+                    </div>
+                  }
+                >
                   <KanbanView
                     links={filteredLinks}
                     onOpenDetail={handleOpenDetail}
                     onUpdateStatus={handleUpdateStatus}
-                    onToggleFavorite={handleToggleFavorite}
                   />
                 </React.Suspense>
               )}
 
-              {/* View 4: AI Semantic Clusters (Lazy) */}
+              {/* View 4: Vector AI Spatial Cluster Map */}
               {currentView === 'cluster' && (
-                <React.Suspense fallback={<div className="p-8 text-center text-xs text-slate-400">Synthesizing semantic clusters...</div>}>
+                <React.Suspense
+                  fallback={
+                    <div className="p-12 text-center font-mono text-xs text-slate-400">
+                      Loading Vector Knowledge Space...
+                    </div>
+                  }
+                >
                   <ClusterView
                     links={links}
                     clusters={clusters}
@@ -981,13 +998,13 @@ export default function App() {
 
         {/* Footer Meta Bar */}
         <footer
-          className="px-6 sm:px-8 py-2.5 border-t flex flex-wrap items-center justify-between font-mono text-[11px] shrink-0 text-slate-500 dark:text-slate-400"
+          className="px-4 sm:px-8 py-2 sm:py-2.5 border-t flex flex-wrap items-center justify-between font-mono text-[11px] shrink-0 text-slate-500 dark:text-slate-400 gap-2"
           style={{
             backgroundColor: 'var(--sidebar-bg)',
             borderColor: 'var(--card-border)',
           }}
         >
-          <div className="font-medium tracking-wider">OMNILINK AI • DESKTOP REPO</div>
+          <div className="font-medium tracking-wider">OMNILINK AI • KNOWLEDGE REPO</div>
           <div className="hidden md:block opacity-60">GEMINI FLASH POWERED EXTRACTION</div>
           <div className="font-medium">{links.length} {links.length === 1 ? 'LINK' : 'LINKS'} CURATED</div>
         </footer>

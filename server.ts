@@ -306,12 +306,14 @@ function saveLinks(links?: LinkItem[]): void {
   }
 }
 
-// Active link repository backed by SQLite
+// Active link repository backed by SQLite & Revision Tracking
+let repoRevision = Date.now();
 let linksDatabase: LinkItem[] = loadLinks();
 
 // Helper to refresh in-memory reference from SQLite
 function refreshLinksCache(): LinkItem[] {
   linksDatabase = omniDb.getAllLinks();
+  repoRevision = Date.now();
   return linksDatabase;
 }
 
@@ -352,8 +354,20 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// GET /api/links - Query and filter
+// GET /api/links - Query and filter with ETag / 304 Not Modified support
 app.get('/api/links', (req, res) => {
+  const isUnfiltered = Object.keys(req.query).length === 0;
+  const etag = `W/"links-${repoRevision}-${linksDatabase.length}"`;
+
+  if (isUnfiltered) {
+    if (req.headers['if-none-match'] === etag) {
+      res.status(304).end();
+      return;
+    }
+    res.setHeader('ETag', etag);
+    res.setHeader('Cache-Control', 'private, no-cache');
+  }
+
   let results = [...linksDatabase];
   const { q, platform, category, tag, readStatus, isFavorite, isArchived, sort, feedId, isRss } = req.query;
 
@@ -1567,8 +1581,16 @@ app.get('/api/ai/embeddings/status', (req, res) => {
   });
 });
 
-// GET /api/stats - Dashboard metrics
+// GET /api/stats - Dashboard metrics with ETag support
 app.get('/api/stats', (req, res) => {
+  const etag = `W/"stats-${repoRevision}-${linksDatabase.length}"`;
+  if (req.headers['if-none-match'] === etag) {
+    res.status(304).end();
+    return;
+  }
+  res.setHeader('ETag', etag);
+  res.setHeader('Cache-Control', 'private, no-cache');
+
   const total = linksDatabase.length;
   const unread = linksDatabase.filter((l) => l.readStatus === 'unread').length;
   const favorites = linksDatabase.filter((l) => l.isFavorite).length;
@@ -2253,8 +2275,21 @@ async function start() {
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
+    app.use(
+      express.static(distPath, {
+        setHeaders: (res, filePath) => {
+          if (filePath.includes('/assets/') || filePath.includes('\\assets\\')) {
+            // Vite hashed static assets - 1 year immutable cache
+            res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+          } else if (filePath.endsWith('.html')) {
+            // HTML entry points must always revalidate
+            res.setHeader('Cache-Control', 'no-cache');
+          }
+        },
+      })
+    );
     app.get('*', (req, res) => {
+      res.setHeader('Cache-Control', 'no-cache');
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }

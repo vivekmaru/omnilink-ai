@@ -50,14 +50,14 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
   return (
     <div
-      className="px-4 sm:px-8 py-2 border-b flex items-center justify-between gap-3 text-xs transition-colors overflow-x-auto"
+      className="px-3 sm:px-8 py-2 border-b flex items-center justify-between gap-2.5 text-xs transition-colors overflow-x-auto no-scrollbar"
       style={{
         backgroundColor: 'var(--sidebar-bg)',
         borderColor: 'var(--card-border)',
       }}
     >
       {/* Left: Consolidated Filter Controls with horizontal scroll on mobile */}
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
         {/* Status Segmented Pills */}
         <div className="flex items-center p-0.5 rounded-lg bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5">
           <button

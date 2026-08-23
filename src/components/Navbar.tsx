@@ -113,32 +113,32 @@ export const Navbar: React.FC<HeaderProps> = ({
 
   return (
     <header
-      className="sticky top-0 z-30 px-5 sm:px-8 py-3 flex items-center justify-between gap-4 border-b backdrop-blur-md transition-colors"
+      className="sticky top-0 z-30 px-3 sm:px-8 py-2.5 sm:py-3 flex items-center justify-between gap-2 sm:gap-4 border-b backdrop-blur-md transition-colors"
       style={{
         backgroundColor: 'var(--bg)',
         borderColor: 'var(--card-border)',
       }}
     >
       {/* Left: Mobile Toggle & Dominant Editorial Search Field */}
-      <div className="flex items-center gap-3 flex-1 max-w-xl">
+      <div className="flex items-center gap-1.5 sm:gap-3 flex-1 min-w-0 max-w-xl">
         <button
           onClick={onToggleMobileSidebar}
-          className="md:hidden p-2 rounded-md text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+          className="md:hidden p-1.5 rounded-md text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-black/5 dark:hover:bg-white/5 transition-colors shrink-0"
           aria-label="Toggle navigation menu"
         >
           <Menu className="w-4 h-4" />
         </button>
 
-        <div className="relative flex-1 search-container">
-          <Search className="w-4 h-4 absolute left-1 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+        <div className="relative flex-1 min-w-0 search-container">
+          <Search className="w-3.5 sm:w-4 h-3.5 sm:h-4 absolute left-1 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
           <input
             id="navbar-search-input"
             ref={searchInputRef}
             type="text"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search knowledge repository..."
-            className="w-full pl-7 pr-16 py-1 bg-transparent border-b border-transparent focus:border-[#d97757] dark:focus:border-[#e08264] font-newsreader text-base sm:text-lg text-slate-900 dark:text-[#f7f6f3] placeholder:text-slate-400/80 dark:placeholder:text-slate-500 outline-none transition-all"
+            placeholder="Search repository..."
+            className="w-full pl-6 sm:pl-7 pr-8 sm:pr-16 py-1 bg-transparent border-b border-transparent focus:border-[#d97757] dark:focus:border-[#e08264] font-newsreader text-sm sm:text-lg text-slate-900 dark:text-[#f7f6f3] placeholder:text-slate-400/80 dark:placeholder:text-slate-500 outline-none transition-all"
           />
 
           <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1">
@@ -215,13 +215,13 @@ export const Navbar: React.FC<HeaderProps> = ({
       </div>
 
       {/* Right: Distilled Tools Menu & Primary Actions */}
-      <div className="flex items-center gap-2.5 shrink-0">
+      <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
         {/* Consolidated Tools Dropdown */}
         <div className="relative" ref={toolsMenuRef}>
           <button
             id="btn-navbar-tools"
             onClick={() => setToolsOpen(!toolsOpen)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all border ${
+            className={`flex items-center gap-1 px-2 py-1.5 sm:px-3 sm:py-1.5 rounded-md text-xs font-medium transition-all border shrink-0 ${
               toolsOpen
                 ? 'bg-black/10 dark:bg-white/10 text-slate-900 dark:text-white border-black/20 dark:border-white/20'
                 : 'bg-transparent hover:bg-black/5 dark:hover:bg-white/5 text-slate-700 dark:text-slate-300 border-black/10 dark:border-white/10'
@@ -231,7 +231,7 @@ export const Navbar: React.FC<HeaderProps> = ({
             aria-haspopup="true"
           >
             <Wrench className="w-3.5 h-3.5 text-[#d97757] dark:text-[#e08264]" />
-            <span className="hidden sm:inline">Tools</span>
+            <span className="hidden md:inline">Tools</span>
             {rssFeedsCount > 0 && (
               <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
             )}
@@ -343,11 +343,11 @@ export const Navbar: React.FC<HeaderProps> = ({
         <button
           id="btn-ask-repo-ai"
           onClick={onOpenAskRepo}
-          className="flex items-center gap-2 px-3.5 py-1.5 rounded-md text-xs font-medium transition-all bg-transparent hover:bg-black/5 dark:hover:bg-white/5 text-slate-800 dark:text-slate-200 border border-black/10 dark:border-white/10 group"
+          className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3.5 sm:py-1.5 rounded-md text-xs font-medium transition-all bg-transparent hover:bg-black/5 dark:hover:bg-white/5 text-slate-800 dark:text-slate-200 border border-black/10 dark:border-white/10 group shrink-0"
           title="Search your knowledge base with conversational AI (⌘J)"
         >
           <Sparkles className="w-3.5 h-3.5 text-[#d97757] dark:text-[#e08264] group-hover:scale-110 transition-transform" />
-          <span className="font-medium">Ask AI</span>
+          <span className="font-medium whitespace-nowrap">Ask AI</span>
           <span className="hidden sm:inline-flex font-mono text-[10px] opacity-60">
             ⌘J
           </span>
@@ -357,11 +357,12 @@ export const Navbar: React.FC<HeaderProps> = ({
         <button
           id="btn-add-new-link"
           onClick={onOpenAddModal}
-          className="flex items-center gap-1.5 px-4 py-1.5 rounded-md text-xs font-semibold transition-all bg-[#d97757] hover:bg-[#c46243] dark:bg-[#e08264] dark:hover:bg-[#e9957a] text-white shadow-2xs hover:scale-[1.01] active:scale-[0.99]"
+          className="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-1.5 rounded-md text-xs font-semibold transition-all bg-[#d97757] hover:bg-[#c46243] dark:bg-[#e08264] dark:hover:bg-[#e9957a] text-white shadow-2xs hover:scale-[1.01] active:scale-[0.99] shrink-0"
           title="Add a link to the knowledge repository (N)"
         >
           <Plus className="w-3.5 h-3.5" />
-          <span>Add New Link</span>
+          <span className="hidden sm:inline whitespace-nowrap">Add New Link</span>
+          <span className="sm:hidden whitespace-nowrap">Add</span>
         </button>
       </div>
     </header>

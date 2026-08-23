@@ -21,6 +21,7 @@ import {
 import { LinkItem, ReadStatus } from '../types';
 import { ApiService } from '../services/api';
 import { analyzeAndSuggestTags } from '../services/autoTagging';
+import { MarkdownRenderer } from './MarkdownRenderer';
 
 interface LinkDetailModalProps {
   link: LinkItem | null;
@@ -500,8 +501,8 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
             </form>
 
             {aiAnswer && (
-              <div className="p-4 rounded-xl bg-white dark:bg-[#18181b] border border-black/5 dark:border-white/10 text-xs text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
-                {aiAnswer}
+              <div className="p-4 rounded-xl bg-white dark:bg-[#18181b] border border-black/5 dark:border-white/10 text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                <MarkdownRenderer content={aiAnswer} />
               </div>
             )}
           </div>

@@ -71,8 +71,10 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
   const [opmlText, setOpmlText] = useState('');
   const [opmlImporting, setOpmlImporting] = useState(false);
 
-  // Edit modal state
-  const [editingFeed, setEditingFeed] = useState<RssFeed | null>(null);
+  // Unsubscribe Confirmation State
+  const [feedToUnsubscribe, setFeedToUnsubscribe] = useState<RssFeed | null>(null);
+  const [deleteAssociatedArticles, setDeleteAssociatedArticles] = useState(false);
+  const [isUnsubscribing, setIsUnsubscribing] = useState(false);
 
   // Load feeds and catalog
   const loadData = async () => {
@@ -247,18 +249,48 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
     }
   };
 
-  // Delete Feed Subscription
-  const handleDeleteFeed = async (feed: RssFeed) => {
-    if (!window.confirm(`Unsubscribe from "${feed.title}"?`)) return;
+  // Open Unsubscribe Confirmation
+  const handleRequestUnsubscribe = (feed: RssFeed) => {
+    setFeedToUnsubscribe(feed);
+    setDeleteAssociatedArticles(false);
+  };
+
+  // Perform Unsubscribe Execution
+  const handleConfirmUnsubscribe = async () => {
+    if (!feedToUnsubscribe) return;
+    setIsUnsubscribing(true);
     try {
-      await ApiService.deleteRssFeed(feed.id, false);
-      onToast('info', `Unsubscribed from ${feed.title}`);
+      await ApiService.deleteRssFeed(feedToUnsubscribe.id, deleteAssociatedArticles);
+      onToast(
+        'info',
+        deleteAssociatedArticles
+          ? `Unsubscribed from ${feedToUnsubscribe.title} and removed associated articles.`
+          : `Unsubscribed from ${feedToUnsubscribe.title}`
+      );
+      setFeedToUnsubscribe(null);
       loadData();
       onFeedsUpdated();
     } catch (err: any) {
-      onToast('error', err.message || 'Failed to delete feed');
+      onToast('error', err.message || 'Failed to unsubscribe from feed');
+    } finally {
+      setIsUnsubscribing(false);
     }
   };
+
+  // Close unsubscribe dialog on Escape or confirm on Enter
+  useEffect(() => {
+    if (!feedToUnsubscribe) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        if (!isUnsubscribing) {
+          setFeedToUnsubscribe(null);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown, true);
+    return () => window.removeEventListener('keydown', handleKeyDown, true);
+  }, [feedToUnsubscribe, isUnsubscribing]);
 
   // Handle OPML File Upload
   const handleOpmlFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -654,10 +686,10 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
                               {feed.enabled ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
                             </button>
 
-                            {/* Delete button */}
+                            {/* Delete / Unsubscribe button */}
                             <button
                               type="button"
-                              onClick={() => handleDeleteFeed(feed)}
+                              onClick={() => handleRequestUnsubscribe(feed)}
                               title="Unsubscribe from feed"
                               className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-black/5 dark:hover:bg-white/5 rounded transition-colors"
                             >
@@ -925,9 +957,29 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
                         </a>
 
                         {isSubscribed ? (
-                          <div className="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
-                            <Check className="w-3.5 h-3.5" />
-                            <span>Subscribed</span>
+                          <div className="flex items-center gap-1.5">
+                            <div className="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+                              <Check className="w-3.5 h-3.5" />
+                              <span>Subscribed</span>
+                            </div>
+                            {(() => {
+                              const matchingFeed = feeds.find(
+                                (f) =>
+                                  f.url.toLowerCase() === item.url.toLowerCase() ||
+                                  (f.siteUrl && item.siteUrl && f.siteUrl.toLowerCase() === item.siteUrl.toLowerCase())
+                              );
+                              if (!matchingFeed) return null;
+                              return (
+                                <button
+                                  type="button"
+                                  onClick={() => handleRequestUnsubscribe(matchingFeed)}
+                                  title="Unsubscribe from feed"
+                                  className="p-1 text-slate-400 hover:text-rose-500 hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition-colors"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              );
+                            })()}
                           </div>
                         ) : (
                           <button
@@ -1041,6 +1093,152 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Custom Unsubscribe Confirmation Modal */}
+      {feedToUnsubscribe && (
+        <div
+          id="rss-unsubscribe-confirm-overlay"
+          className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150"
+          onClick={() => {
+            if (!isUnsubscribing) setFeedToUnsubscribe(null);
+          }}
+        >
+          <div
+            id="rss-unsubscribe-confirm-dialog"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="rss-unsubscribe-title"
+            aria-describedby="rss-unsubscribe-desc"
+            className="relative w-full max-w-md border rounded-2xl shadow-2xl overflow-hidden p-6 space-y-4 animate-in zoom-in-95 duration-150"
+            style={{
+              backgroundColor: 'var(--card-bg)',
+              borderColor: 'var(--card-border)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 border border-rose-500/20">
+                  <Trash2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 id="rss-unsubscribe-title" className="font-newsreader text-lg font-semibold text-slate-900 dark:text-[#f7f6f3]">
+                    Unsubscribe from Feed
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Confirm removing this RSS feed subscription
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setFeedToUnsubscribe(null)}
+                disabled={isUnsubscribing}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition-colors disabled:opacity-50"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Feed Card Preview */}
+            <div className="p-3.5 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-black/5 dark:border-white/5 space-y-2">
+              <div className="flex items-start gap-2.5 min-w-0">
+                <img
+                  src={feedToUnsubscribe.faviconUrl || `https://www.google.com/s2/favicons?domain=${feedToUnsubscribe.url}&sz=64`}
+                  alt=""
+                  className="w-5 h-5 rounded-sm mt-0.5 shrink-0 bg-slate-200 dark:bg-slate-800"
+                  onError={(e) => {
+                    (e.target as HTMLElement).style.display = 'none';
+                  }}
+                />
+                <div className="min-w-0 flex-1">
+                  <h4 className="font-newsreader text-sm font-semibold text-slate-900 dark:text-[#f7f6f3] truncate">
+                    {feedToUnsubscribe.title}
+                  </h4>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate font-mono mt-0.5">
+                    {feedToUnsubscribe.siteUrl || feedToUnsubscribe.url}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 text-[10px] font-mono pt-1 text-slate-500 dark:text-slate-400">
+                <span className="px-2 py-0.5 rounded bg-black/5 dark:bg-white/5 font-semibold text-slate-700 dark:text-slate-300">
+                  {feedToUnsubscribe.category}
+                </span>
+                {feedToUnsubscribe.unreadCount !== undefined && feedToUnsubscribe.unreadCount > 0 ? (
+                  <span className="px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold border border-amber-500/20">
+                    {feedToUnsubscribe.unreadCount} unread
+                  </span>
+                ) : (
+                  <span className="px-2 py-0.5 rounded bg-black/5 dark:bg-white/5">
+                    0 unread
+                  </span>
+                )}
+                {feedToUnsubscribe.repoItemsCount !== undefined && feedToUnsubscribe.repoItemsCount > 0 && (
+                  <span className="px-2 py-0.5 rounded bg-black/5 dark:bg-white/5">
+                    {feedToUnsubscribe.repoItemsCount} in repo
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Informative text */}
+            <p id="rss-unsubscribe-desc" className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              OmniLink will stop automatic syncing and AI summaries for new articles from this feed.
+            </p>
+
+            {/* Delete associated articles option */}
+            <label className="flex items-start gap-2.5 p-3 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-black/5 dark:border-white/5 cursor-pointer hover:bg-black/[0.04] dark:hover:bg-white/[0.04] transition-colors select-none">
+              <input
+                type="checkbox"
+                checked={deleteAssociatedArticles}
+                onChange={(e) => setDeleteAssociatedArticles(e.target.checked)}
+                disabled={isUnsubscribing}
+                className="mt-0.5 h-4 w-4 rounded border-black/20 text-[#d97757] focus:ring-[#d97757] dark:border-white/20 dark:bg-[#18181b]"
+              />
+              <div className="space-y-0.5">
+                <span className="block text-xs font-semibold text-slate-800 dark:text-slate-200">
+                  Also delete existing articles imported from this feed
+                </span>
+                <span className="block text-[11px] text-slate-500 dark:text-slate-400">
+                  Removes previously fetched articles from your Unread queue and repository.
+                </span>
+              </div>
+            </label>
+
+            {/* Actions */}
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-black/5 dark:border-white/5">
+              <button
+                type="button"
+                onClick={() => setFeedToUnsubscribe(null)}
+                disabled={isUnsubscribing}
+                className="px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 rounded-xl transition-colors font-mono disabled:opacity-50"
+              >
+                Keep Feed
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmUnsubscribe}
+                disabled={isUnsubscribing}
+                className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 dark:bg-rose-600 dark:hover:bg-rose-500 rounded-xl shadow-xs transition-colors disabled:opacity-50 font-mono"
+              >
+                {isUnsubscribing ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Unsubscribing...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>{deleteAssociatedArticles ? 'Unsubscribe & Purge' : 'Unsubscribe'}</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

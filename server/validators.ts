@@ -57,7 +57,7 @@ export const MergeLinkSchema = z.object({
 });
 
 export const AskRepoSchema = z.object({
-  question: z.string().min(1, 'Question text cannot be empty.').max(2000),
+  question: z.string().trim().min(1, 'Question text cannot be empty.').max(2000),
   preferredModel: z.string().optional(),
 });
 

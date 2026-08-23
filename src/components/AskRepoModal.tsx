@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { ApiService } from '../services/api';
 import { AskRepoResponse, LinkItem, GeminiModelId } from '../types';
+import { MarkdownRenderer } from './MarkdownRenderer';
 
 interface AskRepoModalProps {
   isOpen: boolean;
@@ -165,9 +166,11 @@ export const AskRepoModal: React.FC<AskRepoModalProps> = ({
                 </div>
               </div>
 
-              <div className="text-xs sm:text-sm text-slate-800 dark:text-slate-200 whitespace-pre-wrap leading-relaxed">
-                {response.answer}
-              </div>
+              <MarkdownRenderer
+                content={response.answer}
+                links={links}
+                onOpenLinkDetail={onOpenLinkDetail}
+              />
 
               {/* Referenced Link Cards & Retrieval Telemetry */}
               {response.referencedLinkIds && response.referencedLinkIds.length > 0 && (
@@ -246,9 +249,13 @@ export const AskRepoModal: React.FC<AskRepoModalProps> = ({
               {history.slice(1).map((item, idx) => (
                 <div
                   key={idx}
-                  className="p-3.5 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-black/10 dark:border-white/10 space-y-1.5 text-xs"
+                  onClick={() => setResponse(item.a as any)}
+                  className="p-3.5 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-black/10 dark:border-white/10 hover:border-[#d97757]/30 space-y-1.5 text-xs cursor-pointer transition-colors"
                 >
-                  <div className="font-semibold text-slate-900 dark:text-slate-100">Q: {item.q}</div>
+                  <div className="font-semibold text-slate-900 dark:text-slate-100 flex items-center justify-between">
+                    <span>Q: {item.q}</span>
+                    <span className="text-[10px] text-[#d97757] dark:text-[#e08264] font-mono">View response &rarr;</span>
+                  </div>
                   <div className="text-slate-600 dark:text-slate-400 line-clamp-2">{item.a.answer}</div>
                 </div>
               ))}

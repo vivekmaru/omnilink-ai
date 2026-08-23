@@ -155,21 +155,22 @@ export const LinkCard: React.FC<LinkCardProps> = ({
     <div
       id={`link-card-${link.id}`}
       onClick={() => onSelect(link)}
-      className={`group relative flex flex-col justify-between p-5 sm:p-6 rounded-2xl border transition-all duration-200 cursor-pointer bg-white dark:bg-[#18181b] border-slate-200/80 dark:border-white/[0.07] hover:border-[#d97757]/50 dark:hover:border-[#e08264]/40 hover:shadow-md hover:-translate-y-0.5 min-h-[250px] animate-card-entrance card-interactive ${
+      className={`group relative flex flex-col justify-between p-4 sm:p-6 rounded-2xl border transition-all duration-200 cursor-pointer bg-white dark:bg-[#18181b] border-slate-200/80 dark:border-white/[0.07] hover:border-[#d97757]/50 dark:hover:border-[#e08264]/40 hover:shadow-md hover:-translate-y-0.5 min-h-[230px] sm:min-h-[250px] animate-card-entrance card-interactive ${
         link.isArchived ? 'opacity-60' : ''
       }`}
     >
-      <div className="space-y-3">
+      <div className="space-y-2.5 sm:space-y-3">
         {/* Card Header: Platform Tag & Clean Actions */}
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5 min-w-0">
-            <span className="font-mono text-[0.72rem] uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate font-semibold">
-              {platformMeta.name} {link.category ? `• ${link.category}` : ''}
+          <div className="flex items-center gap-1.5 min-w-0 flex-1">
+            <span className="inline-flex items-center gap-1 font-mono text-[0.72rem] uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate font-semibold">
+              {platformMeta.icon}
+              <span className="truncate">{link.category || platformMeta.name}</span>
             </span>
             {(link.isRssFeedItem || link.feedTitle) && (
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-medium bg-black/5 dark:bg-white/5 text-slate-600 dark:text-slate-300 border border-black/5 dark:border-white/5 shrink-0">
-                <Rss className="w-2.5 h-2.5 text-slate-400" />
-                <span className="truncate max-w-[90px]">{link.feedTitle || 'RSS'}</span>
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono bg-black/5 dark:bg-white/5 text-slate-600 dark:text-slate-300 border border-black/5 dark:border-white/5 shrink-0 max-w-[130px]">
+                <Rss className="w-2.5 h-2.5 text-[#d97757] dark:text-[#e08264] shrink-0" />
+                <span className="truncate">{link.feedTitle || 'RSS'}</span>
               </span>
             )}
           </div>
@@ -178,15 +179,15 @@ export const LinkCard: React.FC<LinkCardProps> = ({
           <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
             {getStatusBadge(link.readStatus)}
 
-            {/* Quick Actions Cluster */}
-            <div className="flex items-center gap-0.5 ml-1">
+            {/* Quick Actions Cluster (touch-friendly on mobile) */}
+            <div className="flex items-center gap-0.5 ml-0.5">
               <button
                 type="button"
                 onClick={handleStar}
                 className={`p-1.5 rounded-lg transition-all ${
                   link.isFavorite
                     ? 'text-amber-400 bg-amber-500/10'
-                    : 'text-slate-400 hover:text-amber-400 hover:bg-black/5 dark:hover:bg-white/5 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100'
+                    : 'text-slate-400 hover:text-amber-400 hover:bg-black/5 dark:hover:bg-white/5 opacity-70 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100'
                 }`}
                 title={link.isFavorite ? 'Remove Star' : 'Star Link'}
                 aria-label={link.isFavorite ? 'Remove Star' : 'Star Link'}
@@ -197,7 +198,7 @@ export const LinkCard: React.FC<LinkCardProps> = ({
               <button
                 type="button"
                 onClick={handleCopy}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all"
+                className="hidden sm:block p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all"
                 title="Copy URL"
                 aria-label="Copy URL"
               >
@@ -212,7 +213,7 @@ export const LinkCard: React.FC<LinkCardProps> = ({
                 <button
                   type="button"
                   onClick={() => setMenuOpen(!menuOpen)}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 opacity-70 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-all"
                   title="More Actions"
                   aria-label="More Actions"
                 >
@@ -314,30 +315,30 @@ export const LinkCard: React.FC<LinkCardProps> = ({
       </div>
 
       {/* Tag Row & Footer Link */}
-      <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/5 flex items-center justify-between gap-2">
-        <div className="tag-row flex flex-wrap gap-1.5 overflow-hidden">
+      <div className="mt-3.5 pt-2.5 sm:pt-3 border-t border-slate-100 dark:border-white/5 flex items-center justify-between gap-2">
+        <div className="tag-row flex flex-wrap gap-1 sm:gap-1.5 overflow-hidden">
           {link.tags && link.tags.length > 0 ? (
             link.tags.slice(0, 3).map((tag) => (
               <span
                 key={tag}
-                className="font-mono text-[0.72rem] px-2 py-0.5 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-white/5 rounded font-medium"
+                className="font-mono text-[0.7rem] sm:text-[0.72rem] px-1.5 sm:px-2 py-0.5 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-white/5 rounded font-medium"
               >
                 #{tag}
               </span>
             ))
           ) : (
-            <span className="font-mono text-[0.72rem] text-slate-400 opacity-60">#curated</span>
+            <span className="font-mono text-[0.7rem] sm:text-[0.72rem] text-slate-400 opacity-60">#curated</span>
           )}
           {link.tags && link.tags.length > 3 && (
-            <span className="font-mono text-[0.72rem] text-slate-500 dark:text-slate-400 self-center">
+            <span className="font-mono text-[0.7rem] sm:text-[0.72rem] text-slate-500 dark:text-slate-400 self-center">
               +{link.tags.length - 3}
             </span>
           )}
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-1.5 shrink-0">
           {link.aiSummary?.estimatedReadTimeMinutes && (
-            <span className="flex items-center gap-1 font-mono text-[0.72rem] text-slate-500 dark:text-slate-400">
+            <span className="flex items-center gap-1 font-mono text-[0.7rem] sm:text-[0.72rem] text-slate-500 dark:text-slate-400">
               <Clock className="w-3 h-3 opacity-60" />
               <span>{link.aiSummary.estimatedReadTimeMinutes}m</span>
             </span>

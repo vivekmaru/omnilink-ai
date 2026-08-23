@@ -16,6 +16,9 @@ import {
 import { checkDuplicateInLinks, normalizeUrl } from '../utils/url';
 
 const STORAGE_KEY = 'omnilink_local_cache_v1';
+const ETAG_KEY = 'omnilink_etag_links_v1';
+const STATS_STORAGE_KEY = 'omnilink_stats_cache_v1';
+const STATS_ETAG_KEY = 'omnilink_etag_stats_v1';
 const PENDING_SYNC_KEY = 'omnilink_pending_sync_v1';
 
 export class ApiService {
@@ -41,8 +44,36 @@ export class ApiService {
     }
   }
 
-  // Fetch all links with filter queries
-  static async fetchLinks(filters?: Partial<FilterState>): Promise<{ links: LinkItem[]; total: number; isOffline?: boolean }> {
+  // Load from local stats cache
+  static getLocalStats(): SystemStats | null {
+    try {
+      const raw = localStorage.getItem(STATS_STORAGE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  static setLocalStats(stats: SystemStats): void {
+    try {
+      localStorage.setItem(STATS_STORAGE_KEY, JSON.stringify(stats));
+    } catch (e) {
+      console.warn('LocalStorage stats save failed:', e);
+    }
+  }
+
+  // Fetch all links with filter queries & ETag / 304 Not Modified optimization
+  static async fetchLinks(filters?: Partial<FilterState>): Promise<{ links: LinkItem[]; total: number; isOffline?: boolean; notModified?: boolean }> {
+    const isDefaultFetch =
+      !filters ||
+      (!filters.searchQuery &&
+        (!filters.platform || filters.platform === 'all') &&
+        (!filters.category || filters.category === 'all') &&
+        (!filters.tag || filters.tag === 'all') &&
+        (!filters.readStatus || filters.readStatus === 'all') &&
+        !filters.onlyFavorites &&
+        !filters.includeArchived);
+
     const params = new URLSearchParams();
     if (filters?.searchQuery) params.append('q', filters.searchQuery);
     if (filters?.platform && filters.platform !== 'all') params.append('platform', filters.platform);
@@ -54,12 +85,34 @@ export class ApiService {
     if (filters?.sortBy) params.append('sort', filters.sortBy);
 
     try {
-      const res = await fetch(`/api/links?${params.toString()}`);
+      const headers: Record<string, string> = {};
+      if (isDefaultFetch) {
+        const lastEtag = localStorage.getItem(ETAG_KEY);
+        if (lastEtag) {
+          headers['If-None-Match'] = lastEtag;
+        }
+      }
+
+      const res = await fetch(`/api/links?${params.toString()}`, { headers });
+      
+      // If 304 Not Modified, reuse existing local cache instantly with 0 payload transferred
+      if (res.status === 304) {
+        const cached = this.getLocalCache();
+        return { links: cached, total: cached.length, notModified: true };
+      }
+
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       
+      const newEtag = res.headers.get('etag');
+      if (newEtag && isDefaultFetch) {
+        try {
+          localStorage.setItem(ETAG_KEY, newEtag);
+        } catch {}
+      }
+
       // Update local offline cache
-      if (!filters?.searchQuery && (!filters?.platform || filters.platform === 'all')) {
+      if (isDefaultFetch) {
         this.setLocalCache(data.links);
       }
       return { links: data.links, total: data.total };
@@ -400,11 +453,37 @@ export class ApiService {
     }
   }
 
-  // Fetch Dashboard Stats
+  // Fetch Dashboard Stats with ETag caching
   static async fetchStats(): Promise<SystemStats> {
-    const res = await fetch('/api/stats');
-    if (!res.ok) throw new Error('Stats fetch failed');
-    return res.json();
+    try {
+      const headers: Record<string, string> = {};
+      const lastEtag = localStorage.getItem(STATS_ETAG_KEY);
+      if (lastEtag) {
+        headers['If-None-Match'] = lastEtag;
+      }
+
+      const res = await fetch('/api/stats', { headers });
+      if (res.status === 304) {
+        const cached = this.getLocalStats();
+        if (cached) return cached;
+      }
+
+      if (!res.ok) throw new Error('Stats fetch failed');
+      const data: SystemStats = await res.json();
+
+      const newEtag = res.headers.get('etag');
+      if (newEtag) {
+        try {
+          localStorage.setItem(STATS_ETAG_KEY, newEtag);
+        } catch {}
+      }
+      this.setLocalStats(data);
+      return data;
+    } catch (e) {
+      const cached = this.getLocalStats();
+      if (cached) return cached;
+      throw e;
+    }
   }
 
   // Import links to repository
