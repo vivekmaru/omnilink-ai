@@ -25,31 +25,35 @@ import {
   CheckDuplicateSchema,
   AddRssFeedSchema,
 } from './server/validators';
+import {
+  attachEndpointPolicy,
+  attachLocalRequestContext,
+  requireSecurityContext,
+} from './server/securityBoundary';
+import { describeUnsafeRemoteWarning, loadRuntimeConfig } from './server/runtimeConfig';
 
 dotenv.config();
 
 const app = express();
-const PORT = Number(process.env.PORT) || 4000;
+const runtimeConfig = loadRuntimeConfig();
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(attachLocalRequestContext, attachEndpointPolicy, requireSecurityContext);
 
 // Healthcheck endpoint for Docker container & Cloud Load Balancers
 app.get(['/health', '/api/health'], (req, res) => {
   try {
-    const totalCount = omniDb.count();
     res.json({
       status: 'ok',
       uptime: process.uptime(),
-      version: '1.2.0',
-      database: 'healthy',
-      totalBookmarks: totalCount,
       timestamp: new Date().toISOString(),
     });
   } catch (err: any) {
+    console.error('[Healthcheck] failed:', err);
     res.status(503).json({
       status: 'unhealthy',
-      error: err.message,
+      timestamp: new Date().toISOString(),
     });
   }
 });
@@ -344,15 +348,6 @@ function getFaviconUrl(url: string): string {
 }
 
 // --- API Endpoints ---
-
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    totalLinks: linksDatabase.length,
-    geminiConfigured: Boolean(process.env.GEMINI_API_KEY),
-  });
-});
 
 // GET /api/links - Query and filter with ETag / 304 Not Modified support
 app.get('/api/links', (req, res) => {
@@ -2294,8 +2289,10 @@ async function start() {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`OmniLink AI Server running on http://localhost:${PORT}`);
+  app.listen(runtimeConfig.port, runtimeConfig.host, () => {
+    console.log(`OmniLink AI Server running on http://${runtimeConfig.host}:${runtimeConfig.port}`);
+    const unsafeWarning = describeUnsafeRemoteWarning(runtimeConfig);
+    if (unsafeWarning) console.warn(unsafeWarning);
     console.log(`SQLite Database active at data/omnilink.db (${omniDb.count()} links)`);
 
     // Launch non-blocking background vector embedding indexer

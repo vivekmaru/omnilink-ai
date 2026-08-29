@@ -2,6 +2,10 @@
 
 This guide covers production deployment strategies for OmniLink AI across **Unraid Server**, **Docker & Docker Compose**, **Fly.io**, **Railway / Render**, and **Cloudflare Tunnels**.
 
+### Runtime safety (P1.1)
+
+The server defaults to `OMNILINK_MODE=local` and listens on `127.0.0.1`. Remote bind hosts (including `0.0.0.0`) are refused until real application authentication middleware is implemented. Keep the default for single-user local testing. The temporary `OMNILINK_UNSAFE_ALLOW_REMOTE_NO_AUTH=true` override is intended only for trusted development networks and must not be used for public hosting. `OMNILINK_MODE=multi-user` does not by itself enable remote access or authentication.
+
 > [!TIP]
 > **Running Unraid Server?**
 > See our dedicated [**Unraid Server Deployment & 1-Click Update Guide**](file:///Users/vivek/antigravity/OmniLink-AI---Smart-Link-Repository/docs/UNRAID_DEPLOYMENT_GUIDE.md) featuring native XML templates and automated GHCR workflows.

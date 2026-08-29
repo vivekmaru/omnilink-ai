@@ -127,6 +127,8 @@ Restart Claude Desktop, and Claude will now have direct access to `search_reposi
 
 ## 📚 Documentation & Integration Guides
 
+- 🛡️ [**Security & Performance Audit (2026-08-30)**](docs/SECURITY_PERFORMANCE_AUDIT_2026-08-30.md)
+- 🧭 [**Phase 1 Security Boundary Plan**](docs/PHASE_1_SECURITY_BOUNDARY_PLAN.md)
 - 📖 [**Architecture & Technical Specification**](file:///Users/vivek/antigravity/OmniLink-AI---Smart-Link-Repository/ARCHITECTURE.md)
 - 🤖 [**AI Agent Integration & Surface Guide**](file:///Users/vivek/antigravity/OmniLink-AI---Smart-Link-Repository/AGENTS.md)
 - 🖥️ [**Unraid Server Deployment & 1-Click Update Guide**](file:///Users/vivek/antigravity/OmniLink-AI---Smart-Link-Repository/docs/UNRAID_DEPLOYMENT_GUIDE.md)
