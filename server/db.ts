@@ -104,6 +104,52 @@ export class OmniLinkDB {
     } catch {
       // Column already exists
     }
+
+    // Safe FTS5 table migration & self-healing verification
+    try {
+      this.db.prepare('SELECT id, rank FROM links_fts WHERE links_fts MATCH ? LIMIT 1').all('test');
+    } catch {
+      console.warn('[DB] Migrating/rebuilding links_fts virtual table for optimal BM25 search...');
+      try {
+        this.db.exec(`
+          DROP TRIGGER IF EXISTS links_ai;
+          DROP TRIGGER IF EXISTS links_ad;
+          DROP TRIGGER IF EXISTS links_au;
+          DROP TABLE IF EXISTS links_fts;
+
+          CREATE VIRTUAL TABLE links_fts USING fts5(
+            id UNINDEXED,
+            title,
+            url,
+            category,
+            tags,
+            notes,
+            summary
+          );
+
+          CREATE TRIGGER links_ai AFTER INSERT ON links BEGIN
+            INSERT INTO links_fts(id, title, url, category, tags, notes, summary)
+            VALUES (new.id, new.title, new.url, new.category, new.tags, new.notes, new.summary);
+          END;
+
+          CREATE TRIGGER links_ad AFTER DELETE ON links BEGIN
+            DELETE FROM links_fts WHERE id = old.id;
+          END;
+
+          CREATE TRIGGER links_au AFTER UPDATE ON links BEGIN
+            DELETE FROM links_fts WHERE id = old.id;
+            INSERT INTO links_fts(id, title, url, category, tags, notes, summary)
+            VALUES (new.id, new.title, new.url, new.category, new.tags, new.notes, new.summary);
+          END;
+
+          INSERT INTO links_fts(id, title, url, category, tags, notes, summary)
+          SELECT id, title, url, category, tags, notes, summary FROM links;
+        `);
+        console.log('[DB] links_fts virtual table rebuilt and synchronized successfully.');
+      } catch (rebuildErr) {
+        console.error('[DB] Failed to rebuild links_fts table:', rebuildErr);
+      }
+    }
   }
 
   // Row mapper
@@ -475,6 +521,7 @@ export class OmniLinkDB {
 
     return {
       linkId: row.link_id,
+      dimensions: row.dimensions,
       vector: float32,
       model: row.model,
       textChunk: row.text_chunk || undefined,

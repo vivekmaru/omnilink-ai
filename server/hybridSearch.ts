@@ -82,7 +82,7 @@ export class HybridSearchEngine {
     return score;
   }
 
-  // Generate embedding using Gemini text-embedding-004
+  // Generate embedding using Gemini gemini-embedding-001 (768-d MRL)
   async generateEmbedding(text: string, genAi: GoogleGenAI | null): Promise<number[]> {
     if (!text || !text.trim()) {
       return new Array(768).fill(0);
@@ -91,12 +91,17 @@ export class HybridSearchEngine {
     if (genAi) {
       try {
         const response = await (genAi as any).models.embedContent({
-          model: 'text-embedding-004',
+          model: 'gemini-embedding-001',
           contents: text,
+          config: {
+            outputDimensionality: 768,
+          },
         });
 
-        if (response?.embedding?.values && Array.isArray(response.embedding.values)) {
-          return response.embedding.values;
+        const embeddingValues =
+          response?.embeddings?.[0]?.values || response?.embedding?.values;
+        if (embeddingValues && Array.isArray(embeddingValues)) {
+          return embeddingValues;
         }
       } catch (err) {
         console.warn('[HybridSearch] Gemini embedding failed, falling back to term hash vector:', err);
@@ -142,7 +147,7 @@ export class HybridSearchEngine {
     try {
       const text = HybridSearchEngine.formatLinkForEmbedding(link);
       const vector = await this.generateEmbedding(text, genAi);
-      this.db.storeEmbedding(link.id, vector, genAi ? 'text-embedding-004' : 'term-hash-v1', text);
+      this.db.storeEmbedding(link.id, vector, genAi ? 'gemini-embedding-001' : 'term-hash-v1', text);
     } catch (err) {
       console.warn(`[HybridSearch] Failed to index link ${link.id}:`, err);
     }
@@ -181,7 +186,7 @@ export class HybridSearchEngine {
     return { indexed: count, total: this.db.count() };
   }
 
-  // HYBRID SEARCH: BM25 Lexical (FTS5) + Dense Vector Semantic (text-embedding-004) + Reciprocal Rank Fusion (RRF)
+  // HYBRID SEARCH: BM25 Lexical (FTS5) + Dense Vector Semantic (gemini-embedding-001) + Reciprocal Rank Fusion (RRF)
   async search(
     query: string,
     genAi: GoogleGenAI | null,
