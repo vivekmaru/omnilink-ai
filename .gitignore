@@ -44,6 +44,7 @@ test-results/
 .cache/
 scratch/
 .antigravity/
+.impeccable/
 
 # Operating System & IDE Files
 .DS_Store

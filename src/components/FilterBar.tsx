@@ -7,6 +7,7 @@ import {
   Folder,
   X,
   CheckCircle2,
+  Check,
 } from 'lucide-react';
 import { FilterState } from '../types';
 
@@ -17,6 +18,10 @@ interface FilterBarProps {
   availableTags: string[];
   activeCount?: number;
   totalCount?: number;
+  selectedCount?: number;
+  onSelectAllFiltered?: () => void;
+  onClearSelection?: () => void;
+  isAllSelected?: boolean;
 }
 
 export const FilterBar: React.FC<FilterBarProps> = ({
@@ -26,6 +31,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   availableTags,
   activeCount,
   totalCount,
+  selectedCount = 0,
+  onSelectAllFiltered,
+  onClearSelection,
+  isAllSelected = false,
 }) => {
   const isFiltered =
     filters.readStatus !== 'all' ||
@@ -58,6 +67,41 @@ export const FilterBar: React.FC<FilterBarProps> = ({
     >
       {/* Left: Consolidated Filter Controls with horizontal scroll on mobile */}
       <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        {/* Multi-Select Quick Toggle */}
+        {onSelectAllFiltered && onClearSelection && activeCount !== undefined && activeCount > 0 && (
+          <div className="flex items-center gap-1.5 pr-2 border-r border-black/10 dark:border-white/10 shrink-0">
+            <button
+              type="button"
+              onClick={() => (isAllSelected ? onClearSelection() : onSelectAllFiltered())}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-mono transition-all cursor-pointer shadow-xs ${
+                isAllSelected
+                  ? 'bg-[#d97757]/10 dark:bg-[#e08264]/10 border-[#d97757]/30 dark:border-[#e08264]/30 text-[#d97757] dark:text-[#e08264] font-semibold'
+                  : selectedCount > 0
+                  ? 'bg-black/5 dark:bg-white/5 border-black/15 dark:border-white/15 text-slate-800 dark:text-slate-200 font-semibold'
+                  : 'bg-white dark:bg-[#18181c] border-black/10 dark:border-white/10 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+              }`}
+              title={isAllSelected ? 'Deselect all bookmarks' : 'Select all filtered bookmarks'}
+              aria-label={isAllSelected ? 'Deselect all bookmarks' : 'Select all filtered bookmarks'}
+            >
+              <div
+                className={`w-3.5 h-3.5 rounded border flex items-center justify-center transition-all ${
+                  isAllSelected
+                    ? 'bg-[#d97757] dark:bg-[#e08264] border-[#d97757] dark:border-[#e08264] text-white shadow-2xs'
+                    : selectedCount > 0
+                    ? 'bg-[#d97757]/20 border-[#d97757] text-[#d97757]'
+                    : 'border-slate-300 dark:border-white/30 bg-black/5 dark:bg-white/5'
+                }`}
+              >
+                {isAllSelected ? (
+                  <Check className="w-2.5 h-2.5 stroke-[3]" />
+                ) : selectedCount > 0 ? (
+                  <div className="w-1.5 h-1.5 rounded-xs bg-[#d97757] dark:bg-[#e08264]" />
+                ) : null}
+              </div>
+              <span>{isAllSelected ? 'All Selected' : selectedCount > 0 ? `${selectedCount} Selected` : 'Select All'}</span>
+            </button>
+          </div>
+        )}
         {/* Status Segmented Pills */}
         <div className="flex items-center p-0.5 rounded-lg bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5">
           <button

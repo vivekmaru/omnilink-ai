@@ -55,6 +55,7 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
   const [syncingAll, setSyncingAll] = useState(false);
   const [syncingFeedId, setSyncingFeedId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [feedFilterStatus, setFeedFilterStatus] = useState<'all' | 'active' | 'paused'>('all');
 
   // Add Feed Form State
   const [inputUrl, setInputUrl] = useState('');
@@ -76,9 +77,11 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
   const [deleteAssociatedArticles, setDeleteAssociatedArticles] = useState(false);
   const [isUnsubscribing, setIsUnsubscribing] = useState(false);
 
-  // Load feeds and catalog
-  const loadData = async () => {
-    setLoading(true);
+  // Load feeds and catalog (silent option prevents modal flickering)
+  const loadData = async (silent = false) => {
+    if (!silent && feeds.length === 0) {
+      setLoading(true);
+    }
     try {
       const [feedsData, catalogData] = await Promise.all([
         ApiService.fetchRssFeeds(),
@@ -236,16 +239,61 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
     }
   };
 
-  // Toggle Feed Enabled/Paused
+  // Toggle Feed Enabled/Paused with instant optimistic inline update
   const handleToggleFeed = async (feed: RssFeed) => {
+    const feedId = feed.id;
+    const nextState = !feed.enabled;
+
+    // 1. Instant optimistic state update (zero flicker, switch moves instantly)
+    setFeeds((prev) =>
+      prev.map((f) => (f.id === feedId ? { ...f, enabled: nextState } : f))
+    );
+
     try {
-      const nextState = !feed.enabled;
-      await ApiService.updateRssFeed(feed.id, { enabled: nextState });
-      onToast('info', `${feed.title} ${nextState ? 'resumed' : 'paused'}`);
-      loadData();
+      await ApiService.updateRssFeed(feedId, { enabled: nextState });
       onFeedsUpdated();
     } catch (err: any) {
-      onToast('error', err.message || 'Failed to update feed');
+      // Revert on error
+      setFeeds((prev) =>
+        prev.map((f) => (f.id === feedId ? { ...f, enabled: !nextState } : f))
+      );
+      onToast('error', err.message || 'Failed to update feed state');
+    }
+  };
+
+  // Bulk Pause All Feeds
+  const handlePauseAllFeeds = async () => {
+    const activeFeeds = feeds.filter((f) => f.enabled);
+    if (activeFeeds.length === 0) return;
+
+    // Optimistic UI update
+    setFeeds((prev) => prev.map((f) => ({ ...f, enabled: false })));
+    onToast('info', `Paused background polling for ${activeFeeds.length} feeds`);
+
+    try {
+      await Promise.all(activeFeeds.map((f) => ApiService.updateRssFeed(f.id, { enabled: false })));
+      onFeedsUpdated();
+    } catch (err: any) {
+      onToast('error', err.message || 'Failed to pause feeds');
+      loadData(true);
+    }
+  };
+
+  // Bulk Resume All Feeds
+  const handleResumeAllFeeds = async () => {
+    const pausedFeeds = feeds.filter((f) => !f.enabled);
+    if (pausedFeeds.length === 0) return;
+
+    // Optimistic UI update
+    setFeeds((prev) => prev.map((f) => ({ ...f, enabled: true })));
+    onToast('success', `Resumed background polling for ${pausedFeeds.length} feeds`);
+
+    try {
+      await Promise.all(pausedFeeds.map((f) => ApiService.updateRssFeed(f.id, { enabled: true })));
+      onFeedsUpdated();
+    } catch (err: any) {
+      onToast('error', err.message || 'Failed to resume feeds');
+      loadData(true);
     }
   };
 
@@ -334,6 +382,8 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
 
   // Filtered feeds list
   const filteredFeeds = feeds.filter((f) => {
+    if (feedFilterStatus === 'active' && !f.enabled) return false;
+    if (feedFilterStatus === 'paused' && f.enabled) return false;
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
     return (
@@ -482,36 +532,105 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
                 </p>
               </div>
 
-              {/* Search and Filters */}
-              <div className="flex items-center justify-between gap-4">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
-                  <input
-                    id="rss-feed-search-input"
-                    type="text"
-                    placeholder="Search subscribed feeds by name, category, or tags..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 text-xs bg-white dark:bg-[#18181b] border border-black/10 dark:border-white/10 rounded-xl text-slate-900 dark:text-[#f7f6f3] placeholder-slate-400 focus:outline-none focus:border-[#d97757]"
-                  />
-                  {searchQuery && (
-                    <button
-                      onClick={() => setSearchQuery('')}
-                      className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  )}
+              {/* Search, Status Sub-Filter & Bulk Controls */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+                    <input
+                      id="rss-feed-search-input"
+                      type="text"
+                      placeholder="Search subscribed feeds by name, category, or tags..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full pl-9 pr-4 py-2 text-xs bg-white dark:bg-[#18181b] border border-black/10 dark:border-white/10 rounded-xl text-slate-900 dark:text-[#f7f6f3] placeholder-slate-400 focus:outline-none focus:border-[#d97757]"
+                    />
+                    {searchQuery && (
+                      <button
+                        onClick={() => setSearchQuery('')}
+                        className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('add')}
+                    className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-white bg-[#d97757] hover:bg-[#c46243] dark:bg-[#e08264] dark:hover:bg-[#e9957a] rounded-xl transition-colors shrink-0 shadow-xs cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Feed URL
+                  </button>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('add')}
-                  className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-white bg-[#d97757] hover:bg-[#c46243] dark:bg-[#e08264] dark:hover:bg-[#e9957a] rounded-xl transition-colors shrink-0 shadow-xs"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Feed URL
-                </button>
+                {/* Sub-Filter Tabs & Bulk Pause/Resume Controls */}
+                <div className="flex flex-wrap items-center justify-between gap-2.5 pt-0.5">
+                  <div className="flex items-center p-0.5 rounded-lg bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5">
+                    <button
+                      type="button"
+                      onClick={() => setFeedFilterStatus('all')}
+                      className={`px-3 py-1.5 rounded-md text-xs font-mono font-medium transition-all cursor-pointer ${
+                        feedFilterStatus === 'all'
+                          ? 'bg-white dark:bg-[#1f1e1c] text-slate-900 dark:text-slate-100 shadow-xs font-semibold'
+                          : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                      }`}
+                    >
+                      All Feeds ({feeds.length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFeedFilterStatus('active')}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-mono font-medium transition-all cursor-pointer ${
+                        feedFilterStatus === 'active'
+                          ? 'bg-white dark:bg-[#1f1e1c] text-emerald-600 dark:text-emerald-400 shadow-xs font-semibold'
+                          : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                      }`}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      <span>Active ({feeds.filter((f) => f.enabled).length})</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFeedFilterStatus('paused')}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-mono font-medium transition-all cursor-pointer ${
+                        feedFilterStatus === 'paused'
+                          ? 'bg-white dark:bg-[#1f1e1c] text-amber-600 dark:text-amber-400 shadow-xs font-semibold'
+                          : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                      }`}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                      <span>Paused ({feeds.filter((f) => !f.enabled).length})</span>
+                    </button>
+                  </div>
+
+                  {/* Bulk Pause / Resume Controls */}
+                  <div className="flex items-center gap-2">
+                    {feeds.some((f) => f.enabled) && (
+                      <button
+                        type="button"
+                        onClick={handlePauseAllFeeds}
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 text-xs font-mono transition-colors cursor-pointer"
+                        title="Pause background polling for all feeds without deleting"
+                      >
+                        <Pause className="w-3 h-3 text-amber-500" />
+                        <span>Pause All</span>
+                      </button>
+                    )}
+                    {feeds.some((f) => !f.enabled) && (
+                      <button
+                        type="button"
+                        onClick={handleResumeAllFeeds}
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-emerald-500/20 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-mono transition-colors font-medium cursor-pointer"
+                        title="Resume background polling for all paused feeds"
+                      >
+                        <Play className="w-3 h-3 text-emerald-500" />
+                        <span>Resume All</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
 
               {/* Feed List Cards */}
@@ -523,26 +642,46 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
                     <Rss className="w-6 h-6 text-[#d97757]/70" />
                   </div>
                   <h3 className="text-sm font-medium text-slate-900 dark:text-[#f7f6f3]">
-                    {searchQuery ? 'No feeds match your search' : 'No RSS Feeds Subscribed Yet'}
+                    {searchQuery
+                      ? 'No feeds match your search'
+                      : feedFilterStatus === 'paused'
+                      ? 'No Paused Feeds'
+                      : feedFilterStatus === 'active'
+                      ? 'No Active Feeds'
+                      : 'No RSS Feeds Subscribed Yet'}
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-                    Subscribe to developer blogs (Cloudflare, Netflix Tech, GitHub, Hacker News) to automatically deposit new engineering articles into your unread queue.
+                    {feedFilterStatus === 'paused'
+                      ? 'All your subscribed feeds are currently active and being polled on schedule.'
+                      : 'Subscribe to developer blogs (Cloudflare, Netflix Tech, GitHub, Hacker News) to automatically deposit new engineering articles into your unread queue.'}
                   </p>
                   <div className="pt-2 flex justify-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab('catalog')}
-                      className="px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
-                    >
-                      Browse Curated Catalog
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab('add')}
-                      className="px-4 py-2 text-xs font-medium text-[#d97757] dark:text-[#e08264] bg-[#d97757]/10 border border-[#d97757]/20 rounded-lg hover:bg-[#d97757]/20 transition-colors"
-                    >
-                      Add Custom URL
-                    </button>
+                    {feedFilterStatus !== 'all' ? (
+                      <button
+                        type="button"
+                        onClick={() => setFeedFilterStatus('all')}
+                        className="px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg hover:bg-black/10 dark:hover:bg-white/10 transition-colors cursor-pointer"
+                      >
+                        Show All Feeds
+                      </button>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setActiveTab('catalog')}
+                          className="px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg hover:bg-black/10 dark:hover:bg-white/10 transition-colors cursor-pointer"
+                        >
+                          Browse Curated Catalog
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setActiveTab('add')}
+                          className="px-4 py-2 text-xs font-medium text-[#d97757] dark:text-[#e08264] bg-[#d97757]/10 border border-[#d97757]/20 rounded-lg hover:bg-[#d97757]/20 transition-colors cursor-pointer"
+                        >
+                          Add Custom URL
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -555,13 +694,13 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
                         id={`rss-card-${feed.id}`}
                         className={`p-4 rounded-xl border transition-all duration-200 flex flex-col justify-between ${
                           feed.enabled
-                            ? 'bg-white dark:bg-[#18181b] border-black/10 dark:border-white/10 hover:border-[#d97757]/40'
-                            : 'bg-black/[0.02] dark:bg-white/[0.02] border-black/5 dark:border-white/5 opacity-70'
+                            ? 'bg-white dark:bg-[#18181b] border-black/10 dark:border-white/10 hover:border-[#d97757]/40 shadow-2xs'
+                            : 'bg-black/[0.02] dark:bg-white/[0.02] border-black/10 dark:border-white/5 opacity-80'
                         }`}
                       >
                         <div className="space-y-2.5">
-                          {/* Top Row: Favicon, Title, Status */}
-                          <div className="flex items-start justify-between gap-2">
+                          {/* Top Row: Favicon, Title, Status Badge & Toggle Switch */}
+                          <div className="flex items-start justify-between gap-3">
                             <div className="flex items-start gap-2.5 min-w-0">
                               <img
                                 src={feed.faviconUrl || `https://www.google.com/s2/favicons?domain=${feed.url}&sz=64`}
@@ -590,49 +729,83 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
                               </div>
                             </div>
 
-                            {/* Unread badge */}
-                            <div className="flex items-center gap-1.5 shrink-0">
-                              {feed.unreadCount !== undefined && feed.unreadCount > 0 ? (
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    if (onFilterByFeed) {
-                                      onFilterByFeed(feed.id, feed.title);
-                                      onClose();
-                                    }
-                                  }}
-                                  title="View unread articles from this feed"
-                                  className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-black/5 dark:bg-white/10 text-slate-700 dark:text-slate-300 border border-black/10 dark:border-white/10 hover:bg-black/10 transition-colors font-mono"
-                                >
-                                  {feed.unreadCount} unread
-                                </button>
+                            {/* Status Indicator & Interactive Toggle Switch */}
+                            <div className="flex items-center gap-2 shrink-0">
+                              {feed.enabled ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                  <span>Active</span>
+                                </span>
                               ) : (
-                                <span className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-black/5 dark:bg-white/5 text-slate-400 font-mono">
-                                  0 unread
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                  <span>Paused</span>
                                 </span>
                               )}
+
+                              {/* Toggle Switch Component */}
+                              <button
+                                type="button"
+                                role="switch"
+                                aria-checked={feed.enabled}
+                                onClick={() => handleToggleFeed(feed)}
+                                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                                  feed.enabled ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-zinc-700'
+                                }`}
+                                title={
+                                  feed.enabled
+                                    ? 'Toggle OFF to pause background fetching without deleting feed'
+                                    : 'Toggle ON to resume automatic fetching'
+                                }
+                              >
+                                <span className="sr-only">{feed.enabled ? 'Pause feed' : 'Enable feed'}</span>
+                                <span
+                                  aria-hidden="true"
+                                  className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                                    feed.enabled ? 'translate-x-4' : 'translate-x-0'
+                                  }`}
+                                />
+                              </button>
                             </div>
                           </div>
 
-                          {/* Metadata row: Category, Tags, AI badge */}
-                          <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
-                            <span className="px-2 py-0.5 rounded bg-black/5 dark:bg-white/5 text-slate-700 dark:text-slate-300 border border-black/5 dark:border-white/5 font-mono text-[10px] font-semibold">
-                              {feed.category}
-                            </span>
-                            {feed.autoAiExtract && (
-                              <span className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/5 text-slate-600 dark:text-slate-300 border border-black/5 dark:border-white/5 text-[10px] font-medium">
-                                <Sparkles className="w-2.5 h-2.5 text-[#d97757] dark:text-[#e08264]" />
-                                AI TL;DR
+                          {/* Metadata row: Category, Tags, AI badge, and Unread Count */}
+                          <div className="flex flex-wrap items-center justify-between gap-1.5 text-[11px] pt-1">
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <span className="px-2 py-0.5 rounded bg-black/5 dark:bg-white/5 text-slate-700 dark:text-slate-300 border border-black/5 dark:border-white/5 font-mono text-[10px] font-semibold">
+                                {feed.category}
                               </span>
-                            )}
-                            {feed.defaultTags.slice(0, 3).map((tag: string) => (
-                              <span
-                                key={tag}
-                                className="px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/5 text-slate-500 dark:text-slate-400 text-[10px] font-mono"
+                              {feed.autoAiExtract && (
+                                <span className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/5 text-slate-600 dark:text-slate-300 border border-black/5 dark:border-white/5 text-[10px] font-medium">
+                                  <Sparkles className="w-2.5 h-2.5 text-[#d97757] dark:text-[#e08264]" />
+                                  AI TL;DR
+                                </span>
+                              )}
+                              {feed.defaultTags.slice(0, 3).map((tag: string) => (
+                                <span
+                                  key={tag}
+                                  className="px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/5 text-slate-500 dark:text-slate-400 text-[10px] font-mono"
+                                >
+                                  #{tag}
+                                </span>
+                              ))}
+                            </div>
+
+                            {feed.unreadCount !== undefined && feed.unreadCount > 0 && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (onFilterByFeed) {
+                                    onFilterByFeed(feed.id, feed.title);
+                                    onClose();
+                                  }
+                                }}
+                                title="View unread articles from this feed in repository"
+                                className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-black/5 dark:bg-white/10 text-slate-700 dark:text-slate-300 border border-black/10 dark:border-white/10 hover:bg-black/10 transition-colors font-mono cursor-pointer"
                               >
-                                #{tag}
-                              </span>
-                            ))}
+                                {feed.unreadCount} unread
+                              </button>
+                            )}
                           </div>
                         </div>
 
@@ -641,12 +814,14 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
                           <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-mono">
                             <Clock className="w-3 h-3 text-slate-400" />
                             <span>
-                              {feed.lastFetchedAt
-                                ? `Synced ${new Date(feed.lastFetchedAt).toLocaleTimeString([], {
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                  })}`
-                                : 'Active'}
+                              {feed.enabled
+                                ? feed.lastFetchedAt
+                                  ? `Synced ${new Date(feed.lastFetchedAt).toLocaleTimeString([], {
+                                      hour: '2-digit',
+                                      minute: '2-digit',
+                                    })}`
+                                  : `Every ${feed.pollIntervalMinutes || 30}m`
+                                : 'Paused (Polling Off)'}
                             </span>
                           </div>
 
@@ -659,9 +834,9 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
                                   onFilterByFeed(feed.id, feed.title);
                                   onClose();
                                 }}
-                                className="px-2 py-1 text-[11px] text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 rounded transition-colors font-mono"
+                                className="px-2.5 py-1 text-[11px] text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 rounded transition-colors font-mono cursor-pointer"
                               >
-                                Filter Repo
+                                View Articles
                               </button>
                             )}
 
@@ -670,28 +845,18 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
                               type="button"
                               onClick={() => handleSyncFeed(feed)}
                               disabled={isSyncing}
-                              title="Fetch latest posts"
-                              className="p-1.5 text-slate-400 hover:text-[#d97757] hover:bg-black/5 dark:hover:bg-white/5 rounded transition-colors"
+                              title="Fetch latest posts right now"
+                              className="p-1.5 text-slate-400 hover:text-[#d97757] hover:bg-black/5 dark:hover:bg-white/5 rounded transition-colors cursor-pointer disabled:opacity-50"
                             >
                               <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-[#d97757]' : ''}`} />
-                            </button>
-
-                            {/* Pause / Resume toggle */}
-                            <button
-                              type="button"
-                              onClick={() => handleToggleFeed(feed)}
-                              title={feed.enabled ? 'Pause automatic fetching' : 'Resume automatic fetching'}
-                              className="p-1.5 rounded transition-colors text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5"
-                            >
-                              {feed.enabled ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
                             </button>
 
                             {/* Delete / Unsubscribe button */}
                             <button
                               type="button"
                               onClick={() => handleRequestUnsubscribe(feed)}
-                              title="Unsubscribe from feed"
-                              className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-black/5 dark:hover:bg-white/5 rounded transition-colors"
+                              title="Unsubscribe and remove feed"
+                              className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-black/5 dark:hover:bg-white/5 rounded transition-colors cursor-pointer"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>

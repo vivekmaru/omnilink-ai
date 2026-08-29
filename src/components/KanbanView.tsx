@@ -6,11 +6,14 @@ import {
   Circle,
   GripVertical,
   Inbox,
+  Check,
 } from 'lucide-react';
 import { LinkItem, ReadStatus } from '../types';
 
 interface KanbanViewProps {
   links: LinkItem[];
+  selectedIds?: string[];
+  onToggleSelectId?: (id: string) => void;
   onOpenDetail: (link: LinkItem) => void;
   onUpdateStatus: (id: string, newStatus: ReadStatus) => void;
   onToggleFavorite: (id: string, current: boolean) => void;
@@ -28,6 +31,8 @@ interface ColumnConfig {
 
 export const KanbanView: React.FC<KanbanViewProps> = ({
   links,
+  selectedIds = [],
+  onToggleSelectId,
   onOpenDetail,
   onUpdateStatus,
   onToggleFavorite,
@@ -164,6 +169,7 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
                   colLinks.map((link) => {
                     const tldr = link.aiSummary?.tldr || link.summary?.tldr || link.description;
                     const isDragging = draggedLinkId === link.id;
+                    const isSelected = selectedIds.includes(link.id);
 
                     return (
                       <div
@@ -171,13 +177,53 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
                         draggable
                         onDragStart={(e) => handleDragStart(e, link.id)}
                         onDragEnd={handleDragEnd}
-                        onClick={() => onOpenDetail(link)}
-                        className={`group bg-white dark:bg-[#1b1b1f] border border-slate-200/80 dark:border-white/10 hover:border-[#d97757] dark:hover:border-[#e08264] rounded-xl p-3.5 shadow-2xs cursor-grab active:cursor-grabbing transition-all hover:-translate-y-0.5 space-y-2.5 animate-card-entrance ${
+                        onClick={(e) => {
+                          if (e.shiftKey || e.metaKey || e.ctrlKey) {
+                            e.preventDefault();
+                            if (onToggleSelectId) {
+                              onToggleSelectId(link.id);
+                              return;
+                            }
+                          }
+                          onOpenDetail(link);
+                        }}
+                        className={`group bg-white dark:bg-[#1b1b1f] border ${
+                          isSelected
+                            ? 'ring-2 ring-[#d97757] dark:ring-[#e08264] border-[#d97757] dark:border-[#e08264] bg-[#d97757]/[0.03] dark:bg-[#e08264]/[0.04] shadow-md'
+                            : 'border-slate-200/80 dark:border-white/10 hover:border-[#d97757] dark:hover:border-[#e08264]'
+                        } rounded-xl p-3.5 shadow-2xs cursor-grab active:cursor-grabbing transition-all hover:-translate-y-0.5 space-y-2.5 animate-card-entrance ${
                           isDragging ? 'opacity-40 scale-95 border-dashed border-[#d97757]' : ''
                         }`}
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex items-center gap-1.5 min-w-0">
+                            {/* Checkbox */}
+                            {onToggleSelectId && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onToggleSelectId(link.id);
+                                }}
+                                className={`p-0.5 rounded transition-all cursor-pointer ${
+                                  isSelected
+                                    ? 'opacity-100 text-[#d97757] dark:text-[#e08264]'
+                                    : 'opacity-0 group-hover:opacity-100 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
+                                } ${selectedIds.length > 0 ? '!opacity-100' : ''}`}
+                                title={isSelected ? 'Deselect bookmark' : 'Select bookmark'}
+                                aria-label={isSelected ? 'Deselect bookmark' : 'Select bookmark'}
+                              >
+                                <div
+                                  className={`w-3.5 h-3.5 rounded border flex items-center justify-center transition-all ${
+                                    isSelected
+                                      ? 'bg-[#d97757] dark:bg-[#e08264] border-[#d97757] dark:border-[#e08264] text-white shadow-2xs'
+                                      : 'border-slate-300 dark:border-white/30 bg-black/5 dark:bg-white/5 hover:border-[#d97757]'
+                                  }`}
+                                >
+                                  {isSelected && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                                </div>
+                              </button>
+                            )}
                             <GripVertical className="w-3 h-3 text-slate-300 dark:text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                             <span className="font-mono text-[10px] uppercase font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-white/5 px-2 py-0.5 rounded truncate">
                               {link.platform.replace('_', ' ')}

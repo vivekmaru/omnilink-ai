@@ -28,6 +28,9 @@ import { LinkItem, PlatformType, ReadStatus } from '../types';
 
 interface LinkCardProps {
   link: LinkItem;
+  isSelected?: boolean;
+  onToggleSelect?: (id: string, e: React.MouseEvent) => void;
+  selectionMode?: boolean;
   onSelect: (link: LinkItem) => void;
   onToggleFavorite: (id: string, current: boolean) => void;
   onToggleArchive: (id: string, current: boolean) => void;
@@ -38,6 +41,9 @@ interface LinkCardProps {
 
 export const LinkCard: React.FC<LinkCardProps> = ({
   link,
+  isSelected = false,
+  onToggleSelect,
+  selectionMode = false,
   onSelect,
   onToggleFavorite,
   onToggleArchive,
@@ -154,15 +160,56 @@ export const LinkCard: React.FC<LinkCardProps> = ({
   return (
     <div
       id={`link-card-${link.id}`}
-      onClick={() => onSelect(link)}
-      className={`group relative flex flex-col justify-between p-4 sm:p-6 rounded-2xl border transition-all duration-200 cursor-pointer bg-white dark:bg-[#18181b] border-slate-200/80 dark:border-white/[0.07] hover:border-[#d97757]/50 dark:hover:border-[#e08264]/40 hover:shadow-md hover:-translate-y-0.5 min-h-[230px] sm:min-h-[250px] animate-card-entrance card-interactive ${
+      onClick={(e) => {
+        if (e.shiftKey || e.metaKey || e.ctrlKey) {
+          e.preventDefault();
+          if (onToggleSelect) {
+            onToggleSelect(link.id, e);
+            return;
+          }
+        }
+        onSelect(link);
+      }}
+      className={`group relative flex flex-col justify-between p-4 sm:p-6 rounded-2xl border transition-all duration-200 cursor-pointer bg-white dark:bg-[#18181b] ${
+        isSelected
+          ? 'ring-2 ring-[#d97757] dark:ring-[#e08264] border-[#d97757] dark:border-[#e08264] bg-[#d97757]/[0.03] dark:bg-[#e08264]/[0.04] shadow-md'
+          : 'border-slate-200/80 dark:border-white/[0.07] hover:border-[#d97757]/50 dark:hover:border-[#e08264]/40 hover:shadow-md hover:-translate-y-0.5'
+      } min-h-[230px] sm:min-h-[250px] animate-card-entrance card-interactive ${
         link.isArchived ? 'opacity-60' : ''
       }`}
     >
       <div className="space-y-2.5 sm:space-y-3">
         {/* Card Header: Platform Tag & Clean Actions */}
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5 min-w-0 flex-1">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            {/* Multi-Select Checkbox */}
+            {onToggleSelect && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleSelect(link.id, e);
+                }}
+                className={`p-1 -ml-1.5 rounded-md transition-all cursor-pointer ${
+                  isSelected
+                    ? 'opacity-100 text-[#d97757] dark:text-[#e08264]'
+                    : 'opacity-0 group-hover:opacity-100 focus:opacity-100 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
+                } ${selectionMode ? '!opacity-100' : ''}`}
+                title={isSelected ? 'Deselect bookmark' : 'Select bookmark for batch actions'}
+                aria-label={isSelected ? 'Deselect bookmark' : 'Select bookmark for batch actions'}
+              >
+                <div
+                  className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${
+                    isSelected
+                      ? 'bg-[#d97757] dark:bg-[#e08264] border-[#d97757] dark:border-[#e08264] text-white shadow-2xs'
+                      : 'border-slate-300 dark:border-white/30 bg-black/5 dark:bg-white/5 hover:border-[#d97757] dark:hover:border-[#e08264]'
+                  }`}
+                >
+                  {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                </div>
+              </button>
+            )}
+
             <span className="inline-flex items-center gap-1 font-mono text-[0.72rem] uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate font-semibold">
               {platformMeta.icon}
               <span className="truncate">{link.category || platformMeta.name}</span>

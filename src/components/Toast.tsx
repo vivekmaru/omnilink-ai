@@ -31,23 +31,32 @@ const ToastItem: React.FC<{ toast: ToastMessage; onDismiss: (id: string) => void
   toast,
   onDismiss,
 }) => {
-  const duration = toast.duration || 4000;
+  const isActionable = Boolean(toast.action);
+  const duration = toast.duration || (isActionable ? 6000 : 3500);
   const [progress, setProgress] = useState(100);
 
   useEffect(() => {
-    const startTime = Date.now();
-    const interval = setInterval(() => {
-      const elapsed = Date.now() - startTime;
-      const remaining = Math.max(0, 100 - (elapsed / duration) * 100);
-      setProgress(remaining);
-      if (remaining === 0) {
-        clearInterval(interval);
-        onDismiss(toast.id);
-      }
-    }, 50);
+    if (isActionable) {
+      const startTime = Date.now();
+      const interval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const remaining = Math.max(0, 100 - (elapsed / duration) * 100);
+        setProgress(remaining);
+        if (remaining === 0) {
+          clearInterval(interval);
+          onDismiss(toast.id);
+        }
+      }, 50);
 
-    return () => clearInterval(interval);
-  }, [duration, toast.id, onDismiss]);
+      return () => clearInterval(interval);
+    } else {
+      const timer = setTimeout(() => {
+        onDismiss(toast.id);
+      }, duration);
+
+      return () => clearTimeout(timer);
+    }
+  }, [duration, toast.id, isActionable, onDismiss]);
 
   const getIcon = () => {
     switch (toast.type) {
@@ -77,11 +86,13 @@ const ToastItem: React.FC<{ toast: ToastMessage; onDismiss: (id: string) => void
 
   return (
     <div className={`pointer-events-auto relative overflow-hidden flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-[#141418]/95 backdrop-blur-md text-slate-100 border ${getBorderGlow()} shadow-2xl text-xs font-medium transition-all animate-card-entrance`}>
-      {/* Subtle Progress Bar */}
-      <div
-        className="absolute bottom-0 left-0 h-[2px] bg-[#d97757]/80 dark:bg-[#e08264]/80 transition-all duration-75"
-        style={{ width: `${progress}%` }}
-      />
+      {/* Subtle Progress Bar (only rendered when an undo action is available) */}
+      {isActionable && (
+        <div
+          className="absolute bottom-0 left-0 h-[2px] bg-[#d97757]/80 dark:bg-[#e08264]/80 transition-all duration-75"
+          style={{ width: `${progress}%` }}
+        />
+      )}
 
       <div className="flex items-center gap-2.5 min-w-0">
         {getIcon()}

@@ -58,6 +58,7 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
   const [aiAnswer, setAiAnswer] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [savedSuccess, setSavedSuccess] = useState(false);
 
   const handleCopyUrl = () => {
     navigator.clipboard.writeText(link.url);
@@ -114,6 +115,8 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
         tags,
       });
       onUpdateLink(updated);
+      setSavedSuccess(true);
+      setTimeout(() => setSavedSuccess(false), 2000);
     } catch (e) {
       console.error('Failed to update link:', e);
     } finally {
@@ -150,42 +153,19 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
           borderColor: 'var(--card-border)',
         }}
       >
-        {/* Modal Top Header */}
+        {/* Modal Top Header: Platform & Actions */}
         <div className="flex items-center justify-between gap-3 px-5 sm:px-6 py-3 border-b border-black/10 dark:border-white/10 shrink-0 bg-black/[0.01] dark:bg-white/[0.01]">
-          {/* Left: Platform Badge & Tab Switcher */}
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar min-w-0">
+          {/* Left: Platform Badge & Feed Info */}
+          <div className="flex items-center gap-2 min-w-0">
             <span className="font-mono text-[10px] uppercase font-bold px-2.5 py-1 rounded-full bg-[#d97757]/10 text-[#d97757] dark:text-[#e08264] border border-[#d97757]/20 shrink-0">
               {link.platform.replace('_', ' ')}
             </span>
-            {/* View Mode Tab Switcher */}
-            <div className="flex items-center p-0.5 rounded-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 shrink-0">
-              <button
-                type="button"
-                onClick={() => setActiveTab('insights')}
-                className={`px-3 py-1 rounded-full font-mono text-[11px] font-medium transition-all cursor-pointer ${
-                  activeTab === 'insights'
-                    ? 'bg-white dark:bg-[#1f1e1c] text-[#d97757] dark:text-[#e08264] shadow-xs'
-                    : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-                }`}
-              >
-                AI Insights & Meta
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('reader')}
-                className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-mono text-[11px] font-medium transition-all cursor-pointer ${
-                  activeTab === 'reader'
-                    ? 'bg-white dark:bg-[#1f1e1c] text-[#d97757] dark:text-[#e08264] shadow-xs'
-                    : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-                }`}
-              >
-                <BookOpen className="w-3 h-3" />
-                <span>Reader Mode</span>
-                {link.readerSnapshot && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                )}
-              </button>
-            </div>
+            {link.feedTitle && (
+              <span className="hidden sm:inline-flex items-center gap-1 font-mono text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 truncate max-w-[180px]">
+                <Rss className="w-2.5 h-2.5 shrink-0" />
+                <span className="truncate">{link.feedTitle}</span>
+              </span>
+            )}
           </div>
 
           {/* Right: Actions & Fixed Top-Right Close Button */}
@@ -194,10 +174,10 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
               type="button"
               onClick={handleCopyUrl}
               title="Copy URL"
-              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full font-mono text-xs bg-black/5 dark:bg-white/5 hover:bg-black/10 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full font-mono text-xs bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
             >
               {copiedUrl ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>{copiedUrl ? 'Copied' : 'Copy URL'}</span>
+              <span className="hidden sm:inline">{copiedUrl ? 'Copied' : 'Copy URL'}</span>
             </button>
 
             {onOpenExportModal && (
@@ -205,10 +185,10 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
                 type="button"
                 onClick={() => onOpenExportModal(link)}
                 title="Export as Markdown for Obsidian or Notion"
-                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full font-mono text-xs bg-[#d97757]/10 text-[#d97757] dark:text-[#e08264] hover:bg-[#d97757]/20 transition-colors border border-[#d97757]/30 cursor-pointer"
+                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full font-mono text-xs bg-[#d97757]/10 text-[#d97757] dark:text-[#e08264] hover:bg-[#d97757]/20 transition-colors border border-[#d97757]/30 cursor-pointer"
               >
                 <FileDown className="w-3.5 h-3.5" />
-                <span>Export .md</span>
+                <span className="hidden sm:inline">Export .md</span>
               </button>
             )}
 
@@ -233,6 +213,46 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
               <X className="w-4 h-4" />
             </button>
           </div>
+        </div>
+
+        {/* View Mode Sub-Nav / Tabs */}
+        <div className="flex items-center justify-between px-5 sm:px-6 py-2.5 border-b border-black/10 dark:border-white/10 shrink-0 bg-black/[0.02] dark:bg-white/[0.01]">
+          <div className="flex items-center p-0.5 rounded-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5">
+            <button
+              type="button"
+              onClick={() => setActiveTab('insights')}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-mono text-xs font-medium transition-all cursor-pointer ${
+                activeTab === 'insights'
+                  ? 'bg-white dark:bg-[#1f1e1c] text-[#d97757] dark:text-[#e08264] shadow-xs font-semibold'
+                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>AI Insights & Meta</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('reader')}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-mono text-xs font-medium transition-all cursor-pointer ${
+                activeTab === 'reader'
+                  ? 'bg-white dark:bg-[#1f1e1c] text-[#d97757] dark:text-[#e08264] shadow-xs font-semibold'
+                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+              }`}
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              <span>Reader Mode</span>
+              {link.readerSnapshot && (
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" title="Offline snapshot available" />
+              )}
+            </button>
+          </div>
+
+          {link.readerSnapshot && (
+            <div className="hidden sm:flex items-center gap-2 font-mono text-[11px] text-slate-500 dark:text-slate-400">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              <span>{link.readerSnapshot.wordCount} words • {link.readerSnapshot.readingTimeMinutes} min read</span>
+            </div>
+          )}
         </div>
 
         {/* Scrollable Content */}
@@ -472,10 +492,14 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
               <button
                 onClick={handleSave}
                 disabled={isSaving}
-                className="flex items-center gap-2 px-5 py-2 bg-[#d97757] hover:bg-[#c46243] dark:bg-[#e08264] dark:hover:bg-[#e9957a] text-white text-xs font-semibold rounded-xl shadow-xs transition-all disabled:opacity-50 active:scale-[0.98]"
+                className={`flex items-center gap-2 px-5 py-2 text-white text-xs font-semibold rounded-xl shadow-xs transition-all disabled:opacity-50 active:scale-[0.98] cursor-pointer ${
+                  savedSuccess
+                    ? 'bg-emerald-600 dark:bg-emerald-500'
+                    : 'bg-[#d97757] hover:bg-[#c46243] dark:bg-[#e08264] dark:hover:bg-[#e9957a]'
+                }`}
               >
-                <Save className="w-3.5 h-3.5" />
-                <span>{isSaving ? 'Saving...' : 'Save Meta Changes'}</span>
+                {savedSuccess ? <Check className="w-3.5 h-3.5" /> : <Save className="w-3.5 h-3.5" />}
+                <span>{isSaving ? 'Saving...' : savedSuccess ? 'Saved Changes!' : 'Save Meta Changes'}</span>
               </button>
             </div>
           </div>

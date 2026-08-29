@@ -8,6 +8,9 @@ import {
   Bookmark,
   ExternalLink,
   FileDown,
+  Check,
+  Circle,
+  Folder,
 } from 'lucide-react';
 import { Sidebar } from './components/Sidebar';
 import { Navbar } from './components/Navbar';
@@ -70,16 +73,22 @@ export default function App() {
     options?: { duration?: number; action?: { label: string; onClick: () => void } }
   ) => {
     const id = Math.random().toString(36).substring(2, 9);
-    setToasts((prev) => [
-      ...prev,
-      {
-        id,
-        type,
-        message,
-        duration: options?.duration,
-        action: options?.action,
-      },
-    ]);
+    setToasts((prev) => {
+      // Prevent stacking identical toast messages
+      const filtered = prev.filter((t) => t.message !== message);
+      const nextList = [
+        ...filtered,
+        {
+          id,
+          type,
+          message,
+          duration: options?.duration,
+          action: options?.action,
+        },
+      ];
+      // Cap at 3 toasts
+      return nextList.slice(-3);
+    });
   };
   const removeToast = (id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
@@ -274,25 +283,21 @@ export default function App() {
         if (e.key === '1') {
           e.preventDefault();
           setCurrentView('grid');
-          addToast('info', 'Switched to Grid View');
           return;
         }
         if (e.key === '2') {
           e.preventDefault();
           setCurrentView('list');
-          addToast('info', 'Switched to Compact List View');
           return;
         }
         if (e.key === '3') {
           e.preventDefault();
           setCurrentView('kanban');
-          addToast('info', 'Switched to Kanban Board');
           return;
         }
         if (e.key === '4') {
           e.preventDefault();
           setCurrentView('cluster');
-          addToast('info', 'Switched to Semantic Topic Clusters');
           return;
         }
 
@@ -303,27 +308,21 @@ export default function App() {
           if (keyLower === 'a') {
             e.preventDefault();
             setFilters((f) => ({ ...f, readStatus: 'all', onlyFavorites: false, includeArchived: false }));
-            addToast('info', 'Showing All Bookmarks');
           } else if (keyLower === 'u') {
             e.preventDefault();
             setFilters((f) => ({ ...f, readStatus: 'unread', onlyFavorites: false, includeArchived: false }));
-            addToast('info', 'Filtered to Unread Inbox');
           } else if (keyLower === 'r') {
             e.preventDefault();
             setFilters((f) => ({ ...f, readStatus: 'reading', onlyFavorites: false, includeArchived: false }));
-            addToast('info', 'Filtered to Currently Reading');
           } else if (keyLower === 'd') {
             e.preventDefault();
             setFilters((f) => ({ ...f, readStatus: 'read', onlyFavorites: false, includeArchived: false }));
-            addToast('info', 'Filtered to Reviewed Items');
           } else if (keyLower === 's') {
             e.preventDefault();
             setFilters((f) => ({ ...f, readStatus: 'all', onlyFavorites: true, includeArchived: false }));
-            addToast('info', 'Filtered to Starred Bookmarks');
           } else if (keyLower === 'x') {
             e.preventDefault();
             setFilters((f) => ({ ...f, readStatus: 'all', onlyFavorites: false, includeArchived: true }));
-            addToast('info', 'Viewing Archived Bookmarks');
           }
           lastKey = '';
           return;
@@ -537,23 +536,41 @@ export default function App() {
   };
 
   const handleToggleFavorite = async (id: string, current: boolean) => {
+    const nextFav = !current;
+    // Optimistic state update (instant UI transition)
+    setLinks((prev) => prev.map((l) => (l.id === id ? { ...l, isFavorite: nextFav } : l)));
+    if (selectedLink?.id === id) {
+      setSelectedLink((prev) => (prev ? { ...prev, isFavorite: nextFav } : null));
+    }
     try {
-      const updated = await ApiService.updateLink(id, { isFavorite: !current });
+      const updated = await ApiService.updateLink(id, { isFavorite: nextFav });
       handleLinkUpdated(updated);
-      addToast('info', !current ? 'Starred bookmark' : 'Removed from Starred');
     } catch (e) {
-      console.error('Failed to toggle favorite:', e);
+      // Revert on error
+      setLinks((prev) => prev.map((l) => (l.id === id ? { ...l, isFavorite: current } : l)));
+      if (selectedLink?.id === id) {
+        setSelectedLink((prev) => (prev ? { ...prev, isFavorite: current } : null));
+      }
       addToast('error', 'Failed to update star');
     }
   };
 
   const handleToggleArchive = async (id: string, current: boolean) => {
+    const nextArchived = !current;
+    // Optimistic state update (instant UI transition)
+    setLinks((prev) => prev.map((l) => (l.id === id ? { ...l, isArchived: nextArchived } : l)));
+    if (selectedLink?.id === id) {
+      setSelectedLink((prev) => (prev ? { ...prev, isArchived: nextArchived } : null));
+    }
     try {
-      const updated = await ApiService.updateLink(id, { isArchived: !current });
+      const updated = await ApiService.updateLink(id, { isArchived: nextArchived });
       handleLinkUpdated(updated);
-      addToast('info', !current ? 'Moved to Archive' : 'Restored from Archive');
     } catch (e) {
-      console.error('Failed to toggle archive:', e);
+      // Revert on error
+      setLinks((prev) => prev.map((l) => (l.id === id ? { ...l, isArchived: current } : l)));
+      if (selectedLink?.id === id) {
+        setSelectedLink((prev) => (prev ? { ...prev, isArchived: current } : null));
+      }
       addToast('error', 'Failed to archive link');
     }
   };
@@ -600,13 +617,24 @@ export default function App() {
   };
 
   const handleUpdateStatus = async (id: string, newStatus: ReadStatus) => {
+    const originalLink = links.find((l) => l.id === id);
+    const prevStatus = originalLink?.readStatus;
+    // Optimistic state update (instant UI transition in Kanban/grid)
+    setLinks((prev) => prev.map((l) => (l.id === id ? { ...l, readStatus: newStatus } : l)));
+    if (selectedLink?.id === id) {
+      setSelectedLink((prev) => (prev ? { ...prev, readStatus: newStatus } : null));
+    }
     try {
       const updated = await ApiService.updateLink(id, { readStatus: newStatus });
       handleLinkUpdated(updated);
-      addToast('success', `Status changed to ${newStatus}`);
     } catch (e) {
-      console.error('Failed to update status:', e);
-      addToast('error', 'Failed to update status');
+      if (prevStatus) {
+        setLinks((prev) => prev.map((l) => (l.id === id ? { ...l, readStatus: prevStatus } : l)));
+        if (selectedLink?.id === id) {
+          setSelectedLink((prev) => (prev ? { ...prev, readStatus: prevStatus } : null));
+        }
+      }
+      addToast('error', 'Failed to update reading status');
     }
   };
 
@@ -656,7 +684,7 @@ export default function App() {
     }
   };
 
-  // Batch actions with Undo
+  // Batch actions with atomic backend execution & Undo
   const handleBatchDelete = () => {
     if (selectedIds.length === 0) return;
     const linksToDelete = links.filter((l) => selectedIds.includes(l.id));
@@ -664,12 +692,11 @@ export default function App() {
 
     const batchIds = [...selectedIds];
     setSelectedIds([]);
+    // Optimistic UI update
     setLinks((prev) => prev.filter((l) => !batchIds.includes(l.id)));
 
     const batchTimer = setTimeout(async () => {
-      for (const id of batchIds) {
-        await ApiService.deleteLink(id).catch(() => {});
-      }
+      await ApiService.batchAction(batchIds, 'delete').catch(() => {});
       ApiService.fetchStats().then(setStats).catch(() => {});
     }, 6000);
 
@@ -687,13 +714,37 @@ export default function App() {
   };
 
   const handleBatchMarkRead = async () => {
-    for (const id of selectedIds) {
-      await ApiService.updateLink(id, { readStatus: 'read' }).catch(() => {});
-    }
+    if (selectedIds.length === 0) return;
+    const batchIds = [...selectedIds];
+    await ApiService.batchAction(batchIds, 'markRead').catch(() => {});
     setLinks((prev) =>
-      prev.map((l) => (selectedIds.includes(l.id) ? { ...l, readStatus: 'read' } : l))
+      prev.map((l) => (batchIds.includes(l.id) ? { ...l, readStatus: 'read' } : l))
     );
-    addToast('success', `Marked ${selectedIds.length} bookmarks as Reviewed`);
+    addToast('success', `Marked ${batchIds.length} bookmarks as Reviewed`);
+    setSelectedIds([]);
+    ApiService.fetchStats().then(setStats).catch(() => {});
+  };
+
+  const handleBatchMarkUnread = async () => {
+    if (selectedIds.length === 0) return;
+    const batchIds = [...selectedIds];
+    await ApiService.batchAction(batchIds, 'markUnread').catch(() => {});
+    setLinks((prev) =>
+      prev.map((l) => (batchIds.includes(l.id) ? { ...l, readStatus: 'unread' } : l))
+    );
+    addToast('success', `Marked ${batchIds.length} bookmarks as Unread`);
+    setSelectedIds([]);
+    ApiService.fetchStats().then(setStats).catch(() => {});
+  };
+
+  const handleBatchCategorize = async (newCategory: string) => {
+    if (selectedIds.length === 0 || !newCategory) return;
+    const batchIds = [...selectedIds];
+    await ApiService.batchAction(batchIds, 'setCategory', newCategory).catch(() => {});
+    setLinks((prev) =>
+      prev.map((l) => (batchIds.includes(l.id) ? { ...l, category: newCategory } : l))
+    );
+    addToast('success', `Assigned ${batchIds.length} bookmarks to "${newCategory}"`);
     setSelectedIds([]);
     ApiService.fetchStats().then(setStats).catch(() => {});
   };
@@ -795,41 +846,101 @@ export default function App() {
             availableTags={availableTags}
             activeCount={filteredLinks.length}
             totalCount={links.length}
+            selectedCount={selectedIds.length}
+            onSelectAllFiltered={() => setSelectedIds(filteredLinks.map((l) => l.id))}
+            onClearSelection={() => setSelectedIds([])}
+            isAllSelected={filteredLinks.length > 0 && filteredLinks.every((l) => selectedIds.includes(l.id))}
           />
         )}
 
         {/* Batch Actions Bar */}
         {selectedIds.length > 0 && (
-          <div className="bg-[#d97757]/10 border-b border-[#d97757]/20 px-6 py-2 flex items-center justify-between text-xs shrink-0">
-            <span className="font-mono text-xs font-medium text-slate-800 dark:text-slate-200">
-              {selectedIds.length} ITEMS SELECTED
-            </span>
-            <div className="flex items-center gap-2">
+          <div className="bg-[#d97757]/10 dark:bg-[#e08264]/10 border-b border-[#d97757]/20 dark:border-[#e08264]/20 px-4 sm:px-8 py-2.5 flex flex-wrap items-center justify-between gap-2.5 text-xs shrink-0 animate-in fade-in slide-in-from-top-1 duration-150">
+            <div className="flex items-center gap-3">
+              <span className="font-mono text-xs font-bold text-[#d97757] dark:text-[#e08264] flex items-center gap-1.5">
+                <Check className="w-3.5 h-3.5 stroke-[3]" />
+                <span>{selectedIds.length} {selectedIds.length === 1 ? 'ITEM' : 'ITEMS'} SELECTED</span>
+              </span>
+              {filteredLinks.length > selectedIds.length && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedIds(filteredLinks.map((l) => l.id))}
+                  className="font-mono text-[11px] text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 underline underline-offset-2 cursor-pointer"
+                >
+                  Select all {filteredLinks.length} filtered
+                </button>
+              )}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+              {/* Category selector */}
+              <div className="relative">
+                <select
+                  defaultValue=""
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      handleBatchCategorize(e.target.value);
+                      e.target.value = '';
+                    }
+                  }}
+                  className="pl-2.5 pr-6 py-1 bg-white dark:bg-[#1f1e1d] rounded-lg font-medium text-xs text-slate-700 dark:text-slate-300 shadow-2xs border border-black/10 dark:border-white/10 cursor-pointer appearance-none"
+                  aria-label="Move selected bookmarks to category"
+                >
+                  <option value="" disabled>Move to Category...</option>
+                  {availableCategories.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+                <Folder className="w-3 h-3 absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              </div>
+
               <button
+                type="button"
                 onClick={() => {
                   setExportSingleLink(null);
                   setExportModalOpen(true);
                 }}
-                className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-[#1f1e1d] rounded-lg font-medium text-slate-800 dark:text-slate-200 shadow-2xs hover:bg-slate-50 dark:hover:bg-white/5 border border-black/10 dark:border-white/10"
+                className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-[#1f1e1d] rounded-lg font-medium text-slate-800 dark:text-slate-200 shadow-2xs hover:bg-slate-50 dark:hover:bg-white/5 border border-black/10 dark:border-white/10 cursor-pointer"
               >
                 <FileDown className="w-3.5 h-3.5 text-[#d97757] dark:text-[#e08264]" />
-                <span>Export Markdown ({selectedIds.length})</span>
+                <span className="hidden sm:inline">Export .md ({selectedIds.length})</span>
+                <span className="sm:hidden">Export</span>
               </button>
+
               <button
+                type="button"
                 onClick={handleBatchMarkRead}
-                className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-[#1f1e1d] rounded-lg font-medium text-slate-800 dark:text-slate-200 shadow-2xs hover:bg-slate-50 dark:hover:bg-white/5 border border-black/10 dark:border-white/10"
+                className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-[#1f1e1d] rounded-lg font-medium text-slate-800 dark:text-slate-200 shadow-2xs hover:bg-slate-50 dark:hover:bg-white/5 border border-black/10 dark:border-white/10 cursor-pointer"
+                title="Mark all selected as Reviewed"
               >
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
                 <span>Mark Reviewed</span>
               </button>
+
               <button
+                type="button"
+                onClick={handleBatchMarkUnread}
+                className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-[#1f1e1d] rounded-lg font-medium text-slate-800 dark:text-slate-200 shadow-2xs hover:bg-slate-50 dark:hover:bg-white/5 border border-black/10 dark:border-white/10 cursor-pointer"
+                title="Mark all selected as Unread"
+              >
+                <Circle className="w-3.5 h-3.5 text-amber-500" />
+                <span>Mark Unread</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={handleBatchDelete}
-                className="flex items-center gap-1.5 px-3 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded-lg font-medium shadow-2xs"
+                className="flex items-center gap-1.5 px-3 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded-lg font-medium shadow-2xs cursor-pointer transition-colors"
+                title="Delete all selected bookmarks (with 6s Undo)"
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                <span>Delete</span>
+                <span>Delete ({selectedIds.length})</span>
               </button>
+
               <button
+                type="button"
                 onClick={() => setSelectedIds([])}
                 className="px-2.5 py-1 font-mono text-[11px] font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 rounded-md border border-black/5 dark:border-white/5 hover:bg-black/5 dark:hover:bg-white/5 transition-all cursor-pointer"
               >
@@ -925,6 +1036,13 @@ export default function App() {
                     <LinkCard
                       key={link.id}
                       link={link}
+                      isSelected={selectedIds.includes(link.id)}
+                      onToggleSelect={(id) =>
+                        setSelectedIds((prev) =>
+                          prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+                        )
+                      }
+                      selectionMode={selectedIds.length > 0}
                       onSelect={handleOpenDetail}
                       onToggleFavorite={handleToggleFavorite}
                       onToggleArchive={handleToggleArchive}
@@ -969,8 +1087,15 @@ export default function App() {
                 >
                   <KanbanView
                     links={filteredLinks}
+                    selectedIds={selectedIds}
+                    onToggleSelectId={(id) =>
+                      setSelectedIds((prev) =>
+                        prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+                      )
+                    }
                     onOpenDetail={handleOpenDetail}
                     onUpdateStatus={handleUpdateStatus}
+                    onToggleFavorite={handleToggleFavorite}
                   />
                 </React.Suspense>
               )}
@@ -1102,7 +1227,6 @@ export default function App() {
             onClose={() => setShortcutsModalOpen(false)}
             onSelectView={(v) => {
               setCurrentView(v);
-              addToast('info', `Switched to ${v} view`);
             }}
             onOpenAddModal={() => {
               setPrefillData({});
@@ -1121,7 +1245,6 @@ export default function App() {
             onOpenAnalytics={() => setAnalyticsModalOpen(true)}
             onToggleTheme={() => {
               setDarkMode((prev) => !prev);
-              addToast('info', `Switched to ${!darkMode ? 'Dark' : 'Light'} theme`);
             }}
             onFocusSearch={() => {
               const el = document.getElementById('navbar-search-input') as HTMLInputElement;
@@ -1134,7 +1257,6 @@ export default function App() {
                 onlyFavorites: onlyFav ?? false,
                 includeArchived: archived ?? false,
               }));
-              addToast('info', 'Filter updated');
             }}
           />
         )}
@@ -1145,7 +1267,6 @@ export default function App() {
             onClose={() => setRssModalOpen(false)}
             onFeedsUpdated={() => {
               loadRssFeeds();
-              loadData();
             }}
             onToast={addToast}
             onFilterByFeed={(feedId, feedTitle) => {
@@ -1155,7 +1276,6 @@ export default function App() {
                 readStatus: 'unread',
                 includeArchived: false,
               }));
-              addToast('info', `Filtered inbox to ${feedTitle}`);
             }}
           />
         )}
@@ -1175,19 +1295,15 @@ export default function App() {
             links={links}
             onFilterByPlatform={(platform) => {
               setFilters((f) => ({ ...f, platform }));
-              addToast('info', `Filtered by platform: ${platform}`);
             }}
             onFilterByCategory={(category) => {
               setFilters((f) => ({ ...f, category }));
-              addToast('info', `Filtered by category: ${category}`);
             }}
             onFilterByTag={(tag) => {
               setFilters((f) => ({ ...f, tag }));
-              addToast('info', `Filtered by tag: #${tag}`);
             }}
             onFilterByStatus={(status) => {
               setFilters((f) => ({ ...f, readStatus: status }));
-              addToast('info', `Filtered by status: ${status}`);
             }}
           />
         )}
