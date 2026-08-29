@@ -274,7 +274,7 @@ export const LinkCard: React.FC<LinkCardProps> = ({
         </div>
 
         {/* Serif Editorial Title */}
-        <h3 className="font-newsreader text-xl sm:text-[1.25rem] font-medium leading-snug text-slate-900 dark:text-[#f7f6f3] group-hover:text-[#d97757] dark:group-hover:text-[#e08264] transition-colors line-clamp-2">
+        <h3 className="font-newsreader text-xl font-medium leading-snug text-slate-900 dark:text-[#f7f6f3] group-hover:text-[#d97757] dark:group-hover:text-[#e08264] transition-colors line-clamp-2">
           {link.title || link.url}
         </h3>
 

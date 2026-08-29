@@ -27,7 +27,7 @@ const CodeBlock: React.FC<{ language: string; code: string; variant?: 'compact' 
   return (
     <div
       className={`my-4 rounded-xl border border-black/10 dark:border-white/10 overflow-hidden bg-[#18181b] text-slate-200 font-mono shadow-xs ${
-        variant === 'article' ? 'text-[13px] my-6' : 'text-xs my-3'
+        variant === 'article' ? 'text-xs sm:text-[0.85rem] my-6' : 'text-xs my-3'
       }`}
     >
       <div className="flex items-center justify-between px-3.5 py-1.5 bg-black/40 border-b border-white/5 text-[11px] text-slate-400">
@@ -421,7 +421,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
       elements.push(
         <blockquote
           key={`quote-${blockKey++}`}
-          className={`border-l-3 border-[#d97757] dark:border-[#e08264] bg-black/[0.02] dark:bg-white/[0.02] pl-4 py-2 my-4 rounded-r-xl text-slate-700 dark:text-slate-300 italic font-newsreader ${
+          className={`border-l border-black/20 dark:border-white/20 bg-black/[0.02] dark:bg-white/[0.02] pl-4 py-2 my-4 rounded-r-lg text-slate-700 dark:text-slate-300 italic font-newsreader ${
             isArticle ? 'text-base sm:text-lg leading-relaxed' : 'text-xs sm:text-sm'
           }`}
         >
@@ -655,7 +655,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
           key={`p-${blockKey++}`}
           className={`text-slate-800 dark:text-slate-200 ${
             isArticle
-              ? 'font-newsreader text-[1.05rem] sm:text-[1.12rem] leading-[1.8] sm:leading-[1.85] my-4 text-justify sm:text-left'
+              ? 'font-newsreader text-base sm:text-[1.125rem] leading-[1.8] sm:leading-[1.85] my-4 text-justify sm:text-left'
               : 'text-xs sm:text-sm leading-relaxed my-2'
           }`}
         >

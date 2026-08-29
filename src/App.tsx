@@ -831,7 +831,7 @@ export default function App() {
               </button>
               <button
                 onClick={() => setSelectedIds([])}
-                className="px-2 py-1 font-mono text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                className="px-2.5 py-1 font-mono text-[11px] font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 rounded-md border border-black/5 dark:border-white/5 hover:bg-black/5 dark:hover:bg-white/5 transition-all cursor-pointer"
               >
                 Clear
               </button>

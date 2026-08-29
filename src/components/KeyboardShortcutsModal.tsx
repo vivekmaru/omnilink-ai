@@ -519,7 +519,7 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
                         <h4 className="text-xs font-semibold text-slate-900 dark:text-[#f7f6f3] group-hover:text-[#d97757] dark:group-hover:text-[#e08264] transition-colors">
                           {item.title}
                         </h4>
-                        <span className="hidden sm:inline-block font-mono text-[9px] uppercase tracking-wider text-slate-400">
+                        <span className="hidden sm:inline-block font-mono text-[10px] uppercase tracking-wider text-slate-400">
                           {item.category}
                         </span>
                       </div>
