@@ -19,7 +19,7 @@ Pairing the refined aesthetic of **Linear × Raycast × Arc** with a native **SQ
 ### 3.1. Hybrid Search & Vector Retrieval Engine
 - **SQLite WAL Architecture**: Native SQLite database running with `PRAGMA journal_mode = WAL` and synchronous writes for ACID durability and sub-millisecond query execution.
 - **FTS5 Lexical Search**: Virtual table indexed with Porter stemmer across `title`, `url`, `category`, `tags`, `notes`, and `summary` with automated SQLite synchronization triggers (`links_ai`, `links_ad`, `links_au`).
-- **Dense Vector Embeddings**: 768-dimensional float32 vector embeddings generated via Gemini `text-embedding-004` (with offline hash vector fallback).
+- **Dense Vector Embeddings**: 768-dimensional float32 vector embeddings generated via Gemini `gemini-embedding-001` (with offline `term-hash-v1` fallback).
 - **Reciprocal Rank Fusion (RRF)**: Merges lexical and semantic candidate ranks with formula:
   $$\text{RRF}(d) = \frac{1}{60 + \text{rank}_{\text{FTS}}(d)} + \frac{1}{60 + \text{rank}_{\text{Vector}}(d)}$$
 - **Background Worker**: Automatically indexes vector embeddings for newly saved links in non-blocking batches.
