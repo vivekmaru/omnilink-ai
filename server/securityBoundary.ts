@@ -1,4 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
+import type { ServiceTokenScope } from './auth/credentials';
 
 export type RuntimeMode = 'local-single-user' | 'multi-user';
 export type ActorKind = 'local' | 'user' | 'service';
@@ -13,6 +14,7 @@ export interface RequestContext {
     id: string;
     role: WorkspaceRole;
   };
+  authMethod: 'local' | 'session' | 'service-token';
   mode: RuntimeMode;
 }
 
@@ -27,14 +29,35 @@ export type EndpointPolicy =
 export const LOCAL_REQUEST_CONTEXT: RequestContext = Object.freeze({
   actor: Object.freeze({ id: 'local-user', kind: 'local' as const }),
   workspace: Object.freeze({ id: 'local-default', role: 'owner' as const }),
+  authMethod: 'local' as const,
   mode: 'local-single-user' as const,
 });
+
+const POLICY_ROLES: Record<EndpointPolicy, WorkspaceRole> = {
+  'health:read': 'viewer',
+  'repository:read': 'viewer',
+  'repository:write': 'editor',
+  'repository:delete': 'owner',
+  'repository:admin': 'owner',
+  'ai:execute': 'editor',
+};
+
+const ROLE_RANK: Record<WorkspaceRole, number> = { viewer: 1, editor: 2, owner: 3 };
+
+export function requiredRoleForPolicy(policy: EndpointPolicy): WorkspaceRole {
+  return POLICY_ROLES[policy];
+}
+
+export function canAccessPolicy(context: RequestContext, policy: EndpointPolicy): boolean {
+  return ROLE_RANK[context.workspace.role] >= ROLE_RANK[requiredRoleForPolicy(policy)];
+}
 
 declare global {
   namespace Express {
     interface Request {
       securityContext?: RequestContext;
       endpointPolicy?: EndpointPolicy;
+      serviceTokenScopes?: ServiceTokenScope[];
     }
   }
 }
@@ -55,7 +78,11 @@ export function classifyEndpointPolicy(req: Request): EndpointPolicy {
   if (path.startsWith('/api/ai/')) {
     return path.includes('/embeddings/reindex') ? 'repository:admin' : 'ai:execute';
   }
+  if (path.startsWith('/api/auth/tokens')) return 'repository:admin';
+  if (path === '/api/auth/session' || path === '/auth/session') return 'repository:read';
+  if (path === '/auth/logout' || path === '/api/auth/logout') return 'repository:read';
   if (path === '/api/links/suggest-tags') return 'ai:execute';
+  if (path === '/api/share/quick') return 'repository:write';
   if (path === '/api/links/check-duplicate' || path === '/api/links/preview-metadata' || path === '/api/rss/discover') {
     return 'repository:read';
   }

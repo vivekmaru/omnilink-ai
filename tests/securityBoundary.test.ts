@@ -4,6 +4,7 @@ import {
   LOCAL_REQUEST_CONTEXT,
   attachEndpointPolicy,
   attachLocalRequestContext,
+  canAccessPolicy,
   classifyEndpointPolicy,
 } from '../server/securityBoundary';
 
@@ -19,6 +20,7 @@ describe('security boundary', () => {
     expect(req.securityContext).toEqual(LOCAL_REQUEST_CONTEXT);
     expect(req.securityContext?.actor.kind).toBe('local');
     expect(req.securityContext?.workspace.id).toBe('local-default');
+    expect(req.securityContext?.authMethod).toBe('local');
   });
 
   it('classifies read, write, destructive, admin, and AI policies', () => {
@@ -41,5 +43,14 @@ describe('security boundary', () => {
     const req = request('/api/stats');
     attachEndpointPolicy(req, {} as never, () => {});
     expect(req.endpointPolicy).toBe('repository:read');
+  });
+
+  it('uses the role matrix for future authorization checks', () => {
+    const viewer = { ...LOCAL_REQUEST_CONTEXT, workspace: { id: 'w', role: 'viewer' as const } };
+    const editor = { ...LOCAL_REQUEST_CONTEXT, workspace: { id: 'w', role: 'editor' as const } };
+    expect(canAccessPolicy(viewer, 'repository:read')).toBe(true);
+    expect(canAccessPolicy(viewer, 'repository:write')).toBe(false);
+    expect(canAccessPolicy(editor, 'ai:execute')).toBe(true);
+    expect(canAccessPolicy(editor, 'repository:admin')).toBe(false);
   });
 });

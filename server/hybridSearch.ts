@@ -1,6 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
-import { OmniLinkDB, omniDb } from './db';
+import { LOCAL_WORKSPACE_ID, OmniLinkDB, omniDb } from './db';
 import { LinkItem } from '../src/types';
+import { AiQuotaExceededError, beginAiProviderAttempt, recordAiProviderAttempt } from './aiUsage';
 
 export interface HybridSearchResult {
   link: LinkItem;
@@ -89,16 +90,21 @@ export class HybridSearchEngine {
     }
 
     if (genAi) {
+      let attemptReservationId: string | undefined;
       try {
+        attemptReservationId = beginAiProviderAttempt({ model: 'text-embedding-004', inputCharacters: text.length });
         const response = await (genAi as any).models.embedContent({
           model: 'text-embedding-004',
           contents: text,
         });
 
         if (response?.embedding?.values && Array.isArray(response.embedding.values)) {
+          recordAiProviderAttempt({ model: 'text-embedding-004', inputCharacters: text.length, status: 'completed', attempt: 1, reservationId: attemptReservationId });
           return response.embedding.values;
         }
       } catch (err) {
+        if (err instanceof AiQuotaExceededError) throw err;
+        recordAiProviderAttempt({ model: 'text-embedding-004', inputCharacters: text.length, status: 'failed', attempt: 1, reservationId: attemptReservationId });
         console.warn('[HybridSearch] Gemini embedding failed, falling back to term hash vector:', err);
       }
     }
@@ -138,32 +144,33 @@ export class HybridSearchEngine {
   }
 
   // Index single link embedding in database
-  async indexLink(link: LinkItem, genAi: GoogleGenAI | null): Promise<void> {
+  async indexLink(link: LinkItem, genAi: GoogleGenAI | null, workspaceId: string = LOCAL_WORKSPACE_ID): Promise<void> {
     try {
       const text = HybridSearchEngine.formatLinkForEmbedding(link);
       const vector = await this.generateEmbedding(text, genAi);
-      this.db.storeEmbedding(link.id, vector, genAi ? 'text-embedding-004' : 'term-hash-v1', text);
+      this.db.storeEmbedding(link.id, vector, genAi ? 'text-embedding-004' : 'term-hash-v1', text, workspaceId);
     } catch (err) {
+      if (err instanceof AiQuotaExceededError) throw err;
       console.warn(`[HybridSearch] Failed to index link ${link.id}:`, err);
     }
   }
 
   // Run background indexing for all unindexed bookmarks
-  async runBackgroundIndexing(genAi: GoogleGenAI | null): Promise<{ indexed: number; total: number }> {
+  async runBackgroundIndexing(genAi: GoogleGenAI | null, workspaceId: string = LOCAL_WORKSPACE_ID): Promise<{ indexed: number; total: number }> {
     if (this.isIndexing) {
-      return { indexed: 0, total: this.db.count() };
+      return { indexed: 0, total: this.db.count(workspaceId) };
     }
 
     this.isIndexing = true;
-    const unindexedIds = this.db.getUnindexedLinkIds();
+    const unindexedIds = this.db.getUnindexedLinkIds(workspaceId);
     console.log(`[HybridSearch] Found ${unindexedIds.length} bookmarks missing vector embeddings. Starting background indexing...`);
 
     let count = 0;
     try {
       for (const id of unindexedIds) {
-        const link = this.db.getLinkById(id);
+        const link = this.db.getLinkById(id, workspaceId);
         if (link) {
-          await this.indexLink(link, genAi);
+          await this.indexLink(link, genAi, workspaceId);
           count++;
           // Non-blocking yield
           if (count % 5 === 0) {
@@ -173,26 +180,28 @@ export class HybridSearchEngine {
       }
       console.log(`[HybridSearch] Background indexing complete! Indexed ${count} bookmarks.`);
     } catch (err) {
+      if (err instanceof AiQuotaExceededError) throw err;
       console.error('[HybridSearch] Error during background indexing:', err);
     } finally {
       this.isIndexing = false;
     }
 
-    return { indexed: count, total: this.db.count() };
+    return { indexed: count, total: this.db.count(workspaceId) };
   }
 
   // HYBRID SEARCH: BM25 Lexical (FTS5) + Dense Vector Semantic (text-embedding-004) + Reciprocal Rank Fusion (RRF)
   async search(
     query: string,
     genAi: GoogleGenAI | null,
-    options: HybridSearchOptions = {}
+    options: HybridSearchOptions = {},
+    workspaceId: string = LOCAL_WORKSPACE_ID,
   ): Promise<HybridSearchResult[]> {
     const { limit = 10, category, platform, readStatus, minScore = 0.001 } = options;
     const trimmedQuery = query ? query.trim() : '';
 
     if (!trimmedQuery) {
       // Empty query: return most recent bookmarks
-      const all = this.db.getAllLinks().slice(0, limit);
+      const all = this.db.getAllLinks(workspaceId).slice(0, limit);
       return all.map((l) => ({
         link: l,
         rrfScore: 1.0,
@@ -203,7 +212,7 @@ export class HybridSearchEngine {
     }
 
     // Step 1: Lexical Search via SQLite FTS5 (BM25)
-    const ftsMatches = this.db.searchFts(trimmedQuery, 30);
+    const ftsMatches = this.db.searchFts(trimmedQuery, 30, workspaceId);
     const ftsRankMap = new Map<string, number>();
     ftsMatches.forEach((m, idx) => {
       ftsRankMap.set(m.id, idx + 1); // 1-indexed rank
@@ -218,7 +227,7 @@ export class HybridSearchEngine {
       const qVec = await this.generateEmbedding(trimmedQuery, genAi);
       queryEmbedding = new Float32Array(qVec);
 
-      const allEmbeddings = this.db.getAllEmbeddings();
+      const allEmbeddings = this.db.getAllEmbeddings(workspaceId);
       const scored: Array<{ linkId: string; sim: number }> = [];
 
       for (const item of allEmbeddings) {
@@ -236,6 +245,7 @@ export class HybridSearchEngine {
         vectorRankMap.set(item.linkId, idx + 1);
       });
     } catch (embErr) {
+      if (embErr instanceof AiQuotaExceededError) throw embErr;
       console.warn('[HybridSearch] Vector search step error:', embErr);
     }
 
@@ -246,7 +256,7 @@ export class HybridSearchEngine {
     const fusedResults: HybridSearchResult[] = [];
 
     for (const id of candidateIds) {
-      const link = this.db.getLinkById(id);
+      const link = this.db.getLinkById(id, workspaceId);
       if (!link) continue;
 
       // Apply metadata filters if specified

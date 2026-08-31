@@ -8,6 +8,7 @@ import {
   ModelOrchestratorStats,
   PlatformType,
 } from '../src/types';
+import { AiQuotaExceededError, beginAiProviderAttempt, recordAiProviderAttempt } from './aiUsage';
 
 // =========================================================================
 // OmniLink Intelligent Multi-Tier Gemini Model Orchestration & Router Engine
@@ -229,7 +230,7 @@ export class ModelOrchestrator {
         fallbackHops: 0,
         success: false,
         error: 'Gemini API client not initialized or GEMINI_API_KEY missing.',
-        targetUrlOrPrompt: options.url || prompt.slice(0, 100),
+        targetUrlOrPrompt: '[redacted]',
       });
 
       return {
@@ -257,6 +258,8 @@ export class ModelOrchestrator {
 
       // Max 2 retry attempts per model tier
       for (let attempt = 0; attempt < 2; attempt++) {
+        let providerCompleted = false;
+        let attemptReservationId: string | undefined;
         try {
           const configObj: any = {
             ...(schemaConfig
@@ -279,6 +282,7 @@ export class ModelOrchestrator {
             }
           }
 
+          attemptReservationId = beginAiProviderAttempt({ model: currentModel, inputCharacters: prompt.length });
           const response = await ai.models.generateContent({
             model: currentModel,
             contents: prompt,
@@ -286,6 +290,15 @@ export class ModelOrchestrator {
           });
 
           const rawText = response?.text || null;
+          providerCompleted = true;
+          recordAiProviderAttempt({
+            model: currentModel,
+            inputCharacters: prompt.length,
+            outputCharacters: rawText?.length || 0,
+            status: 'completed',
+            attempt: i * 2 + attempt + 1,
+            reservationId: attemptReservationId,
+          });
           let parsedData: T | null = null;
 
           if (rawText) {
@@ -316,7 +329,7 @@ export class ModelOrchestrator {
             thinkingLevel: decision.thinkingLevel,
             success: true,
             estimatedCostUsd: estimatedCost,
-            targetUrlOrPrompt: options.url || prompt.slice(0, 100),
+            targetUrlOrPrompt: '[redacted]',
           });
 
           return {
@@ -330,6 +343,16 @@ export class ModelOrchestrator {
             thinkingLevel: decision.thinkingLevel,
           };
         } catch (err: any) {
+          if (err instanceof AiQuotaExceededError) throw err;
+          if (!providerCompleted) {
+            recordAiProviderAttempt({
+              model: currentModel,
+              inputCharacters: prompt.length,
+              status: 'failed',
+              attempt: i * 2 + attempt + 1,
+              reservationId: attemptReservationId,
+            });
+          }
           const errMsg = err?.message || String(err);
           const errStatus = err?.status || err?.code || '';
           lastError = errMsg;
@@ -374,7 +397,7 @@ export class ModelOrchestrator {
       success: false,
       estimatedCostUsd: 0,
       error: lastError || 'All models in fallback chain failed.',
-      targetUrlOrPrompt: options.url || prompt.slice(0, 100),
+      targetUrlOrPrompt: '[redacted]',
     });
 
     return {

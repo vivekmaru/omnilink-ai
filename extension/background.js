@@ -1,9 +1,21 @@
 // OmniLink AI - Background Service Worker (Manifest V3)
 const DEFAULT_APP_URL = 'http://localhost:3000';
+const SERVICE_TOKEN_STORAGE_KEY = 'omnilink_service_token';
 
 async function getAppUrl() {
   const data = await chrome.storage.sync.get(['omnilink_app_url']);
   return (data.omnilink_app_url || DEFAULT_APP_URL).replace(/\/$/, '');
+}
+
+// Keep service credentials local to this extension profile and out of sync
+// storage. Tokens are sent only in Authorization headers, never in URLs or
+// diagnostic output.
+async function getApiHeaders(base = {}) {
+  const data = await chrome.storage.local.get([SERVICE_TOKEN_STORAGE_KEY]);
+  const token = typeof data[SERVICE_TOKEN_STORAGE_KEY] === 'string'
+    ? data[SERVICE_TOKEN_STORAGE_KEY].trim()
+    : '';
+  return token ? { ...base, Authorization: `Bearer ${token}` } : { ...base };
 }
 
 // 1. Initialize Context Menus
@@ -54,7 +66,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   try {
     const res = await fetch(`${appUrl}/api/share/quick`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await getApiHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({
         url: targetUrl,
         title: title || targetUrl,
@@ -92,7 +104,7 @@ chrome.omnibox.onInputChanged.addListener(async (text, suggest) => {
     const appUrl = await getAppUrl();
     const res = await fetch(`${appUrl}/api/ai/search/hybrid`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await getApiHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ query, limit: 5 }),
     });
 

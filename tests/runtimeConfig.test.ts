@@ -17,10 +17,41 @@ describe('runtime configuration', () => {
     expect(describeUnsafeRemoteWarning(config)).toMatch(/without authentication/);
   });
 
-  it('keeps future multi-user mode loopback-only until auth exists', () => {
+  it('refuses multi-user startup until the complete auth and quota policy exists', () => {
     expect(() => loadRuntimeConfig({
       OMNILINK_MODE: 'multi-user',
       OMNILINK_HOST: '0.0.0.0',
-    })).toThrow(/Refusing remote bind/);
+    })).toThrow(/OIDC_ISSUER/);
+  });
+
+  it('allows remote multi-user binding only with complete guarded configuration', () => {
+    const config = loadRuntimeConfig({
+      OMNILINK_MODE: 'multi-user',
+      OMNILINK_HOST: '0.0.0.0',
+      OMNILINK_OIDC_ISSUER: 'https://identity.example.test',
+      OMNILINK_OIDC_CLIENT_ID: 'omnilink',
+      OMNILINK_OIDC_REDIRECT_URI: 'https://app.example.test/auth/callback',
+      OMNILINK_SESSION_SECRET: 'a'.repeat(32),
+      OMNILINK_SESSION_STORE: 'sqlite',
+      OMNILINK_APP_ORIGIN: 'https://app.example.test',
+      OMNILINK_AI_QUOTA_MONTHLY_UNITS: '100000',
+    });
+    expect(config).toMatchObject({ mode: 'multi-user', host: '0.0.0.0', appOrigin: 'https://app.example.test' });
+    expect(config.auth?.clientId).toBe('omnilink');
+  });
+
+  it('requires HTTPS for non-loopback multi-user application origins', () => {
+    const base = {
+      OMNILINK_MODE: 'multi-user',
+      OMNILINK_HOST: '0.0.0.0',
+      OMNILINK_OIDC_ISSUER: 'https://identity.example.test',
+      OMNILINK_OIDC_CLIENT_ID: 'omnilink',
+      OMNILINK_OIDC_REDIRECT_URI: 'http://127.0.0.1:4000/auth/callback',
+      OMNILINK_SESSION_SECRET: 'a'.repeat(32),
+      OMNILINK_SESSION_STORE: 'sqlite',
+      OMNILINK_AI_QUOTA_MONTHLY_UNITS: '100000',
+    };
+    expect(() => loadRuntimeConfig({ ...base, OMNILINK_APP_ORIGIN: 'http://links.example.test' })).toThrow(/must use HTTPS/);
+    expect(loadRuntimeConfig({ ...base, OMNILINK_APP_ORIGIN: 'http://127.0.0.1:4000' }).appOrigin).toBe('http://127.0.0.1:4000');
   });
 });

@@ -26,14 +26,17 @@ Add the `omnilink` server definition to `mcpServers`:
         "/absolute/path/to/omnilink-ai/server/mcpServer.ts"
       ],
       "env": {
-        "GEMINI_API_KEY": "YOUR_GEMINI_API_KEY"
+        "GEMINI_API_KEY": "YOUR_GEMINI_API_KEY",
+        "OMNILINK_MODE": "multi-user",
+        "OMNILINK_SERVICE_TOKEN": "YOUR_SCOPED_SERVICE_TOKEN",
+        "OMNILINK_AI_QUOTA_MONTHLY_UNITS": "1000000"
       }
     }
   }
 }
 ```
 
-> **Note**: Replace `/absolute/path/to/omnilink-ai` with the absolute path to your OmniLink repository. If you don't have a Gemini API key, you can omit `GEMINI_API_KEY` (OmniLink's offline term-hash fallback will be used automatically). For advanced agent workflows, see [**AGENTS.md**](file:///Users/vivek/antigravity/OmniLink-AI---Smart-Link-Repository/AGENTS.md).
+> **Note**: Replace the path and placeholders with values from your installation. Local mode needs neither a service token nor a quota. A multi-user MCP process also inherits the complete Phase 1B OIDC/application-origin environment contract; the shortened JSON above shows only the MCP-specific additions. Its revocable token needs `repository:read` for retrieval, `repository:write` for saves, and `ai:execute` for synthesis or embedding queries. The raw token is shown only when created and must be supplied through `OMNILINK_SERVICE_TOKEN`, never a command-line URL.
 
 Restart Claude Desktop. You will see a hammer icon (`🛠️`) indicating that OmniLink tools and resources are active.
 

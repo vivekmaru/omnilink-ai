@@ -1,6 +1,7 @@
 import { JSDOM } from 'jsdom';
 import { Readability } from '@mozilla/readability';
 import TurndownService from 'turndown';
+import { readResponseJson, readResponseText, safeFetch } from './outboundUrlPolicy';
 
 export interface ReaderArticle {
   title: string;
@@ -55,7 +56,7 @@ export class ReadabilityService {
       const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
       // Fetch submission from Pullpush archive API
-      const subRes = await fetch(`https://api.pullpush.io/reddit/submission/search/?ids=${postId}`, {
+      const subRes = await safeFetch(`https://api.pullpush.io/reddit/submission/search/?ids=${postId}`, {
         signal: controller.signal,
         headers: { Accept: 'application/json' },
       });
@@ -63,7 +64,7 @@ export class ReadabilityService {
       clearTimeout(timeoutId);
 
       if (subRes.ok) {
-        const subJson = await subRes.json();
+        const subJson = await readResponseJson<any>(subRes);
         const post = subJson.data?.[0];
 
         if (post && post.title) {
@@ -77,14 +78,14 @@ export class ReadabilityService {
           try {
             const comController = new AbortController();
             const comTimeout = setTimeout(() => comController.abort(), 4000);
-            const comRes = await fetch(
+            const comRes = await safeFetch(
               `https://api.pullpush.io/reddit/comment/search/?link_id=${postId}&sort=desc&sort_type=score&size=10`,
               { signal: comController.signal, headers: { Accept: 'application/json' } }
             );
             clearTimeout(comTimeout);
 
             if (comRes.ok) {
-              const comJson = await comRes.json();
+              const comJson = await readResponseJson<any>(comRes);
               topComments = (comJson.data || [])
                 .map((c: any) => ({
                   author: c.author || 'commenter',
@@ -133,9 +134,9 @@ export class ReadabilityService {
 
     // Fallback: Reddit oEmbed
     try {
-      const oeRes = await fetch(`https://www.reddit.com/oembed?url=${encodeURIComponent(url)}`);
+      const oeRes = await safeFetch(`https://www.reddit.com/oembed?url=${encodeURIComponent(url)}`);
       if (oeRes.ok) {
-        const oe = await oeRes.json();
+        const oe = await readResponseJson<any>(oeRes);
         const title = oe.title || 'Reddit Discussion';
         const author = oe.author_name ? `u/${oe.author_name}` : 'Reddit Community';
         const md = `# ${title}\n\n**Source:** Reddit (${author})\n\n[Visit original Reddit conversation](${url})`;
@@ -177,11 +178,11 @@ export class ReadabilityService {
           const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/README.md`;
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), timeoutMs / 2);
-          const res = await fetch(rawUrl, { signal: controller.signal });
+          const res = await safeFetch(rawUrl, { signal: controller.signal });
           clearTimeout(timeoutId);
 
           if (res.ok) {
-            readmeText = await res.text();
+            readmeText = await readResponseText(res);
             if (readmeText && readmeText.length > 50) break;
           }
         } catch {
@@ -218,11 +219,11 @@ export class ReadabilityService {
       const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`;
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-      const res = await fetch(oembedUrl, { signal: controller.signal });
+      const res = await safeFetch(oembedUrl, { signal: controller.signal });
       clearTimeout(timeoutId);
 
       if (res.ok) {
-        const data = await res.json();
+        const data = await readResponseJson<any>(res);
         const title = data.title || 'YouTube Video';
         const channel = data.author_name || 'YouTube Creator';
         const markdown = `# ${title}\n\n**Creator / Channel:** [${channel}](${data.author_url || url})\n**Platform:** YouTube Video\n\n[Watch Video on YouTube](${url})`;
@@ -254,11 +255,11 @@ export class ReadabilityService {
       const arxivId = arxivMatch[1];
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-      const res = await fetch(`https://arxiv.org/abs/${arxivId}`, { signal: controller.signal });
+      const res = await safeFetch(`https://arxiv.org/abs/${arxivId}`, { signal: controller.signal });
       clearTimeout(timeoutId);
 
       if (res.ok) {
-        const html = await res.text();
+        const html = await readResponseText(res);
         const dom = new JSDOM(html);
         const doc = dom.window.document;
 
@@ -299,7 +300,7 @@ export class ReadabilityService {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-      const res = await fetch(`https://hn.algolia.com/api/v1/items/${hnId}`, {
+      const res = await safeFetch(`https://hn.algolia.com/api/v1/items/${hnId}`, {
         signal: controller.signal,
         headers: { Accept: 'application/json' },
       });
@@ -307,7 +308,7 @@ export class ReadabilityService {
       clearTimeout(timeoutId);
 
       if (res.ok) {
-        const data = await res.json();
+        const data = await readResponseJson<any>(res);
         const title = data.title || `Hacker News Item #${hnId}`;
         const author = data.author || 'HN User';
         const points = data.points || 0;
@@ -417,7 +418,7 @@ export class ReadabilityService {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-      const res = await fetch(url, {
+      const res = await safeFetch(url, {
         headers: {
           'User-Agent':
             'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
@@ -434,7 +435,7 @@ export class ReadabilityService {
         return null;
       }
 
-      const html = await res.text();
+      const html = await readResponseText(res);
       return this.extractFromHtml(html, url);
     } catch (err: any) {
       console.warn(`[ReadabilityService] Failed to extract from URL ${url}:`, err.message);
