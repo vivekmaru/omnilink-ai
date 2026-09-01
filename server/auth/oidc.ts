@@ -8,6 +8,7 @@ import {
   type JWTPayload,
   type RemoteJWKSetOptions,
 } from 'jose';
+import { readResponseJson } from '../outboundUrlPolicy';
 import { verifyOidcNonce } from './pkce';
 
 export const OIDC_ALLOWED_ALGORITHMS = [
@@ -255,7 +256,7 @@ export async function discoverOidcProviderFromUrl(
 
   let metadata: unknown;
   try {
-    metadata = JSON.parse(await readBoundedResponse(response, 256 * 1024));
+    metadata = await readResponseJson<unknown>(response, 256 * 1024);
   } catch (error) {
     if (error instanceof OidcConfigurationError) throw error;
     throw new OidcConfigurationError('OIDC discovery returned invalid JSON.');
@@ -291,44 +292,11 @@ export async function discoverOidcProviderFromUrl(
 }
 
 async function fetchWithTimeout(fetchImpl: OidcFetch, url: string): Promise<Response> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 5_000);
   try {
-    return await fetchImpl(url, { method: 'GET', redirect: 'error', signal: controller.signal });
+    return await fetchImpl(url, { method: 'GET', redirect: 'error', signal: AbortSignal.timeout(5_000) });
   } catch (error) {
     throw new OidcConfigurationError(`OIDC discovery request failed: ${error instanceof Error ? error.message : 'network error'}`);
-  } finally {
-    clearTimeout(timeout);
   }
-}
-
-async function readBoundedResponse(response: Response, maxBytes: number): Promise<string> {
-  const contentLength = Number(response.headers.get('content-length'));
-  if (Number.isFinite(contentLength) && contentLength > maxBytes) {
-    throw new OidcConfigurationError('OIDC discovery response exceeds the configured size limit.');
-  }
-  if (!response.body) {
-    const text = await response.text();
-    if (Buffer.byteLength(text, 'utf8') > maxBytes) throw new OidcConfigurationError('OIDC discovery response exceeds the configured size limit.');
-    return text;
-  }
-
-  const reader = response.body.getReader();
-  const chunks: Buffer[] = [];
-  let total = 0;
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      const chunk = Buffer.from(value);
-      total += chunk.length;
-      if (total > maxBytes) throw new OidcConfigurationError('OIDC discovery response exceeds the configured size limit.');
-      chunks.push(chunk);
-    }
-  } finally {
-    reader.releaseLock();
-  }
-  return Buffer.concat(chunks).toString('utf8');
 }
 
 function normaliseAudience(audience: OidcAudience): string | string[] {

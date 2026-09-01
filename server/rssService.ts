@@ -6,7 +6,7 @@ import { ModelOrchestrator } from './modelOrchestrator';
 import { AiQuotaExceededError } from './aiUsage';
 import { ReadabilityService } from './readabilityService';
 import { LOCAL_WORKSPACE_ID } from './db';
-import { readResponseText, safeFetch } from './outboundUrlPolicy';
+import { OutboundUrlPolicyError, assertResponseMediaType, readResponseText, readResponseXml, safeFetch } from './outboundUrlPolicy';
 
 type StoredRssFeed = RssFeed & { workspaceId: string };
 
@@ -531,30 +531,24 @@ export class RssFeedManager {
 
     // Step 1: Attempt direct fetch of the URL
     try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 6000);
-
       const response = await safeFetch(cleanUrl, {
-        signal: controller.signal,
+        timeoutMs: 6_000,
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 (OmniLink AI RSS Crawler)',
-          'Accept': 'application/rss+xml, application/atom+xml, application/xml, text/xml, text/html, */*',
+          'Accept': 'application/rss+xml, application/atom+xml, application/xml, text/xml, text/html',
         },
       });
-      clearTimeout(timeout);
 
-      const contentType = response.headers.get('content-type') || '';
-      const text = await readResponseText(response);
+      let responseMediaType: string | null = null;
+      try {
+        responseMediaType = assertResponseMediaType(response, ['html', 'xml']);
+      } catch (error) {
+        if (!(error instanceof OutboundUrlPolicyError) || error.code !== 'unsupported-media-type') throw error;
+      }
+      const text = responseMediaType ? await readResponseText(response) : '';
 
       // If already XML/RSS/Atom content
-      if (
-        contentType.includes('xml') ||
-        contentType.includes('rss') ||
-        contentType.includes('atom') ||
-        text.includes('<rss') ||
-        text.includes('<feed') ||
-        text.includes('<rdf:RDF')
-      ) {
+      if (responseMediaType?.includes('xml')) {
         const parsed = parseFeedXml(text, cleanUrl);
         return {
           discovered: true,
@@ -583,10 +577,14 @@ export class RssFeedManager {
         try {
           const resolvedUrl = new URL(rawHref, cleanUrl).toString();
           const feedRes = await safeFetch(resolvedUrl, {
-            headers: { 'User-Agent': 'OmniLink-AI/1.0 RSS Reader' },
+            timeoutMs: 6_000,
+            headers: {
+              'User-Agent': 'OmniLink-AI/1.0 RSS Reader',
+              Accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml',
+            },
           });
           if (feedRes.ok) {
-            const feedXml = await readResponseText(feedRes);
+            const feedXml = await readResponseXml(feedRes);
             if (feedXml.includes('<rss') || feedXml.includes('<feed') || feedXml.includes('<rdf:RDF')) {
               const parsed = parseFeedXml(feedXml, resolvedUrl);
               return {
@@ -614,10 +612,14 @@ export class RssFeedManager {
         try {
           const candidate = `${origin}${p}`;
           const candidateRes = await safeFetch(candidate, {
-            headers: { 'User-Agent': 'OmniLink-AI/1.0 RSS Reader' },
+            timeoutMs: 6_000,
+            headers: {
+              'User-Agent': 'OmniLink-AI/1.0 RSS Reader',
+              Accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml',
+            },
           });
           if (candidateRes.ok) {
-            const candidateXml = await readResponseText(candidateRes);
+            const candidateXml = await readResponseXml(candidateRes);
             if (candidateXml.includes('<rss') || candidateXml.includes('<feed') || candidateXml.includes('<rdf:RDF')) {
               const parsed = parseFeedXml(candidateXml, candidate);
               return {
@@ -670,23 +672,19 @@ export class RssFeedManager {
     const newLinks: LinkItem[] = [];
 
     try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 10000);
-
       const response = await safeFetch(feed.url, {
-        signal: controller.signal,
+        timeoutMs: 10_000,
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 (OmniLink AI RSS Reader)',
-          'Accept': 'application/rss+xml, application/atom+xml, application/xml, text/xml, */*',
+          'Accept': 'application/rss+xml, application/atom+xml, application/xml, text/xml',
         },
       });
-      clearTimeout(timeout);
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const xmlText = await readResponseText(response);
+      const xmlText = await readResponseXml(response);
       const parsed = parseFeedXml(xmlText, feed.url);
 
       // Ingest latest items (limit up to 15 newest items per sync run)
@@ -874,7 +872,7 @@ Guidelines:
       };
     } catch (err: any) {
       if (err instanceof AiQuotaExceededError) throw err;
-      console.error(`RSS Sync error for ${feed.title} (${feed.url}):`, err.message);
+      console.error(`RSS sync failed for feed ${feed.id}:`, err.message);
       this.updateFeed(feed.id, {
         lastFetchedAt: new Date().toISOString(),
         lastError: err.message || 'Sync failed',

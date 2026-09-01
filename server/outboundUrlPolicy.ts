@@ -5,15 +5,114 @@ import ipaddr from 'ipaddr.js';
 
 const DEFAULT_MAX_REDIRECTS = 3;
 const DEFAULT_MAX_RESPONSE_BYTES = 5 * 1024 * 1024;
+const DEFAULT_REQUEST_TIMEOUT_MS = 15_000;
+const MAX_REQUEST_TIMEOUT_MS = 2_147_483_647;
+
+export type OutboundMediaType = 'json' | 'html' | 'xml' | 'text';
+
+export interface OutboundRequestMetrics {
+  requestsStarted: number;
+  responsesReceived: number;
+  redirectsFollowed: number;
+  blockedRequests: number;
+  dnsFailures: number;
+  networkFailures: number;
+  timedOutRequests: number;
+  rejectedMediaTypes: number;
+  oversizedResponses: number;
+}
+
+// Deliberately aggregate-only: never add URL, query, header, or body dimensions.
+const outboundRequestMetrics: OutboundRequestMetrics = {
+  requestsStarted: 0,
+  responsesReceived: 0,
+  redirectsFollowed: 0,
+  blockedRequests: 0,
+  dnsFailures: 0,
+  networkFailures: 0,
+  timedOutRequests: 0,
+  rejectedMediaTypes: 0,
+  oversizedResponses: 0,
+};
+
+const responseSignals = new WeakMap<Response, AbortSignal>();
+const countedTimeoutSignals = new WeakSet<AbortSignal>();
+
+export function getOutboundRequestMetrics(): Readonly<OutboundRequestMetrics> {
+  return Object.freeze({ ...outboundRequestMetrics });
+}
+
+/** Intended for metrics collection intervals and isolated tests. */
+export function resetOutboundRequestMetrics(): void {
+  for (const key of Object.keys(outboundRequestMetrics) as Array<keyof OutboundRequestMetrics>) {
+    outboundRequestMetrics[key] = 0;
+  }
+}
 
 export class OutboundUrlPolicyError extends Error {
-  code: 'invalid-url' | 'blocked-host' | 'dns-failure' | 'redirect-limit' | 'response-too-large';
+  code: 'invalid-url' | 'blocked-host' | 'dns-failure' | 'redirect-limit' | 'response-too-large' | 'unsupported-media-type' | 'request-timeout';
 
   constructor(code: OutboundUrlPolicyError['code'], message: string) {
     super(message);
     this.name = 'OutboundUrlPolicyError';
     this.code = code;
   }
+}
+
+function timeoutError(signal?: AbortSignal): OutboundUrlPolicyError {
+  if (!signal || !countedTimeoutSignals.has(signal)) {
+    outboundRequestMetrics.timedOutRequests += 1;
+    if (signal) countedTimeoutSignals.add(signal);
+  }
+  return new OutboundUrlPolicyError('request-timeout', 'Outbound request exceeded the configured timeout.');
+}
+
+function throwIfAborted(signal?: AbortSignal): void {
+  if (!signal?.aborted) return;
+  if (signal.reason instanceof DOMException && signal.reason.name === 'TimeoutError') throw timeoutError(signal);
+  throw signal.reason ?? new DOMException('The operation was aborted.', 'AbortError');
+}
+
+function networkErrorCode(error: unknown): string | undefined {
+  let current = error;
+  for (let depth = 0; depth < 5 && current && typeof current === 'object'; depth += 1) {
+    const candidate = current as { code?: unknown; cause?: unknown };
+    if (typeof candidate.code === 'string') return candidate.code;
+    current = candidate.cause;
+  }
+  return undefined;
+}
+
+async function cancelResponseBody(response: Response, reason?: unknown): Promise<void> {
+  try {
+    await response.body?.cancel(reason);
+  } catch {
+    // Cancellation is cleanup and must not mask the policy error being raised.
+  }
+}
+
+async function awaitWithSignal<T>(promise: Promise<T>, signal?: AbortSignal): Promise<T> {
+  if (!signal) return promise;
+  throwIfAborted(signal);
+  return new Promise<T>((resolve, reject) => {
+    const removeListener = () => signal.removeEventListener('abort', rejectOnAbort);
+    const rejectOnAbort = () => {
+      removeListener();
+      try {
+        throwIfAborted(signal);
+      } catch (error) {
+        reject(error);
+      }
+    };
+    signal.addEventListener('abort', rejectOnAbort, { once: true });
+    promise.then((value) => {
+      removeListener();
+      resolve(value);
+    }, (error) => {
+      removeListener();
+      reject(error);
+    });
+  });
 }
 
 function isBlockedIp(value: string): boolean {
@@ -109,8 +208,12 @@ export async function assertSafeOutboundUrl(
   if (net.isIP(hostname) === 0) {
     let addresses: Array<{ address: string }>;
     try {
-      addresses = await lookup(hostname, { all: true, verbatim: true }) as Array<{ address: string }>;
+      addresses = await awaitWithSignal(
+        lookup(hostname, { all: true, verbatim: true }) as Promise<Array<{ address: string }>>,
+        signal,
+      );
     } catch {
+      throwIfAborted(signal);
       throw new OutboundUrlPolicyError('dns-failure', 'Outbound hostname could not be resolved.');
     }
     if (addresses.length === 0 || addresses.some(({ address }) => isBlockedIp(address))) {
@@ -126,42 +229,93 @@ export async function assertSafeOutboundUrl(
  */
 export async function safeFetch(input: string | URL, options: RequestInit & {
   maxRedirects?: number;
+  timeoutMs?: number;
   /** Test/integration seam; production uses node DNS resolution. */
   lookup?: typeof dns.lookup;
 } = {}): Promise<Response> {
-  const { maxRedirects = DEFAULT_MAX_REDIRECTS, lookup = dns.lookup, ...requestOptions } = options;
-  let current = await assertSafeOutboundUrl(input, requestOptions.signal, lookup);
+  const {
+    maxRedirects = DEFAULT_MAX_REDIRECTS,
+    timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
+    lookup = dns.lookup,
+    ...requestOptions
+  } = options;
+  if (!Number.isInteger(timeoutMs) || timeoutMs <= 0 || timeoutMs > MAX_REQUEST_TIMEOUT_MS) {
+    throw new OutboundUrlPolicyError('invalid-url', 'Outbound request timeout must be a positive number.');
+  }
+  outboundRequestMetrics.requestsStarted += 1;
+  const timeoutSignal = AbortSignal.timeout(timeoutMs);
+  const requestSignal = requestOptions.signal
+    ? AbortSignal.any([requestOptions.signal, timeoutSignal])
+    : timeoutSignal;
+  let current: URL;
+  try {
+    current = await assertSafeOutboundUrl(input, requestSignal, lookup);
+  } catch (error) {
+    if (error instanceof OutboundUrlPolicyError && error.code === 'blocked-host') outboundRequestMetrics.blockedRequests += 1;
+    if (error instanceof OutboundUrlPolicyError && error.code === 'dns-failure') outboundRequestMetrics.dnsFailures += 1;
+    throwIfAborted(requestSignal);
+    throw error;
+  }
   let headers = new Headers(requestOptions.headers || {});
   let method = requestOptions.method;
   let body = requestOptions.body;
 
   for (let hop = 0; ; hop += 1) {
-    const response = await fetch(current, {
-      ...requestOptions,
-      method,
-      body,
-      headers,
-      redirect: 'manual',
-      // Node's fetch accepts Undici dispatchers; keep this property last so a
-      // caller cannot replace the connection-time DNS policy.
-      dispatcher: safeOutboundDispatcher,
-    } as RequestInit);
-    if (![301, 302, 303, 307, 308].includes(response.status)) return response;
+    throwIfAborted(requestSignal);
+    let response: Response;
+    try {
+      response = await fetch(current, {
+        ...requestOptions,
+        signal: requestSignal,
+        method,
+        body,
+        headers,
+        redirect: 'manual',
+        // Node's fetch accepts Undici dispatchers; keep this property last so a
+        // caller cannot replace the connection-time DNS policy.
+        dispatcher: safeOutboundDispatcher,
+      } as RequestInit);
+    } catch (error) {
+      if (requestSignal.aborted) throwIfAborted(requestSignal);
+      const code = networkErrorCode(error);
+      if (code === 'EACCES') outboundRequestMetrics.blockedRequests += 1;
+      else if (code === 'ENOTFOUND') outboundRequestMetrics.dnsFailures += 1;
+      else outboundRequestMetrics.networkFailures += 1;
+      throw error;
+    }
+    if (![301, 302, 303, 307, 308].includes(response.status)) {
+      outboundRequestMetrics.responsesReceived += 1;
+      responseSignals.set(response, requestSignal);
+      return response;
+    }
     const location = response.headers.get('location');
-    if (!location) return response;
+    if (!location) {
+      outboundRequestMetrics.responsesReceived += 1;
+      responseSignals.set(response, requestSignal);
+      return response;
+    }
     if (hop >= maxRedirects) {
-      await response.body?.cancel();
+      await cancelResponseBody(response);
       throw new OutboundUrlPolicyError('redirect-limit', 'Outbound redirect limit exceeded.');
     }
-    const next = parseUrl(new URL(location, current));
+    let next: URL;
     // Resolve and validate every destination before applying transport policy;
     // redirects to private hosts must never reach the network layer.
-    await assertSafeOutboundUrl(next, requestOptions.signal, lookup);
+    try {
+      next = parseUrl(new URL(location, current));
+      await assertSafeOutboundUrl(next, requestSignal, lookup);
+    } catch (error) {
+      await cancelResponseBody(response, error);
+      if (error instanceof OutboundUrlPolicyError && error.code === 'blocked-host') outboundRequestMetrics.blockedRequests += 1;
+      if (error instanceof OutboundUrlPolicyError && error.code === 'dns-failure') outboundRequestMetrics.dnsFailures += 1;
+      throwIfAborted(requestSignal);
+      throw error;
+    }
     if (current.protocol === 'https:' && next.protocol === 'http:') {
-      await response.body?.cancel();
+      await cancelResponseBody(response);
       throw new OutboundUrlPolicyError('invalid-url', 'HTTPS outbound requests may not downgrade to HTTP.');
     }
-    await response.body?.cancel();
+    await cancelResponseBody(response);
     // Never forward caller credentials across an origin change.
     if (next.origin !== current.origin) {
       headers = new Headers(headers);
@@ -172,15 +326,38 @@ export async function safeFetch(input: string | URL, options: RequestInit & {
       method = 'GET';
       body = undefined;
     }
+    outboundRequestMetrics.redirectsFollowed += 1;
     current = next;
   }
 }
 
+const MEDIA_TYPE_PATTERNS: Record<OutboundMediaType, (mime: string) => boolean> = {
+  json: (mime) => mime === 'application/json' || mime.endsWith('+json'),
+  html: (mime) => mime === 'text/html' || mime === 'application/xhtml+xml',
+  xml: (mime) => mime === 'application/xml' || mime === 'text/xml' || mime.endsWith('+xml'),
+  text: (mime) => mime.startsWith('text/'),
+};
+
+/** Reject a response before handing attacker-controlled bytes to a parser. */
+export function assertResponseMediaType(response: Response, allowed: readonly OutboundMediaType[]): string {
+  const raw = response.headers.get('content-type');
+  const mime = raw?.split(';', 1)[0]?.trim().toLowerCase() ?? '';
+  if (!mime || !allowed.some((kind) => MEDIA_TYPE_PATTERNS[kind](mime))) {
+    outboundRequestMetrics.rejectedMediaTypes += 1;
+    void response.body?.cancel().catch(() => undefined);
+    throw new OutboundUrlPolicyError('unsupported-media-type', 'Outbound response has an unsupported media type.');
+  }
+  return mime;
+}
+
 /** Read a response body with a decompressed byte limit. */
 export async function readResponseText(response: Response, maxBytes: number = DEFAULT_MAX_RESPONSE_BYTES): Promise<string> {
+  const signal = responseSignals.get(response);
+  throwIfAborted(signal);
   const declaredLength = Number(response.headers.get('content-length') || 0);
   if (declaredLength > maxBytes) {
-    await response.body?.cancel();
+    outboundRequestMetrics.oversizedResponses += 1;
+    await cancelResponseBody(response);
     throw new OutboundUrlPolicyError('response-too-large', 'Outbound response exceeds the configured size limit.');
   }
   if (!response.body) return response.text();
@@ -189,15 +366,45 @@ export async function readResponseText(response: Response, maxBytes: number = DE
   let total = 0;
   try {
     while (true) {
-      const { done, value } = await reader.read();
+      throwIfAborted(signal);
+      const read = reader.read();
+      const { done, value } = signal
+        ? await new Promise<ReadableStreamReadResult<Uint8Array>>((resolve, reject) => {
+          const removeListener = () => signal.removeEventListener('abort', rejectOnAbort);
+          const rejectOnAbort = () => {
+            let error: unknown;
+            try {
+              throwIfAborted(signal);
+            } catch (cause) {
+              error = cause;
+            }
+            removeListener();
+            reject(error);
+            void reader.cancel(error).catch(() => undefined);
+          };
+          signal.addEventListener('abort', rejectOnAbort, { once: true });
+          read.then((result) => {
+            removeListener();
+            resolve(result);
+          }, (error) => {
+            removeListener();
+            reject(error);
+          });
+        })
+        : await read;
       if (done) break;
       total += value.byteLength;
       if (total > maxBytes) {
+        outboundRequestMetrics.oversizedResponses += 1;
         await reader.cancel();
         throw new OutboundUrlPolicyError('response-too-large', 'Outbound response exceeds the configured size limit.');
       }
       chunks.push(value);
     }
+  } catch (error) {
+    if (error instanceof OutboundUrlPolicyError && error.code === 'request-timeout') throw error;
+    throwIfAborted(signal);
+    throw error;
   } finally {
     reader.releaseLock();
   }
@@ -211,5 +418,16 @@ export async function readResponseText(response: Response, maxBytes: number = DE
 }
 
 export async function readResponseJson<T = unknown>(response: Response, maxBytes: number = DEFAULT_MAX_RESPONSE_BYTES): Promise<T> {
+  assertResponseMediaType(response, ['json']);
   return JSON.parse(await readResponseText(response, maxBytes)) as T;
+}
+
+export async function readResponseHtml(response: Response, maxBytes: number = DEFAULT_MAX_RESPONSE_BYTES): Promise<string> {
+  assertResponseMediaType(response, ['html']);
+  return readResponseText(response, maxBytes);
+}
+
+export async function readResponseXml(response: Response, maxBytes: number = DEFAULT_MAX_RESPONSE_BYTES): Promise<string> {
+  assertResponseMediaType(response, ['xml']);
+  return readResponseText(response, maxBytes);
 }

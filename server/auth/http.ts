@@ -3,6 +3,7 @@ import express from 'express';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import type { OmniLinkDB } from '../db';
 import type { RuntimeConfig } from '../runtimeConfig';
+import { readResponseJson } from '../outboundUrlPolicy';
 import {
   LOCAL_REQUEST_CONTEXT,
   canAccessPolicy,
@@ -218,11 +219,9 @@ function registerBrowserRoutes(router: Router, runtime: RuntimeConfig, db: OmniL
         signal: AbortSignal.timeout(10_000),
       });
       if (!tokenResponse.ok) return unauthorized(res);
-      const tokenBody = await tokenResponse.text();
-      if (tokenBody.length > 256 * 1024) return unauthorized(res);
       let tokenPayload: { id_token?: string };
       try {
-        tokenPayload = JSON.parse(tokenBody) as { id_token?: string };
+        tokenPayload = await readResponseJson<{ id_token?: string }>(tokenResponse, 256 * 1024);
       } catch {
         return unauthorized(res);
       }

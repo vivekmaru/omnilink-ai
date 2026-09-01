@@ -1,6 +1,6 @@
 # Phase 1 Plan: Local-Safe Security Boundary and Multi-User Foundations
 
-**Status:** In progress (P1.1 runtime safety and initial policy seam)  
+**Status:** Implemented; staging OIDC verification remains
 **Depends on:** `docs/SECURITY_PERFORMANCE_AUDIT_2026-08-30.md`
 
 ## Outcome
@@ -243,7 +243,7 @@ npm audit --omit=dev
 - Billing and payment integration.
 - Enforced quota amounts and reset periods.
 - Physical storage topology decision and data migration.
-- SSRF guarded-fetch implementation, which is Phase 2.
+- SSRF guarded-fetch implementation (completed in Phase 2; see `docs/PHASE_2_OUTBOUND_NETWORKING.md`).
 - Query pagination and vector-search redesign, which are Phase 4.
 
 ## Decisions needed before implementation reaches multi-user mode

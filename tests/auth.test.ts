@@ -2,6 +2,7 @@ import { generateKeyPair, exportJWK, SignJWT } from 'jose';
 import { describe, expect, it } from 'vitest';
 import {
   createOidcVerifier,
+  discoverOidcProvider,
   OidcTokenVerificationError,
 } from '../server/auth/oidc';
 import {
@@ -14,6 +15,35 @@ import { generatePkcePair, verifyPkceChallenge } from '../server/auth/pkce';
 import { parseCookies, sessionCookie } from '../server/auth/http';
 
 describe('OIDC and credential security primitives', () => {
+  it('requires bounded JSON discovery responses while retaining loopback development', async () => {
+    const metadata = {
+      issuer: 'http://127.0.0.1:4444',
+      jwks_uri: 'http://127.0.0.1:4444/jwks',
+      authorization_endpoint: 'http://127.0.0.1:4444/authorize',
+      token_endpoint: 'http://127.0.0.1:4444/token',
+    };
+    const jsonFetch = async () => new Response(JSON.stringify(metadata), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+    await expect(discoverOidcProvider(metadata.issuer, jsonFetch)).resolves.toMatchObject({
+      issuer: metadata.issuer,
+      tokenEndpoint: metadata.token_endpoint,
+    });
+
+    const htmlFetch = async () => new Response(JSON.stringify(metadata), {
+      status: 200,
+      headers: { 'Content-Type': 'text/html' },
+    });
+    await expect(discoverOidcProvider(metadata.issuer, htmlFetch)).rejects.toThrow(/invalid JSON/);
+
+    const oversizedFetch = async () => new Response(JSON.stringify(metadata), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json', 'Content-Length': String(256 * 1024 + 1) },
+    });
+    await expect(discoverOidcProvider(metadata.issuer, oversizedFetch)).rejects.toThrow(/invalid JSON/);
+  });
+
   it('generates and verifies RFC 7636 S256 PKCE pairs', () => {
     const pair = generatePkcePair();
     expect(pair.codeChallengeMethod).toBe('S256');

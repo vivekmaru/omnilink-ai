@@ -48,6 +48,7 @@ Then deploy to a staging OIDC tenant and verify:
 5. An exhausted test quota returns `429` before any Gemini request.
 6. A service token stops working immediately after revocation and never appears in a URL or token-list response.
 7. The extension token is stored in `chrome.storage.local`; MCP receives its token through `OMNILINK_SERVICE_TOKEN`.
+8. The Phase 2 outbound-network adversarial checks in `docs/PHASE_2_OUTBOUND_NETWORKING.md` pass without logging target URLs or content.
 
 Do not change the reverse proxy or container port from loopback-only publication until this gate passes.
 

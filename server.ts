@@ -34,6 +34,7 @@ import { AiQuotaExceededError, createAiAdmissionMiddleware } from './server/aiUs
 
 dotenv.config();
 
+const GEMINI_HTTP_TIMEOUT_MS = 30_000;
 const app = express();
 const runtimeConfig = loadRuntimeConfig();
 const authStackPromise = createAuthStack(runtimeConfig, omniDb);
@@ -94,6 +95,7 @@ function getGenAI(): GoogleGenAI | null {
     genAiClient = new GoogleGenAI({
       apiKey,
       httpOptions: {
+        timeout: GEMINI_HTTP_TIMEOUT_MS,
         headers: {
           'User-Agent': 'aistudio-build',
         },

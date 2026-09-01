@@ -13,11 +13,16 @@ import { loadRuntimeConfig } from './runtimeConfig.js';
 
 dotenv.config();
 
+const GEMINI_HTTP_TIMEOUT_MS = 30_000;
+
 // Initialize Gemini Client if API key is provided
 function getGenAI(): GoogleGenAI | null {
   const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
   if (!apiKey) return null;
-  return new GoogleGenAI({ apiKey });
+  return new GoogleGenAI({
+    apiKey,
+    httpOptions: { timeout: GEMINI_HTTP_TIMEOUT_MS },
+  });
 }
 
 const MCP_SERVICE_TOKEN_ENV = 'OMNILINK_SERVICE_TOKEN';

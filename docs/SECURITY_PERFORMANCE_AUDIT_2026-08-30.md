@@ -172,10 +172,10 @@ This dependency result is a point-in-time registry check, not a guarantee that e
 
 ## Remediation sequence
 
-1. Phase 1: define and enforce the application security boundary while preserving local single-user mode.
-2. Phase 2: centralize and secure outbound networking.
+1. Phase 1: define and enforce the application security boundary while preserving local single-user mode. **Implemented; staging OIDC verification remains.**
+2. Phase 2: centralize and secure outbound networking. **Implemented; adversarial staging verification remains.**
 3. Phase 3: meter, limit, and queue expensive work.
 4. Phase 4: paginate data access and improve storage/search scalability.
 5. Phase 5: add adversarial regression tests and production release gates.
 
-The implementation-ready Phase 1 plan is in `docs/PHASE_1_SECURITY_BOUNDARY_PLAN.md`.
+Phase 1 details are in `docs/PHASE_1_SECURITY_BOUNDARY_PLAN.md` and `docs/PHASE_1B_AUTHENTICATION.md`. The implemented Phase 2 controls, complete outbound inventory, and remaining release gate are in `docs/PHASE_2_OUTBOUND_NETWORKING.md`.
