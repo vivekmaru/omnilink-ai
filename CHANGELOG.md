@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.2.0](https://github.com/vivekmaru/omnilink-ai/compare/omnilink-ai-v1.1.0...omnilink-ai-v1.2.0) (2026-09-03)
+
+
+### Features
+
+* phase 3 ai ux hardening ([8f0b670](https://github.com/vivekmaru/omnilink-ai/commit/8f0b6704ef265b4a04bf34ba752a8f411f2cc1ab))
+* **security:** add managed OIDC and outbound hardening ([9263e5a](https://github.com/vivekmaru/omnilink-ai/commit/9263e5a6e91248bca8a5f95573771609e5bdba66))
+
+
+### Bug Fixes
+
+* complete Unraid deployment configuration ([869d598](https://github.com/vivekmaru/omnilink-ai/commit/869d598db6af8c9cdb3c6ec418eef3736e6e7637))
+* harden quota and metadata UX ([49f75c9](https://github.com/vivekmaru/omnilink-ai/commit/49f75c9e1175ec1fc64a422e0210d4a4be1143fb))
+* improve quota admission and metadata fallback ([706a4d6](https://github.com/vivekmaru/omnilink-ai/commit/706a4d6d09763013ae0728e9f916f11fec1ecc9c))
+* surface quota errors and clarify AI usage UI ([2557bbd](https://github.com/vivekmaru/omnilink-ai/commit/2557bbd448295eca910071cfbce22a31783ebcc1))
+
 ## [1.1.0](https://github.com/vivekmaru/omnilink-ai/compare/omnilink-ai-v1.0.0...omnilink-ai-v1.1.0) (2026-08-30)
 
 
