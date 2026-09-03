@@ -20,46 +20,262 @@ const ETAG_KEY = 'omnilink_etag_links_v1';
 const STATS_STORAGE_KEY = 'omnilink_stats_cache_v1';
 const STATS_ETAG_KEY = 'omnilink_etag_stats_v1';
 const PENDING_SYNC_KEY = 'omnilink_pending_sync_v1';
+const CACHE_NAMESPACE_KEY = 'omnilink_cache_workspace_v1';
+const CACHE_KEYS = [STORAGE_KEY, ETAG_KEY, STATS_STORAGE_KEY, STATS_ETAG_KEY, PENDING_SYNC_KEY] as const;
+
+export const AUTHENTICATION_REQUIRED_EVENT = 'omnilink:authentication-required';
+
+interface WorkspaceCacheKeys {
+  links: string | null;
+  linksEtag: string | null;
+  stats: string | null;
+  statsEtag: string | null;
+  pendingSync: string | null;
+}
+
+/**
+ * Raised when the API rejects the current browser session or service token.
+ *
+ * Authentication failures must not fall through to the offline cache: doing so
+ * would make a multi-user client appear to work while showing another local
+ * user's stale data.  The error intentionally contains only the HTTP status,
+ * never a token or response body.
+ */
+export class ApiAuthenticationError extends Error {
+  readonly status: 401 | 403;
+
+  constructor(status: 401 | 403) {
+    super(status === 401 ? 'Authentication required (HTTP 401)' : 'Not authorized (HTTP 403)');
+    this.name = 'ApiAuthenticationError';
+    this.status = status;
+  }
+}
 
 export class ApiService {
-  private static isOnline(): boolean {
-    return typeof navigator !== 'undefined' ? navigator.onLine : true;
+  /**
+   * Optional in-memory bearer token for non-browser callers embedding the API
+   * service.  Browser sessions remain cookie-based by default; callers should
+   * inject a short-lived token explicitly instead of persisting it in
+   * localStorage or putting it in a URL.
+   */
+  private static serviceToken: string | null = null;
+  private static workspaceNamespace: string | null = null;
+  private static workspaceGeneration = 0;
+
+  /**
+   * Select the authenticated workspace before rendering repository UI. All
+   * repository data, ETags, and pending-sync state are isolated under this
+   * namespace. Switching identities clears the previously active namespace so
+   * a shared browser profile cannot expose the prior workspace offline.
+   */
+  static setWorkspaceNamespace(workspaceId: string): void {
+    const normalized = typeof workspaceId === 'string' ? workspaceId.trim() : '';
+    if (!normalized || normalized.length > 255) {
+      throw new TypeError('workspaceId must be a non-empty string of at most 255 characters.');
+    }
+
+    if (this.workspaceNamespace !== normalized) this.workspaceGeneration += 1;
+
+    try {
+      const previous = localStorage.getItem(CACHE_NAMESPACE_KEY);
+      if (previous && previous !== normalized) {
+        this.removeWorkspaceCache(previous);
+      }
+
+      this.workspaceNamespace = normalized;
+      if (normalized === 'local-default') {
+        this.migrateLegacyLocalCache(normalized);
+      } else {
+        // Unscoped caches pre-date tenant isolation and must never be assigned
+        // to the first multi-user workspace that happens to sign in.
+        for (const key of CACHE_KEYS) localStorage.removeItem(key);
+      }
+      localStorage.setItem(CACHE_NAMESPACE_KEY, normalized);
+    } catch {
+      // Storage can be disabled or quota-restricted. The in-memory namespace
+      // still prevents this tab from reading an unscoped cache.
+      this.workspaceNamespace = normalized;
+    }
   }
 
-  // Load from local storage cache
-  static getLocalCache(): LinkItem[] {
+  static getWorkspaceNamespace(): string | null {
+    return this.workspaceNamespace;
+  }
+
+  /**
+   * Remove the active workspace's browser cache and disable cache access. This
+   * is used for logout, expired sessions, and unauthenticated/error states.
+   */
+  static clearWorkspaceNamespace(): void {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      const active = this.workspaceNamespace || localStorage.getItem(CACHE_NAMESPACE_KEY);
+      if (active) this.removeWorkspaceCache(active);
+      for (const key of CACHE_KEYS) localStorage.removeItem(key);
+      localStorage.removeItem(CACHE_NAMESPACE_KEY);
+    } catch {
+      // Best effort only; setting the in-memory namespace to null below is the
+      // critical boundary for the active application instance.
+    }
+    this.workspaceNamespace = null;
+    this.workspaceGeneration += 1;
+    this.clearServiceToken();
+  }
+
+  static async logout(): Promise<void> {
+    try {
+      await fetch('/auth/logout', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { Accept: 'application/json' },
+      });
+    } finally {
+      this.clearWorkspaceNamespace();
+      this.notifyAuthenticationRequired();
+    }
+  }
+
+  private static namespacedKey(base: string, workspaceId: string | null = this.workspaceNamespace): string | null {
+    return workspaceId ? `${base}:${encodeURIComponent(workspaceId)}` : null;
+  }
+
+  private static currentCacheKeys(): WorkspaceCacheKeys {
+    return {
+      links: this.namespacedKey(STORAGE_KEY),
+      linksEtag: this.namespacedKey(ETAG_KEY),
+      stats: this.namespacedKey(STATS_STORAGE_KEY),
+      statsEtag: this.namespacedKey(STATS_ETAG_KEY),
+      pendingSync: this.namespacedKey(PENDING_SYNC_KEY),
+    };
+  }
+
+  private static readLinksFromKey(key: string | null): LinkItem[] {
+    if (!key) return [];
+    try {
+      const raw = localStorage.getItem(key);
       return raw ? JSON.parse(raw) : [];
     } catch {
       return [];
     }
   }
 
-  static setLocalCache(links: LinkItem[]): void {
+  private static writeLinksToKey(key: string | null, links: LinkItem[]): void {
+    if (!key) return;
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(links));
+      localStorage.setItem(key, JSON.stringify(links));
     } catch (e) {
       console.warn('LocalStorage save failed:', e);
     }
   }
 
-  // Load from local stats cache
-  static getLocalStats(): SystemStats | null {
+  private static readStatsFromKey(key: string | null): SystemStats | null {
+    if (!key) return null;
     try {
-      const raw = localStorage.getItem(STATS_STORAGE_KEY);
+      const raw = localStorage.getItem(key);
       return raw ? JSON.parse(raw) : null;
     } catch {
       return null;
     }
   }
 
-  static setLocalStats(stats: SystemStats): void {
+  private static writeStatsToKey(key: string | null, stats: SystemStats): void {
+    if (!key) return;
     try {
-      localStorage.setItem(STATS_STORAGE_KEY, JSON.stringify(stats));
+      localStorage.setItem(key, JSON.stringify(stats));
     } catch (e) {
       console.warn('LocalStorage stats save failed:', e);
     }
+  }
+
+  private static removeWorkspaceCache(workspaceId: string): void {
+    for (const base of CACHE_KEYS) {
+      const key = this.namespacedKey(base, workspaceId);
+      if (key) localStorage.removeItem(key);
+    }
+  }
+
+  private static migrateLegacyLocalCache(workspaceId: string): void {
+    for (const base of CACHE_KEYS) {
+      const legacyValue = localStorage.getItem(base);
+      const target = this.namespacedKey(base, workspaceId);
+      if (legacyValue !== null && target && localStorage.getItem(target) === null) {
+        localStorage.setItem(target, legacyValue);
+      }
+      localStorage.removeItem(base);
+    }
+  }
+
+  private static notifyAuthenticationRequired(): void {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event(AUTHENTICATION_REQUIRED_EVENT));
+    }
+  }
+
+  static setServiceToken(token: string | null | undefined): void {
+    const normalized = typeof token === 'string' ? token.trim() : '';
+    this.serviceToken = normalized || null;
+  }
+
+  static clearServiceToken(): void {
+    this.serviceToken = null;
+  }
+
+  static hasServiceToken(): boolean {
+    return this.serviceToken !== null;
+  }
+
+  private static isAuthenticationError(err: unknown): err is ApiAuthenticationError {
+    return err instanceof ApiAuthenticationError;
+  }
+
+  /**
+   * Centralize credentials and bearer handling for every API request.  The
+   * default same-origin credentials mode sends an HttpOnly browser session
+   * cookie, while an explicitly injected service token is sent as an
+   * Authorization header only.
+   */
+  private static async request(input: RequestInfo | URL, init: RequestInit = {}): Promise<Response> {
+    const headers = new Headers(init.headers);
+    if (this.serviceToken && !headers.has('Authorization')) {
+      headers.set('Authorization', `Bearer ${this.serviceToken}`);
+    }
+
+    const res = await fetch(input, {
+      ...init,
+      headers,
+      credentials: init.credentials ?? 'same-origin',
+    });
+
+    if (res.status === 401) {
+      this.clearWorkspaceNamespace();
+      this.notifyAuthenticationRequired();
+      throw new ApiAuthenticationError(res.status);
+    }
+    if (res.status === 403) {
+      throw new ApiAuthenticationError(res.status);
+    }
+    return res;
+  }
+
+  private static isOnline(): boolean {
+    return typeof navigator !== 'undefined' ? navigator.onLine : true;
+  }
+
+  // Load from local storage cache
+  static getLocalCache(): LinkItem[] {
+    return this.readLinksFromKey(this.currentCacheKeys().links);
+  }
+
+  static setLocalCache(links: LinkItem[]): void {
+    this.writeLinksToKey(this.currentCacheKeys().links, links);
+  }
+
+  // Load from local stats cache
+  static getLocalStats(): SystemStats | null {
+    return this.readStatsFromKey(this.currentCacheKeys().stats);
+  }
+
+  static setLocalStats(stats: SystemStats): void {
+    this.writeStatsToKey(this.currentCacheKeys().stats, stats);
   }
 
   // Fetch all links with filter queries & ETag / 304 Not Modified optimization
@@ -84,41 +300,47 @@ export class ApiService {
     if (filters?.includeArchived) params.append('isArchived', 'true');
     if (filters?.sortBy) params.append('sort', filters.sortBy);
 
+    const cacheKeys = this.currentCacheKeys();
+    const cacheGeneration = this.workspaceGeneration;
     try {
       const headers: Record<string, string> = {};
       if (isDefaultFetch) {
-        const lastEtag = localStorage.getItem(ETAG_KEY);
+        const lastEtag = cacheKeys.linksEtag ? localStorage.getItem(cacheKeys.linksEtag) : null;
         if (lastEtag) {
           headers['If-None-Match'] = lastEtag;
         }
       }
 
-      const res = await fetch(`/api/links?${params.toString()}`, { headers });
+      const res = await this.request(`/api/links?${params.toString()}`, { headers });
       
       // If 304 Not Modified, reuse existing local cache instantly with 0 payload transferred
       if (res.status === 304) {
-        const cached = this.getLocalCache();
+        if (cacheGeneration !== this.workspaceGeneration) return { links: [], total: 0 };
+        const cached = this.readLinksFromKey(cacheKeys.links);
         return { links: cached, total: cached.length, notModified: true };
       }
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
+      if (cacheGeneration !== this.workspaceGeneration) return { links: data.links, total: data.total };
       
       const newEtag = res.headers.get('etag');
       if (newEtag && isDefaultFetch) {
         try {
-          localStorage.setItem(ETAG_KEY, newEtag);
+          if (cacheKeys.linksEtag) localStorage.setItem(cacheKeys.linksEtag, newEtag);
         } catch {}
       }
 
       // Update local offline cache
       if (isDefaultFetch) {
-        this.setLocalCache(data.links);
+        this.writeLinksToKey(cacheKeys.links, data.links);
       }
       return { links: data.links, total: data.total };
     } catch (err) {
+      if (cacheGeneration !== this.workspaceGeneration) return { links: [], total: 0 };
+      if (this.isAuthenticationError(err)) throw err;
       console.warn('Server fetch failed, falling back to local cache:', err);
-      let local = this.getLocalCache();
+      let local = this.readLinksFromKey(cacheKeys.links);
       
       // Apply basic local filtering if offline
       if (filters?.searchQuery) {
@@ -143,7 +365,7 @@ export class ApiService {
     platform: string;
   }> {
     try {
-      const res = await fetch('/api/links/preview-metadata', {
+      const res = await this.request('/api/links/preview-metadata', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url }),
@@ -169,8 +391,10 @@ export class ApiService {
     tags?: string[];
     autoAiExtract?: boolean;
   }): Promise<LinkItem> {
+    const cacheKeys = this.currentCacheKeys();
+    const cacheGeneration = this.workspaceGeneration;
     try {
-      const res = await fetch('/api/links', {
+      const res = await this.request('/api/links', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -182,6 +406,8 @@ export class ApiService {
       const data = await res.json();
       return data.link;
     } catch (err) {
+      if (cacheGeneration !== this.workspaceGeneration) throw err;
+      if (this.isAuthenticationError(err)) throw err;
       // Offline fallback: create item locally
       const localItem: LinkItem = {
         id: 'local-' + Date.now(),
@@ -201,16 +427,18 @@ export class ApiService {
         updatedAt: new Date().toISOString(),
         notes: payload.notes || '',
       };
-      const cache = this.getLocalCache();
-      this.setLocalCache([localItem, ...cache]);
+      const cache = this.readLinksFromKey(cacheKeys.links);
+      this.writeLinksToKey(cacheKeys.links, [localItem, ...cache]);
       return localItem;
     }
   }
 
   // Update existing link
   static async updateLink(id: string, updates: Partial<LinkItem>): Promise<LinkItem> {
+    const cacheKeys = this.currentCacheKeys();
+    const cacheGeneration = this.workspaceGeneration;
     try {
-      const res = await fetch(`/api/links/${id}`, {
+      const res = await this.request(`/api/links/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates),
@@ -219,11 +447,13 @@ export class ApiService {
       const data = await res.json();
       return data.link;
     } catch (err) {
-      const cache = this.getLocalCache();
+      if (cacheGeneration !== this.workspaceGeneration) throw err;
+      if (this.isAuthenticationError(err)) throw err;
+      const cache = this.readLinksFromKey(cacheKeys.links);
       const idx = cache.findIndex(l => l.id === id);
       if (idx !== -1) {
         cache[idx] = { ...cache[idx], ...updates, updatedAt: new Date().toISOString() };
-        this.setLocalCache(cache);
+        this.writeLinksToKey(cacheKeys.links, cache);
         return cache[idx];
       }
       throw err;
@@ -246,7 +476,7 @@ export class ApiService {
 
     // 2. Query server check-duplicate endpoint
     try {
-      const res = await fetch('/api/links/check-duplicate', {
+      const res = await this.request('/api/links/check-duplicate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: trimmed }),
@@ -256,6 +486,7 @@ export class ApiService {
         return serverResult;
       }
     } catch (err) {
+      if (this.isAuthenticationError(err)) throw err;
       console.warn('Server duplicate check fallback to local:', err);
     }
 
@@ -274,8 +505,10 @@ export class ApiService {
       autoAiExtract?: boolean;
     }
   ): Promise<LinkItem> {
+    const cacheKeys = this.currentCacheKeys();
+    const cacheGeneration = this.workspaceGeneration;
     try {
-      const res = await fetch(`/api/links/merge/${id}`, {
+      const res = await this.request(`/api/links/merge/${id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -287,8 +520,10 @@ export class ApiService {
       const data = await res.json();
       return data.link;
     } catch (err) {
+      if (cacheGeneration !== this.workspaceGeneration) throw err;
+      if (this.isAuthenticationError(err)) throw err;
       // Offline fallback: perform local merge
-      const cache = this.getLocalCache();
+      const cache = this.readLinksFromKey(cacheKeys.links);
       const idx = cache.findIndex((l) => l.id === id);
       if (idx !== -1) {
         const existing = cache[idx];
@@ -325,7 +560,7 @@ export class ApiService {
         };
 
         cache[idx] = mergedItem;
-        this.setLocalCache(cache);
+        this.writeLinksToKey(cacheKeys.links, cache);
         return mergedItem;
       }
       throw err;
@@ -334,13 +569,17 @@ export class ApiService {
 
   // Delete link
   static async deleteLink(id: string): Promise<boolean> {
+    const cacheKeys = this.currentCacheKeys();
+    const cacheGeneration = this.workspaceGeneration;
     try {
-      const res = await fetch(`/api/links/${id}`, { method: 'DELETE' });
+      const res = await this.request(`/api/links/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Delete failed');
       return true;
     } catch (err) {
-      const cache = this.getLocalCache().filter(l => l.id !== id);
-      this.setLocalCache(cache);
+      if (cacheGeneration !== this.workspaceGeneration) throw err;
+      if (this.isAuthenticationError(err)) throw err;
+      const cache = this.readLinksFromKey(cacheKeys.links).filter(l => l.id !== id);
+      this.writeLinksToKey(cacheKeys.links, cache);
       return true;
     }
   }
@@ -348,13 +587,14 @@ export class ApiService {
   // Batch operations
   static async batchAction(ids: string[], action: string, value?: any): Promise<boolean> {
     try {
-      const res = await fetch('/api/links/batch', {
+      const res = await this.request('/api/links/batch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ids, action, value }),
       });
       return res.ok;
-    } catch {
+    } catch (err) {
+      if (this.isAuthenticationError(err)) throw err;
       return false;
     }
   }
@@ -368,7 +608,7 @@ export class ApiService {
     preferredModel?: string
   ): Promise<any> {
     try {
-      const res = await fetch('/api/ai/extract', {
+      const res = await this.request('/api/ai/extract', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url, title, notes, linkId, preferredModel }),
@@ -380,6 +620,7 @@ export class ApiService {
       const data = await res.json();
       return data.result || data;
     } catch (err: any) {
+      if (this.isAuthenticationError(err)) throw err;
       console.warn('extractAI network notice, generating local extraction:', err);
       // Return a safe minimal structure so the app never breaks
       return {
@@ -398,7 +639,7 @@ export class ApiService {
 
   // AI Semantic Clustering via Thinking Gemini 3.7
   static async fetchClusters(): Promise<ClusterGroup[]> {
-    const res = await fetch('/api/ai/cluster', {
+    const res = await this.request('/api/ai/cluster', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
     });
@@ -411,7 +652,7 @@ export class ApiService {
 
   // AI Ask Repo via Thinking Gemini 3.7
   static async askRepository(question: string, preferredModel?: string): Promise<AskRepoResponse> {
-    const res = await fetch('/api/ai/ask', {
+    const res = await this.request('/api/ai/ask', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ question, preferredModel }),
@@ -426,11 +667,12 @@ export class ApiService {
   // Model Orchestrator Telemetry & Stats
   static async getOrchestratorStats(): Promise<any> {
     try {
-      const res = await fetch('/api/ai/orchestrator-stats');
+      const res = await this.request('/api/ai/orchestrator-stats');
       if (!res.ok) throw new Error('Failed to fetch orchestrator stats');
       const data = await res.json();
       return data.stats;
     } catch (e) {
+      if (this.isAuthenticationError(e)) throw e;
       console.warn('getOrchestratorStats fallback:', e);
       return null;
     }
@@ -439,7 +681,7 @@ export class ApiService {
   // Model Route Preview
   static async previewRoute(payload: any): Promise<any> {
     try {
-      const res = await fetch('/api/ai/route-preview', {
+      const res = await this.request('/api/ai/route-preview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -448,6 +690,7 @@ export class ApiService {
       const data = await res.json();
       return data.decision;
     } catch (e) {
+      if (this.isAuthenticationError(e)) throw e;
       console.warn('previewRoute fallback:', e);
       return null;
     }
@@ -455,32 +698,38 @@ export class ApiService {
 
   // Fetch Dashboard Stats with ETag caching
   static async fetchStats(): Promise<SystemStats> {
+    const cacheKeys = this.currentCacheKeys();
+    const cacheGeneration = this.workspaceGeneration;
     try {
       const headers: Record<string, string> = {};
-      const lastEtag = localStorage.getItem(STATS_ETAG_KEY);
+      const lastEtag = cacheKeys.statsEtag ? localStorage.getItem(cacheKeys.statsEtag) : null;
       if (lastEtag) {
         headers['If-None-Match'] = lastEtag;
       }
 
-      const res = await fetch('/api/stats', { headers });
+      const res = await this.request('/api/stats', { headers });
       if (res.status === 304) {
-        const cached = this.getLocalStats();
+        if (cacheGeneration !== this.workspaceGeneration) throw new Error('Workspace changed while fetching stats.');
+        const cached = this.readStatsFromKey(cacheKeys.stats);
         if (cached) return cached;
       }
 
       if (!res.ok) throw new Error('Stats fetch failed');
       const data: SystemStats = await res.json();
+      if (cacheGeneration !== this.workspaceGeneration) throw new Error('Workspace changed while fetching stats.');
 
       const newEtag = res.headers.get('etag');
       if (newEtag) {
         try {
-          localStorage.setItem(STATS_ETAG_KEY, newEtag);
+          if (cacheKeys.statsEtag) localStorage.setItem(cacheKeys.statsEtag, newEtag);
         } catch {}
       }
-      this.setLocalStats(data);
+      this.writeStatsToKey(cacheKeys.stats, data);
       return data;
     } catch (e) {
-      const cached = this.getLocalStats();
+      if (cacheGeneration !== this.workspaceGeneration) throw e;
+      if (this.isAuthenticationError(e)) throw e;
+      const cached = this.readStatsFromKey(cacheKeys.stats);
       if (cached) return cached;
       throw e;
     }
@@ -488,7 +737,7 @@ export class ApiService {
 
   // Import links to repository
   static async importLinks(links: LinkItem[], mode: 'merge' | 'replace'): Promise<boolean> {
-    const res = await fetch('/api/import', {
+    const res = await this.request('/api/import', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ links, mode }),
@@ -503,11 +752,12 @@ export class ApiService {
   // List all subscribed feeds
   static async fetchRssFeeds(): Promise<RssFeed[]> {
     try {
-      const res = await fetch('/api/rss/feeds');
+      const res = await this.request('/api/rss/feeds');
       if (!res.ok) throw new Error('Failed to fetch feeds');
       const data = await res.json();
       return data.feeds || [];
     } catch (err) {
+      if (this.isAuthenticationError(err)) throw err;
       console.warn('Feeds fetch error:', err);
       return [];
     }
@@ -525,7 +775,7 @@ export class ApiService {
     pollIntervalMinutes?: number;
     initialSync?: boolean;
   }): Promise<{ feed: RssFeed; newItemsCount: number }> {
-    const res = await fetch('/api/rss/feeds', {
+    const res = await this.request('/api/rss/feeds', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(feedInput),
@@ -539,7 +789,7 @@ export class ApiService {
 
   // Update feed settings
   static async updateRssFeed(id: string, updates: Partial<RssFeed>): Promise<RssFeed> {
-    const res = await fetch(`/api/rss/feeds/${id}`, {
+    const res = await this.request(`/api/rss/feeds/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates),
@@ -554,7 +804,7 @@ export class ApiService {
 
   // Delete feed subscription
   static async deleteRssFeed(id: string, deleteAssociatedLinks = false): Promise<boolean> {
-    const res = await fetch(`/api/rss/feeds/${id}?deleteAssociatedLinks=${deleteAssociatedLinks}`, {
+    const res = await this.request(`/api/rss/feeds/${id}?deleteAssociatedLinks=${deleteAssociatedLinks}`, {
       method: 'DELETE',
     });
     return res.ok;
@@ -562,7 +812,7 @@ export class ApiService {
 
   // Auto-discover RSS feed from web URL
   static async discoverRssFeed(url: string): Promise<RssDiscoveryResult> {
-    const res = await fetch('/api/rss/discover', {
+    const res = await this.request('/api/rss/discover', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url }),
@@ -576,7 +826,7 @@ export class ApiService {
 
   // Sync single feed
   static async syncRssFeed(id: string): Promise<RssSyncResult> {
-    const res = await fetch(`/api/rss/feeds/${id}/sync`, {
+    const res = await this.request(`/api/rss/feeds/${id}/sync`, {
       method: 'POST',
     });
     if (!res.ok) {
@@ -588,7 +838,7 @@ export class ApiService {
 
   // Sync all enabled feeds
   static async syncAllRssFeeds(): Promise<RssSyncResult> {
-    const res = await fetch('/api/rss/sync', {
+    const res = await this.request('/api/rss/sync', {
       method: 'POST',
     });
     if (!res.ok) {
@@ -601,18 +851,19 @@ export class ApiService {
   // Fetch curated dev & engineering blogs catalog
   static async fetchRssCatalog(): Promise<Array<Omit<RssFeed, 'id' | 'createdAt' | 'updatedAt' | 'totalFetchedCount'> & { isSubscribed: boolean }>> {
     try {
-      const res = await fetch('/api/rss/catalog');
+      const res = await this.request('/api/rss/catalog');
       if (!res.ok) throw new Error('Failed to fetch catalog');
       const data = await res.json();
       return data.catalog || [];
-    } catch {
+    } catch (err) {
+      if (this.isAuthenticationError(err)) throw err;
       return [];
     }
   }
 
   // Import feeds from OPML
   static async importOpml(opmlContent: string, initialSync = true): Promise<OpmlImportResult> {
-    const res = await fetch('/api/rss/opml/import', {
+    const res = await this.request('/api/rss/opml/import', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ opmlContent, initialSync }),
@@ -640,7 +891,7 @@ export class ApiService {
     minScore?: number;
   } = {}): Promise<HybridSearchMatch[]> {
     try {
-      const res = await fetch('/api/ai/search/hybrid', {
+      const res = await this.request('/api/ai/search/hybrid', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query, ...options }),
@@ -649,6 +900,7 @@ export class ApiService {
       const data = await res.json();
       return data.results || [];
     } catch (err) {
+      if (this.isAuthenticationError(err)) throw err;
       console.warn('Hybrid search API error, falling back to local filter:', err);
       return [];
     }
@@ -656,7 +908,7 @@ export class ApiService {
 
   // Trigger full vector embedding re-indexing
   static async reindexEmbeddings(): Promise<{ indexed: number; total: number }> {
-    const res = await fetch('/api/ai/embeddings/reindex', {
+    const res = await this.request('/api/ai/embeddings/reindex', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
     });
@@ -666,7 +918,7 @@ export class ApiService {
 
   // Check vector embeddings index status
   static async getEmbeddingsStatus(): Promise<EmbeddingsStatusResponse> {
-    const res = await fetch('/api/ai/embeddings/status');
+    const res = await this.request('/api/ai/embeddings/status');
     if (!res.ok) throw new Error('Failed to get embeddings status');
     return res.json();
   }
@@ -675,7 +927,7 @@ export class ApiService {
 
   // Get or extract offline reader mode article snapshot
   static async getReaderSnapshot(linkId: string): Promise<ReaderSnapshot> {
-    const res = await fetch(`/api/links/${linkId}/reader`);
+    const res = await this.request(`/api/links/${linkId}/reader`);
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.error || 'Failed to fetch article content');
@@ -686,7 +938,7 @@ export class ApiService {
 
   // Force capture fresh offline reader snapshot
   static async captureReaderSnapshot(linkId: string): Promise<ReaderSnapshot> {
-    const res = await fetch(`/api/links/${linkId}/reader/snapshot`, {
+    const res = await this.request(`/api/links/${linkId}/reader/snapshot`, {
       method: 'POST',
     });
     if (!res.ok) {

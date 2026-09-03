@@ -3,7 +3,12 @@ import path from 'path';
 import { GoogleGenAI, Type } from '@google/genai';
 import { RssFeed, RssFeedItem, RssDiscoveryResult, LinkItem, LinkSummary, PlatformType } from '../src/types';
 import { ModelOrchestrator } from './modelOrchestrator';
+import { AiQuotaExceededError } from './aiUsage';
 import { ReadabilityService } from './readabilityService';
+import { LOCAL_WORKSPACE_ID } from './db';
+import { OutboundUrlPolicyError, assertResponseMediaType, readResponseText, readResponseXml, safeFetch } from './outboundUrlPolicy';
+
+type StoredRssFeed = RssFeed & { workspaceId: string };
 
 // Storage paths
 const DATA_DIR = path.join(process.cwd(), 'data');
@@ -385,10 +390,10 @@ export function parseFeedXml(xmlContent: string, feedUrl: string): {
 
 // Feed Persistence & State Manager
 export class RssFeedManager {
-  private static feeds: RssFeed[] = [];
+  private static feeds: StoredRssFeed[] = [];
   private static initialized = false;
 
-  static loadFeeds(): RssFeed[] {
+  static loadFeeds(): StoredRssFeed[] {
     if (this.initialized && this.feeds.length > 0) {
       return this.feeds;
     }
@@ -399,10 +404,11 @@ export class RssFeedManager {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) {
           this.feeds = parsed.map((f) => {
+            const scoped = { ...f, workspaceId: f.workspaceId || LOCAL_WORKSPACE_ID };
             if (f.url && f.url.includes('hnrss.org') && f.autoAiExtract === false) {
-              return { ...f, autoAiExtract: true };
+              return { ...scoped, autoAiExtract: true };
             }
-            return f;
+            return scoped;
           });
           this.initialized = true;
           return this.feeds;
@@ -416,6 +422,7 @@ export class RssFeedManager {
     const now = new Date().toISOString();
     this.feeds = CURATED_DEV_FEEDS.map((seed, idx) => ({
       ...seed,
+      workspaceId: LOCAL_WORKSPACE_ID,
       id: `feed-seed-${idx + 1}-${Math.random().toString(36).substring(2, 6)}`,
       totalFetchedCount: 0,
       createdAt: now,
@@ -427,7 +434,7 @@ export class RssFeedManager {
     return this.feeds;
   }
 
-  static saveFeeds(feeds: RssFeed[]): void {
+  static saveFeeds(feeds: StoredRssFeed[]): void {
     this.feeds = feeds;
     try {
       fs.writeFileSync(RSS_FEEDS_FILE, JSON.stringify(feeds, null, 2), 'utf-8');
@@ -436,12 +443,12 @@ export class RssFeedManager {
     }
   }
 
-  static getAll(): RssFeed[] {
-    return this.loadFeeds();
+  static getAll(workspaceId: string = LOCAL_WORKSPACE_ID): RssFeed[] {
+    return this.loadFeeds().filter((feed) => feed.workspaceId === workspaceId);
   }
 
-  static getById(id: string): RssFeed | undefined {
-    return this.loadFeeds().find((f) => f.id === id);
+  static getById(id: string, workspaceId: string = LOCAL_WORKSPACE_ID): RssFeed | undefined {
+    return this.loadFeeds().find((f) => f.id === id && f.workspaceId === workspaceId);
   }
 
   static addFeed(feedInput: {
@@ -454,17 +461,18 @@ export class RssFeedManager {
     autoAiExtract?: boolean;
     pollIntervalMinutes?: number;
     faviconUrl?: string;
-  }): RssFeed {
+  }, workspaceId: string = LOCAL_WORKSPACE_ID): RssFeed {
     const feeds = this.loadFeeds();
     
     // Check if feed URL already subscribed
-    const existing = feeds.find((f) => f.url.toLowerCase() === feedInput.url.toLowerCase().trim());
+    const existing = feeds.find((f) => f.workspaceId === workspaceId && f.url.toLowerCase() === feedInput.url.toLowerCase().trim());
     if (existing) {
       return existing;
     }
 
     const now = new Date().toISOString();
-    const newFeed: RssFeed = {
+    const newFeed: StoredRssFeed = {
+      workspaceId,
       id: `feed-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       url: feedInput.url.trim(),
       siteUrl: feedInput.siteUrl || feedInput.url,
@@ -486,15 +494,16 @@ export class RssFeedManager {
     return newFeed;
   }
 
-  static updateFeed(id: string, updates: Partial<RssFeed>): RssFeed | null {
+  static updateFeed(id: string, updates: Partial<RssFeed>, workspaceId: string = LOCAL_WORKSPACE_ID): RssFeed | null {
     const feeds = this.loadFeeds();
-    const idx = feeds.findIndex((f) => f.id === id);
+    const idx = feeds.findIndex((f) => f.id === id && f.workspaceId === workspaceId);
     if (idx === -1) return null;
 
-    const updated: RssFeed = {
+    const updated: StoredRssFeed = {
       ...feeds[idx],
       ...updates,
       id, // Immutable
+      workspaceId,
       updatedAt: new Date().toISOString(),
     };
 
@@ -503,10 +512,10 @@ export class RssFeedManager {
     return updated;
   }
 
-  static deleteFeed(id: string): boolean {
+  static deleteFeed(id: string, workspaceId: string = LOCAL_WORKSPACE_ID): boolean {
     const feeds = this.loadFeeds();
     const initialLen = feeds.length;
-    const filtered = feeds.filter((f) => f.id !== id);
+    const filtered = feeds.filter((f) => f.id !== id || f.workspaceId !== workspaceId);
     if (filtered.length === initialLen) return false;
 
     this.saveFeeds(filtered);
@@ -522,30 +531,24 @@ export class RssFeedManager {
 
     // Step 1: Attempt direct fetch of the URL
     try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 6000);
-
-      const response = await fetch(cleanUrl, {
-        signal: controller.signal,
+      const response = await safeFetch(cleanUrl, {
+        timeoutMs: 6_000,
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 (OmniLink AI RSS Crawler)',
-          'Accept': 'application/rss+xml, application/atom+xml, application/xml, text/xml, text/html, */*',
+          'Accept': 'application/rss+xml, application/atom+xml, application/xml, text/xml, text/html',
         },
       });
-      clearTimeout(timeout);
 
-      const contentType = response.headers.get('content-type') || '';
-      const text = await response.text();
+      let responseMediaType: string | null = null;
+      try {
+        responseMediaType = assertResponseMediaType(response, ['html', 'xml']);
+      } catch (error) {
+        if (!(error instanceof OutboundUrlPolicyError) || error.code !== 'unsupported-media-type') throw error;
+      }
+      const text = responseMediaType ? await readResponseText(response) : '';
 
       // If already XML/RSS/Atom content
-      if (
-        contentType.includes('xml') ||
-        contentType.includes('rss') ||
-        contentType.includes('atom') ||
-        text.includes('<rss') ||
-        text.includes('<feed') ||
-        text.includes('<rdf:RDF')
-      ) {
+      if (responseMediaType?.includes('xml')) {
         const parsed = parseFeedXml(text, cleanUrl);
         return {
           discovered: true,
@@ -573,11 +576,15 @@ export class RssFeedManager {
       for (const rawHref of feedLinkMatches) {
         try {
           const resolvedUrl = new URL(rawHref, cleanUrl).toString();
-          const feedRes = await fetch(resolvedUrl, {
-            headers: { 'User-Agent': 'OmniLink-AI/1.0 RSS Reader' },
+          const feedRes = await safeFetch(resolvedUrl, {
+            timeoutMs: 6_000,
+            headers: {
+              'User-Agent': 'OmniLink-AI/1.0 RSS Reader',
+              Accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml',
+            },
           });
           if (feedRes.ok) {
-            const feedXml = await feedRes.text();
+            const feedXml = await readResponseXml(feedRes);
             if (feedXml.includes('<rss') || feedXml.includes('<feed') || feedXml.includes('<rdf:RDF')) {
               const parsed = parseFeedXml(feedXml, resolvedUrl);
               return {
@@ -604,11 +611,15 @@ export class RssFeedManager {
       for (const p of commonPaths) {
         try {
           const candidate = `${origin}${p}`;
-          const candidateRes = await fetch(candidate, {
-            headers: { 'User-Agent': 'OmniLink-AI/1.0 RSS Reader' },
+          const candidateRes = await safeFetch(candidate, {
+            timeoutMs: 6_000,
+            headers: {
+              'User-Agent': 'OmniLink-AI/1.0 RSS Reader',
+              Accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml',
+            },
           });
           if (candidateRes.ok) {
-            const candidateXml = await candidateRes.text();
+            const candidateXml = await readResponseXml(candidateRes);
             if (candidateXml.includes('<rss') || candidateXml.includes('<feed') || candidateXml.includes('<rdf:RDF')) {
               const parsed = parseFeedXml(candidateXml, candidate);
               return {
@@ -645,13 +656,14 @@ export class RssFeedManager {
   static async syncFeed(
     feedId: string,
     existingLinks: LinkItem[],
-    genAiClient?: GoogleGenAI | null
+    genAiClient?: GoogleGenAI | null,
+    workspaceId: string = LOCAL_WORKSPACE_ID,
   ): Promise<{
     feed: RssFeed;
     newLinks: LinkItem[];
     error?: string;
   }> {
-    const feed = this.getById(feedId);
+    const feed = this.getById(feedId, workspaceId);
     if (!feed) {
       throw new Error(`Feed with ID ${feedId} not found.`);
     }
@@ -660,23 +672,19 @@ export class RssFeedManager {
     const newLinks: LinkItem[] = [];
 
     try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 10000);
-
-      const response = await fetch(feed.url, {
-        signal: controller.signal,
+      const response = await safeFetch(feed.url, {
+        timeoutMs: 10_000,
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 (OmniLink AI RSS Reader)',
-          'Accept': 'application/rss+xml, application/atom+xml, application/xml, text/xml, */*',
+          'Accept': 'application/rss+xml, application/atom+xml, application/xml, text/xml',
         },
       });
-      clearTimeout(timeout);
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const xmlText = await response.text();
+      const xmlText = await readResponseXml(response);
       const parsed = parseFeedXml(xmlText, feed.url);
 
       // Ingest latest items (limit up to 15 newest items per sync run)
@@ -843,6 +851,7 @@ Guidelines:
               }
             }
           } catch (itemAiErr) {
+            if (itemAiErr instanceof AiQuotaExceededError) throw itemAiErr;
             console.warn(`[RSS AI Auto-Extraction] Skipped for ${link.title}:`, itemAiErr);
           }
         }
@@ -855,18 +864,19 @@ Guidelines:
         totalFetchedCount: feed.totalFetchedCount + newLinks.length,
         siteUrl: parsed.siteUrl || feed.siteUrl,
         title: feed.title || parsed.title,
-      });
+      }, workspaceId);
 
       return {
         feed: updatedFeed || feed,
         newLinks,
       };
     } catch (err: any) {
-      console.error(`RSS Sync error for ${feed.title} (${feed.url}):`, err.message);
+      if (err instanceof AiQuotaExceededError) throw err;
+      console.error(`RSS sync failed for feed ${feed.id}:`, err.message);
       this.updateFeed(feed.id, {
         lastFetchedAt: new Date().toISOString(),
         lastError: err.message || 'Sync failed',
-      });
+      }, workspaceId);
       return {
         feed,
         newLinks: [],
@@ -878,13 +888,14 @@ Guidelines:
   // Sync All Enabled Feeds
   static async syncAllEnabledFeeds(
     existingLinks: LinkItem[],
-    genAiClient?: GoogleGenAI | null
+    genAiClient?: GoogleGenAI | null,
+    workspaceId: string = LOCAL_WORKSPACE_ID,
   ): Promise<{
     processedCount: number;
     newLinks: LinkItem[];
     errors: string[];
   }> {
-    const feeds = this.loadFeeds().filter((f) => f.enabled);
+    const feeds = this.loadFeeds().filter((f) => f.enabled && f.workspaceId === workspaceId);
     const allNewLinks: LinkItem[] = [];
     const errors: string[] = [];
 
@@ -893,7 +904,7 @@ Guidelines:
 
     for (const feed of feeds) {
       try {
-        const result = await this.syncFeed(feed.id, currentLinks, genAiClient);
+        const result = await this.syncFeed(feed.id, currentLinks, genAiClient, workspaceId);
         if (result.newLinks.length > 0) {
           allNewLinks.push(...result.newLinks);
           currentLinks.push(...result.newLinks);
@@ -902,6 +913,7 @@ Guidelines:
           errors.push(`${feed.title}: ${result.error}`);
         }
       } catch (err: any) {
+        if (err instanceof AiQuotaExceededError) throw err;
         errors.push(`${feed.title}: ${err.message}`);
       }
     }
@@ -914,8 +926,8 @@ Guidelines:
   }
 
   // Export Feeds to OPML XML
-  static exportOpml(): string {
-    const feeds = this.loadFeeds();
+  static exportOpml(workspaceId: string = LOCAL_WORKSPACE_ID): string {
+    const feeds = this.getAll(workspaceId);
     let opml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
     opml += `<opml version="2.0">\n`;
     opml += `  <head>\n`;
@@ -947,8 +959,8 @@ Guidelines:
   }
 
   // Import Feeds from OPML XML
-  static importOpml(opmlText: string): { importedCount: number; skippedCount: number; feeds: RssFeed[] } {
-    const existingFeeds = this.loadFeeds();
+  static importOpml(opmlText: string, workspaceId: string = LOCAL_WORKSPACE_ID): { importedCount: number; skippedCount: number; feeds: RssFeed[] } {
+    const existingFeeds = this.getAll(workspaceId);
     const existingUrls = new Set(existingFeeds.map((f) => f.url.toLowerCase()));
     let importedCount = 0;
     let skippedCount = 0;
@@ -1000,7 +1012,7 @@ Guidelines:
         category,
         defaultTags: ['rss', 'imported'],
         autoAiExtract: true,
-      });
+      }, workspaceId);
 
       existingUrls.add(xmlUrl.toLowerCase());
       importedCount++;
@@ -1009,7 +1021,7 @@ Guidelines:
     return {
       importedCount,
       skippedCount,
-      feeds: this.loadFeeds(),
+      feeds: this.getAll(workspaceId),
     };
   }
 }

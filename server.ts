@@ -9,7 +9,7 @@ import { ModelOrchestrator } from './server/modelOrchestrator';
 import { GeminiModelId } from './src/types';
 import { analyzeAndSuggestTags } from './src/services/autoTagging';
 import { normalizeUrl, checkDuplicateInLinks } from './src/utils/url';
-import { omniDb } from './server/db';
+import { LOCAL_WORKSPACE_ID, omniDb } from './server/db';
 import { hybridSearchEngine } from './server/hybridSearch';
 import { ReadabilityService } from './server/readabilityService';
 import {
@@ -25,31 +25,61 @@ import {
   CheckDuplicateSchema,
   AddRssFeedSchema,
 } from './server/validators';
+import {
+  attachEndpointPolicy,
+} from './server/securityBoundary';
+import { describeUnsafeRemoteWarning, loadRuntimeConfig } from './server/runtimeConfig';
+import { createAuthStack } from './server/auth/http';
+import { AiQuotaExceededError, createAiAdmissionMiddleware } from './server/aiUsage';
 
 dotenv.config();
 
+const GEMINI_HTTP_TIMEOUT_MS = 30_000;
 const app = express();
-const PORT = Number(process.env.PORT) || 4000;
+const runtimeConfig = loadRuntimeConfig();
+const authStackPromise = createAuthStack(runtimeConfig, omniDb);
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(attachEndpointPolicy);
+app.use(async (req, res, next) => {
+  try {
+    const stack = await authStackPromise;
+    const handlers: express.RequestHandler[] = [...stack.middleware, stack.router];
+    let index = 0;
+    const run = (error?: unknown): void => {
+      if (error) return next(error);
+      const handler = handlers[index++];
+      if (!handler) return next();
+      try {
+        const result = (handler as any)(req, res, run);
+        if (result && typeof (result as Promise<unknown>).catch === 'function') {
+          (result as Promise<unknown>).catch(run);
+        }
+      } catch (handlerError) {
+        run(handlerError);
+      }
+    };
+    run();
+  } catch (error) {
+    next(error);
+  }
+});
+app.use(createAiAdmissionMiddleware(runtimeConfig, omniDb));
 
 // Healthcheck endpoint for Docker container & Cloud Load Balancers
 app.get(['/health', '/api/health'], (req, res) => {
   try {
-    const totalCount = omniDb.count();
     res.json({
       status: 'ok',
       uptime: process.uptime(),
-      version: '1.2.0',
-      database: 'healthy',
-      totalBookmarks: totalCount,
       timestamp: new Date().toISOString(),
     });
   } catch (err: any) {
+    console.error('[Healthcheck] failed:', err);
     res.status(503).json({
       status: 'unhealthy',
-      error: err.message,
+      timestamp: new Date().toISOString(),
     });
   }
 });
@@ -65,6 +95,7 @@ function getGenAI(): GoogleGenAI | null {
     genAiClient = new GoogleGenAI({
       apiKey,
       httpOptions: {
+        timeout: GEMINI_HTTP_TIMEOUT_MS,
         headers: {
           'User-Agent': 'aistudio-build',
         },
@@ -295,7 +326,8 @@ function loadLinks(): LinkItem[] {
   return omniDb.getAllLinks();
 }
 
-function saveLinks(links?: LinkItem[]): void {
+function saveLinks(links?: LinkItem[], workspaceId: string = LOCAL_WORKSPACE_ID): void {
+  if (workspaceId !== LOCAL_WORKSPACE_ID) return;
   // SQLite maintains atomic persistence automatically.
   // Optional backup sync to repository.json for portability:
   try {
@@ -309,12 +341,32 @@ function saveLinks(links?: LinkItem[]): void {
 // Active link repository backed by SQLite & Revision Tracking
 let repoRevision = Date.now();
 let linksDatabase: LinkItem[] = loadLinks();
+const workspaceRevisions = new Map<string, number>([[LOCAL_WORKSPACE_ID, repoRevision]]);
+
+function workspaceFor(req: express.Request): string {
+  if (!req.securityContext) throw new Error('Request workspace is unavailable.');
+  return req.securityContext.workspace.id;
+}
+
+function respondToAiQuotaError(error: unknown, res: express.Response): boolean {
+  if (!(error instanceof AiQuotaExceededError) && (error as { code?: string } | null)?.code !== 'AI_QUOTA_EXCEEDED') {
+    return false;
+  }
+  res.status(429).json({ error: 'AI usage quota exhausted.', code: 'AI_QUOTA_EXCEEDED' });
+  return true;
+}
+
+function linksFor(req: express.Request): LinkItem[] {
+  return omniDb.getAllLinks(workspaceFor(req));
+}
 
 // Helper to refresh in-memory reference from SQLite
-function refreshLinksCache(): LinkItem[] {
-  linksDatabase = omniDb.getAllLinks();
+function refreshLinksCache(workspaceId: string = LOCAL_WORKSPACE_ID): LinkItem[] {
+  const workspaceLinks = omniDb.getAllLinks(workspaceId);
+  if (workspaceId === LOCAL_WORKSPACE_ID) linksDatabase = workspaceLinks;
   repoRevision = Date.now();
-  return linksDatabase;
+  workspaceRevisions.set(workspaceId, repoRevision);
+  return workspaceLinks;
 }
 
 // Helper to detect platform
@@ -345,21 +397,17 @@ function getFaviconUrl(url: string): string {
 
 // --- API Endpoints ---
 
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    totalLinks: linksDatabase.length,
-    geminiConfigured: Boolean(process.env.GEMINI_API_KEY),
-  });
-});
-
 // GET /api/links - Query and filter with ETag / 304 Not Modified support
 app.get('/api/links', (req, res) => {
+  const workspaceId = workspaceFor(req);
+  const workspaceLinks = linksFor(req);
   const isUnfiltered = Object.keys(req.query).length === 0;
-  const etag = `W/"links-${repoRevision}-${linksDatabase.length}"`;
+  const etag = `W/"links-${workspaceRevisions.get(workspaceId) || 0}-${workspaceLinks.length}"`;
 
-  if (isUnfiltered) {
+  // The local in-memory revision counter cannot observe writes made by other
+  // multi-user processes (for example MCP). Do not risk a cross-session 304;
+  // multi-user responses are always revalidated from tenant-scoped storage.
+  if (runtimeConfig.mode === 'local' && isUnfiltered) {
     if (req.headers['if-none-match'] === etag) {
       res.status(304).end();
       return;
@@ -368,7 +416,7 @@ app.get('/api/links', (req, res) => {
     res.setHeader('Cache-Control', 'private, no-cache');
   }
 
-  let results = [...linksDatabase];
+  let results = [...workspaceLinks];
   const { q, platform, category, tag, readStatus, isFavorite, isArchived, sort, feedId, isRss } = req.query;
 
   if (q && typeof q === 'string') {
@@ -450,10 +498,11 @@ app.get('/api/links', (req, res) => {
 // POST /api/links - Add link with optional auto-AI extraction
 app.post('/api/links', validateBody(CreateLinkSchema), async (req, res) => {
   try {
+    const workspaceId = workspaceFor(req);
     const { url, title, notes, category, tags, autoAiExtract, source } = req.body;
 
     // Check if URL already exists in SQLite
-    const existing = omniDb.getLinkByUrl(url.trim());
+    const existing = omniDb.getLinkByUrl(url.trim(), workspaceId);
     if (existing) {
       res.status(200).json({ link: existing, message: 'Link already exists in repository' });
       return;
@@ -492,6 +541,7 @@ app.post('/api/links', validateBody(CreateLinkSchema), async (req, res) => {
           }
         }
       } catch (aiErr) {
+        if (aiErr instanceof AiQuotaExceededError) throw aiErr;
         console.warn('AI Extraction fallback warning:', aiErr);
       }
     }
@@ -518,17 +568,18 @@ app.post('/api/links', validateBody(CreateLinkSchema), async (req, res) => {
       aiScore,
     };
 
-    omniDb.insertLink(newLink);
-    refreshLinksCache();
-    saveLinks();
+    omniDb.insertLink(newLink, workspaceId);
+    refreshLinksCache(workspaceId);
+    saveLinks(undefined, workspaceId);
 
     // Trigger background vector indexing
-    hybridSearchEngine.indexLink(newLink, getGenAI()).catch((err) => {
+    hybridSearchEngine.indexLink(newLink, getGenAI(), workspaceId).catch((err) => {
       console.warn('[HybridSearch] Background embedding generation notice:', err);
     });
 
     res.status(201).json({ link: newLink });
   } catch (err: any) {
+    if (respondToAiQuotaError(err, res)) return;
     console.error('Error adding link:', err);
     res.status(500).json({ error: err.message || 'Failed to add link.' });
   }
@@ -559,7 +610,12 @@ function extractUrlAndText(rawUrl?: string, rawText?: string, rawTitle?: string)
 
 // POST /api/share/quick - Instant ingress from iOS Shortcuts, Android Tasker, Raycast, or Webhooks
 app.post('/api/share/quick', async (req, res) => {
+  if (runtimeConfig.mode === 'multi-user' && req.securityContext?.authMethod !== 'service-token') {
+    res.status(403).json({ error: 'Multi-user quick share requires a workspace-scoped service token.' });
+    return;
+  }
   try {
+    const workspaceId = workspaceFor(req);
     const rawUrl = req.body?.url || req.query?.url;
     const rawText = req.body?.text || req.body?.notes || req.query?.text || req.query?.notes;
     const rawTitle = req.body?.title || req.query?.title;
@@ -573,7 +629,7 @@ app.post('/api/share/quick', async (req, res) => {
     }
 
     // Check duplicate
-    const existing = omniDb.getLinkByUrl(url);
+    const existing = omniDb.getLinkByUrl(url, workspaceId);
     if (existing) {
       res.json({
         success: true,
@@ -616,6 +672,7 @@ app.post('/api/share/quick', async (req, res) => {
         }
       }
     } catch (e) {
+      if (e instanceof AiQuotaExceededError) throw e;
       console.warn('[MobileQuickShare] AI extraction notice:', e);
     }
 
@@ -641,16 +698,16 @@ app.post('/api/share/quick', async (req, res) => {
       aiScore,
     };
 
-    omniDb.insertLink(newLink);
-    refreshLinksCache();
-    saveLinks();
+    omniDb.insertLink(newLink, workspaceId);
+    refreshLinksCache(workspaceId);
+    saveLinks(undefined, workspaceId);
 
     // Trigger background vector indexing & full article snapshot
-    hybridSearchEngine.indexLink(newLink, getGenAI()).catch(() => {});
+    hybridSearchEngine.indexLink(newLink, getGenAI(), workspaceId).catch(() => {});
     ReadabilityService.extractFromUrl(newLink.url).then((snapshot) => {
       if (snapshot) {
-        omniDb.updateLink(newLink.id, { readerSnapshot: snapshot });
-        refreshLinksCache();
+        omniDb.updateLink(newLink.id, { readerSnapshot: snapshot }, workspaceId);
+        refreshLinksCache(workspaceId);
       }
     }).catch(() => {});
 
@@ -660,6 +717,7 @@ app.post('/api/share/quick', async (req, res) => {
       link: newLink,
     });
   } catch (err: any) {
+    if (respondToAiQuotaError(err, res)) return;
     console.error('Quick share error:', err);
     res.status(500).json({ error: err.message || 'Quick share processing failed.' });
   }
@@ -667,6 +725,11 @@ app.post('/api/share/quick', async (req, res) => {
 
 // GET /api/share/quick - Bookmarklet or simple GET ingress
 app.get('/api/share/quick', async (req, res) => {
+  if (runtimeConfig.mode === 'multi-user' && req.securityContext?.authMethod !== 'service-token') {
+    res.status(403).json({ error: 'Multi-user quick share requires a workspace-scoped service token.' });
+    return;
+  }
+  const workspaceId = workspaceFor(req);
   req.body = req.query;
   const rawUrl = req.query.url;
   const rawText = req.query.text || req.query.notes;
@@ -679,7 +742,7 @@ app.get('/api/share/quick', async (req, res) => {
   }
 
   // Redirect or JSON
-  const existing = omniDb.getLinkByUrl(url);
+  const existing = omniDb.getLinkByUrl(url, workspaceId);
   if (existing) {
     res.json({ success: true, isDuplicate: true, message: `Already in repository: "${existing.title}"`, link: existing });
     return;
@@ -707,10 +770,10 @@ app.get('/api/share/quick', async (req, res) => {
     aiScore: 85,
   };
 
-  omniDb.insertLink(newLink);
-  refreshLinksCache();
-  saveLinks();
-  hybridSearchEngine.indexLink(newLink, getGenAI()).catch(() => {});
+  omniDb.insertLink(newLink, workspaceId);
+  refreshLinksCache(workspaceId);
+  saveLinks(undefined, workspaceId);
+  hybridSearchEngine.indexLink(newLink, getGenAI(), workspaceId).catch(() => {});
 
   res.status(201).json({ success: true, message: `Saved: "${newLink.title}"`, link: newLink });
 });
@@ -718,17 +781,18 @@ app.get('/api/share/quick', async (req, res) => {
 // PUT /api/links/:id - Update link
 app.put('/api/links/:id', validateBody(UpdateLinkSchema), (req, res) => {
   const { id } = req.params;
-  const updated = omniDb.updateLink(id, req.body);
+  const workspaceId = workspaceFor(req);
+  const updated = omniDb.updateLink(id, req.body, workspaceId);
   if (!updated) {
     res.status(404).json({ error: 'Link not found.' });
     return;
   }
 
-  refreshLinksCache();
-  saveLinks();
+  refreshLinksCache(workspaceId);
+  saveLinks(undefined, workspaceId);
 
   // Re-index updated text embedding in background
-  hybridSearchEngine.indexLink(updated, getGenAI()).catch((err) => {
+  hybridSearchEngine.indexLink(updated, getGenAI(), workspaceId).catch((err) => {
     console.warn('[HybridSearch] Background update embedding notice:', err);
   });
 
@@ -738,14 +802,15 @@ app.put('/api/links/:id', validateBody(UpdateLinkSchema), (req, res) => {
 // DELETE /api/links/:id - Delete link
 app.delete('/api/links/:id', (req, res) => {
   const { id } = req.params;
-  const deleted = omniDb.deleteLink(id);
+  const workspaceId = workspaceFor(req);
+  const deleted = omniDb.deleteLink(id, workspaceId);
   if (!deleted) {
     res.status(404).json({ error: 'Link not found.' });
     return;
   }
 
-  refreshLinksCache();
-  saveLinks();
+  refreshLinksCache(workspaceId);
+  saveLinks(undefined, workspaceId);
   res.json({ success: true, id });
 });
 
@@ -753,7 +818,8 @@ app.delete('/api/links/:id', (req, res) => {
 app.get('/api/links/:id/reader', async (req, res) => {
   try {
     const { id } = req.params;
-    const link = omniDb.getLinkById(id);
+    const workspaceId = workspaceFor(req);
+    const link = omniDb.getLinkById(id, workspaceId);
     if (!link) {
       res.status(404).json({ error: 'Link not found' });
       return;
@@ -767,8 +833,8 @@ app.get('/api/links/:id/reader', async (req, res) => {
     // Extract fresh article snapshot
     const snapshot = await ReadabilityService.extractFromUrl(link.url);
     if (snapshot) {
-      omniDb.updateLink(id, { readerSnapshot: snapshot });
-      refreshLinksCache();
+      omniDb.updateLink(id, { readerSnapshot: snapshot }, workspaceId);
+      refreshLinksCache(workspaceId);
       res.json({ success: true, snapshot, cached: false });
     } else {
       res.status(422).json({ error: 'Unable to parse full article content from target page.' });
@@ -783,7 +849,8 @@ app.get('/api/links/:id/reader', async (req, res) => {
 app.post('/api/links/:id/reader/snapshot', async (req, res) => {
   try {
     const { id } = req.params;
-    const link = omniDb.getLinkById(id);
+    const workspaceId = workspaceFor(req);
+    const link = omniDb.getLinkById(id, workspaceId);
     if (!link) {
       res.status(404).json({ error: 'Link not found' });
       return;
@@ -791,8 +858,8 @@ app.post('/api/links/:id/reader/snapshot', async (req, res) => {
 
     const snapshot = await ReadabilityService.extractFromUrl(link.url);
     if (snapshot) {
-      const updated = omniDb.updateLink(id, { readerSnapshot: snapshot });
-      refreshLinksCache();
+      const updated = omniDb.updateLink(id, { readerSnapshot: snapshot }, workspaceId);
+      refreshLinksCache(workspaceId);
       res.json({ success: true, snapshot, link: updated });
     } else {
       res.status(422).json({ error: 'Failed to extract article content from URL.' });
@@ -806,33 +873,34 @@ app.post('/api/links/:id/reader/snapshot', async (req, res) => {
 // POST /api/links/batch - Batch operations
 app.post('/api/links/batch', validateBody(BatchActionSchema), (req, res) => {
   const { ids, action, value } = req.body;
+  const workspaceId = workspaceFor(req);
 
   if (action === 'delete') {
-    omniDb.batchDelete(ids);
+    omniDb.batchDelete(ids, workspaceId);
   } else if (action === 'archive') {
-    omniDb.batchUpdate(ids, { isArchived: true });
+    omniDb.batchUpdate(ids, { isArchived: true }, workspaceId);
   } else if (action === 'unarchive') {
-    omniDb.batchUpdate(ids, { isArchived: false });
+    omniDb.batchUpdate(ids, { isArchived: false }, workspaceId);
   } else if (action === 'markRead') {
-    omniDb.batchUpdate(ids, { readStatus: 'read' });
+    omniDb.batchUpdate(ids, { readStatus: 'read' }, workspaceId);
   } else if (action === 'markUnread') {
-    omniDb.batchUpdate(ids, { readStatus: 'unread' });
+    omniDb.batchUpdate(ids, { readStatus: 'unread' }, workspaceId);
   } else if (action === 'setCategory' && value) {
-    omniDb.batchUpdate(ids, { category: String(value) });
+    omniDb.batchUpdate(ids, { category: String(value) }, workspaceId);
   } else if (action === 'addTag' && value) {
     for (const id of ids) {
-      const item = omniDb.getLinkById(id);
+      const item = omniDb.getLinkById(id, workspaceId);
       if (item) {
         const cleanTag = String(value).trim().toLowerCase();
         const nextTags = Array.from(new Set([...item.tags, cleanTag]));
-        omniDb.updateLink(id, { tags: nextTags });
+        omniDb.updateLink(id, { tags: nextTags }, workspaceId);
       }
     }
   }
 
-  refreshLinksCache();
-  saveLinks();
-  res.json({ success: true, count: ids.length, total: omniDb.count() });
+  refreshLinksCache(workspaceId);
+  saveLinks(undefined, workspaceId);
+  res.json({ success: true, count: ids.length, total: omniDb.count(workspaceId) });
 });
 
 // GET /api/links/check-duplicate & POST /api/links/check-duplicate
@@ -842,13 +910,13 @@ app.get('/api/links/check-duplicate', (req, res) => {
     res.json({ isDuplicate: false, existingLink: null, normalizedUrl: '' });
     return;
   }
-  const result = checkDuplicateInLinks(url, linksDatabase);
+  const result = checkDuplicateInLinks(url, linksFor(req));
   res.json(result);
 });
 
 app.post('/api/links/check-duplicate', validateBody(CheckDuplicateSchema), (req, res) => {
   const { url } = req.body;
-  const result = checkDuplicateInLinks(url, linksDatabase);
+  const result = checkDuplicateInLinks(url, linksFor(req));
   res.json(result);
 });
 
@@ -856,9 +924,10 @@ app.post('/api/links/check-duplicate', validateBody(CheckDuplicateSchema), (req,
 app.post('/api/links/merge/:id', validateBody(MergeLinkSchema), async (req, res) => {
   try {
     const { id } = req.params;
+    const workspaceId = workspaceFor(req);
     const { title, category, tags, notes, mode, autoAiExtract } = req.body;
 
-    const existing = omniDb.getLinkById(id);
+    const existing = omniDb.getLinkById(id, workspaceId);
     if (!existing) {
       res.status(404).json({ error: 'Existing link not found to merge.' });
       return;
@@ -924,6 +993,7 @@ app.post('/api/links/merge/:id', validateBody(MergeLinkSchema), async (req, res)
           }
         }
       } catch (aiErr) {
+        if (aiErr instanceof AiQuotaExceededError) throw aiErr;
         console.warn('Merge AI extraction warning:', aiErr);
       }
     }
@@ -935,23 +1005,24 @@ app.post('/api/links/merge/:id', validateBody(MergeLinkSchema), async (req, res)
       notes: mergedNotes,
       summary: updatedSummary,
       aiScore: updatedAiScore,
-    });
+    }, workspaceId);
 
     if (!updatedLink) {
       res.status(500).json({ error: 'Failed to update link in database' });
       return;
     }
 
-    refreshLinksCache();
-    saveLinks();
+    refreshLinksCache(workspaceId);
+    saveLinks(undefined, workspaceId);
 
     // Re-index embedding in background
-    hybridSearchEngine.indexLink(updatedLink, getGenAI()).catch((err) => {
+    hybridSearchEngine.indexLink(updatedLink, getGenAI(), workspaceId).catch((err) => {
       console.warn('[HybridSearch] Background merge embedding notice:', err);
     });
 
     res.json({ link: updatedLink, message: 'Bookmark successfully merged' });
   } catch (err: any) {
+    if (respondToAiQuotaError(err, res)) return;
     console.error('Error merging link:', err);
     res.status(500).json({ error: err.message || 'Failed to merge link.' });
   }
@@ -1111,6 +1182,7 @@ Allowed Categories: Dev & Tech, AI & Machine Learning, Design & UI, Reddit Discu
       analyzedLength: combinedText.length,
     });
   } catch (err: any) {
+    if (respondToAiQuotaError(err, res)) return;
     res.status(500).json({ error: err.message || 'Auto-tag suggestion failed' });
   }
 });
@@ -1301,6 +1373,7 @@ Return strictly valid JSON matching the schema.`;
 // POST /api/ai/extract - Manual or programmatic AI extraction
 app.post('/api/ai/extract', async (req, res) => {
   try {
+    const workspaceId = workspaceFor(req);
     const { url, title, notes, linkId, preferredModel } = req.body;
     if (!url) {
       res.status(400).json({ error: 'url is required' });
@@ -1312,7 +1385,7 @@ app.post('/api/ai/extract', async (req, res) => {
 
     // If linkId is provided, auto-update the database item in SQLite
     if (linkId && aiData) {
-      const existing = omniDb.getLinkById(linkId);
+      const existing = omniDb.getLinkById(linkId, workspaceId);
       if (existing) {
         const updated = omniDb.updateLink(linkId, {
           title: aiData.title || existing.title,
@@ -1323,17 +1396,18 @@ app.post('/api/ai/extract', async (req, res) => {
           readingTimeMinutes: aiData.readingTimeMinutes || existing.readingTimeMinutes,
           aiScore: aiData.aiScore || existing.aiScore,
           readerSnapshot: aiData.readerSnapshot || existing.readerSnapshot,
-        });
-        refreshLinksCache();
-        saveLinks();
+        }, workspaceId);
+        refreshLinksCache(workspaceId);
+        saveLinks(undefined, workspaceId);
         if (updated) {
-          hybridSearchEngine.indexLink(updated, getGenAI()).catch(() => {});
+          hybridSearchEngine.indexLink(updated, getGenAI(), workspaceId).catch(() => {});
         }
       }
     }
 
     res.json({ result: aiData, success: true });
   } catch (err: any) {
+    if (respondToAiQuotaError(err, res)) return;
     console.error('AI extraction error:', err);
     // Even if unexpected error occurs, provide heuristic fallback
     const fallback = generateHeuristicExtraction(req.body.url, req.body.title, req.body.notes);
@@ -1344,12 +1418,13 @@ app.post('/api/ai/extract', async (req, res) => {
 // POST /api/ai/cluster - Semantic Topic Grouping of all repository links via Thinking Gemini 3.7
 app.post('/api/ai/cluster', async (req, res) => {
   try {
-    if (linksDatabase.length === 0) {
+    const workspaceLinks = linksFor(req);
+    if (workspaceLinks.length === 0) {
       res.json({ clusters: [] });
       return;
     }
 
-    const linkSummaries = linksDatabase.map((l) => ({
+    const linkSummaries = workspaceLinks.map((l) => ({
       id: l.id,
       title: l.title,
       platform: l.platform,
@@ -1399,7 +1474,7 @@ ${JSON.stringify(linkSummaries, null, 2)}`;
       genAi,
       {
         taskType: 'deep_reasoning',
-        itemCount: linksDatabase.length,
+        itemCount: workspaceLinks.length,
         forceThinking: true,
       },
       prompt,
@@ -1411,7 +1486,7 @@ ${JSON.stringify(linkSummaries, null, 2)}`;
     }
 
     if (!Array.isArray(clusters) || clusters.length === 0) {
-      clusters = generateHeuristicClusters(linksDatabase);
+      clusters = generateHeuristicClusters(workspaceLinks);
     }
 
     res.json({
@@ -1424,8 +1499,9 @@ ${JSON.stringify(linkSummaries, null, 2)}`;
       },
     });
   } catch (err: any) {
+    if (respondToAiQuotaError(err, res)) return;
     console.error('Clustering error:', err);
-    res.json({ clusters: generateHeuristicClusters(linksDatabase) });
+    res.json({ clusters: generateHeuristicClusters(linksFor(req)) });
   }
 });
 
@@ -1433,14 +1509,15 @@ ${JSON.stringify(linkSummaries, null, 2)}`;
 app.post('/api/ai/ask', validateBody(AskRepoSchema), async (req, res) => {
   try {
     const { question, preferredModel } = req.body;
+    const workspaceId = workspaceFor(req);
 
     const genAi = getGenAI();
 
     // Stage 1 & 2: Hybrid Retrieval (SQLite FTS5 BM25 + Gemini gemini-embedding-001 dense vectors + RRF)
-    const hybridMatches = await hybridSearchEngine.search(question, genAi, { limit: 8 });
+    const hybridMatches = await hybridSearchEngine.search(question, genAi, { limit: 8 }, workspaceId);
     const relevantLinks = hybridMatches.length > 0
       ? hybridMatches.map((m) => m.link)
-      : omniDb.getAllLinks().slice(0, 10);
+      : omniDb.getAllLinks(workspaceId).slice(0, 10);
 
     const knowledgeBase = relevantLinks.map((l) => ({
       id: l.id,
@@ -1513,7 +1590,7 @@ Instructions:
       retrieval: {
         strategy: 'hybrid_fts5_vector_rrf',
         retrievedCount: relevantLinks.length,
-        totalVaultItems: omniDb.count(),
+        totalVaultItems: omniDb.count(workspaceId),
         topMatches: hybridMatches.map((m) => ({
           id: m.link.id,
           title: m.link.title,
@@ -1531,8 +1608,9 @@ Instructions:
       },
     });
   } catch (err: any) {
+    if (respondToAiQuotaError(err, res)) return;
     console.error('Ask Repo error:', err);
-    res.json(generateHeuristicAskRepo(req.body?.question || 'General search', omniDb.getAllLinks()));
+    res.json(generateHeuristicAskRepo(req.body?.question || 'General search', linksFor(req)));
   }
 });
 
@@ -1547,9 +1625,10 @@ app.post('/api/ai/search/hybrid', validateBody(HybridSearchSchema), async (req, 
       platform,
       readStatus,
       minScore: minScore !== undefined ? Number(minScore) : 0.001,
-    });
+    }, workspaceFor(req));
     res.json({ success: true, count: results.length, results });
   } catch (err: any) {
+    if (respondToAiQuotaError(err, res)) return;
     console.error('Hybrid search error:', err);
     res.status(500).json({ error: err.message || 'Hybrid search failed' });
   }
@@ -1559,9 +1638,10 @@ app.post('/api/ai/search/hybrid', validateBody(HybridSearchSchema), async (req, 
 app.post('/api/ai/embeddings/reindex', async (req, res) => {
   try {
     const genAi = getGenAI();
-    const result = await hybridSearchEngine.runBackgroundIndexing(genAi);
+    const result = await hybridSearchEngine.runBackgroundIndexing(genAi, workspaceFor(req));
     res.json({ success: true, ...result });
   } catch (err: any) {
+    if (respondToAiQuotaError(err, res)) return;
     console.error('Reindexing error:', err);
     res.status(500).json({ error: err.message || 'Reindexing failed' });
   }
@@ -1569,8 +1649,9 @@ app.post('/api/ai/embeddings/reindex', async (req, res) => {
 
 // GET /api/ai/embeddings/status - Check vector embedding status
 app.get('/api/ai/embeddings/status', (req, res) => {
-  const total = omniDb.count();
-  const unindexed = omniDb.getUnindexedLinkIds().length;
+  const workspaceId = workspaceFor(req);
+  const total = omniDb.count(workspaceId);
+  const unindexed = omniDb.getUnindexedLinkIds(workspaceId).length;
   const indexed = total - unindexed;
   res.json({
     total,
@@ -1583,24 +1664,28 @@ app.get('/api/ai/embeddings/status', (req, res) => {
 
 // GET /api/stats - Dashboard metrics with ETag support
 app.get('/api/stats', (req, res) => {
-  const etag = `W/"stats-${repoRevision}-${linksDatabase.length}"`;
-  if (req.headers['if-none-match'] === etag) {
-    res.status(304).end();
-    return;
+  const workspaceId = workspaceFor(req);
+  const workspaceLinks = linksFor(req);
+  const etag = `W/"stats-${workspaceRevisions.get(workspaceId) || 0}-${workspaceLinks.length}"`;
+  if (runtimeConfig.mode === 'local') {
+    if (req.headers['if-none-match'] === etag) {
+      res.status(304).end();
+      return;
+    }
+    res.setHeader('ETag', etag);
+    res.setHeader('Cache-Control', 'private, no-cache');
   }
-  res.setHeader('ETag', etag);
-  res.setHeader('Cache-Control', 'private, no-cache');
 
-  const total = linksDatabase.length;
-  const unread = linksDatabase.filter((l) => l.readStatus === 'unread').length;
-  const favorites = linksDatabase.filter((l) => l.isFavorite).length;
-  const archived = linksDatabase.filter((l) => l.isArchived).length;
+  const total = workspaceLinks.length;
+  const unread = workspaceLinks.filter((l) => l.readStatus === 'unread').length;
+  const favorites = workspaceLinks.filter((l) => l.isFavorite).length;
+  const archived = workspaceLinks.filter((l) => l.isArchived).length;
 
   const platformCounts: Record<string, number> = {};
   const categoryCounts: Record<string, number> = {};
   const tagCounts: Record<string, number> = {};
 
-  for (const item of linksDatabase) {
+  for (const item of workspaceLinks) {
     platformCounts[item.platform] = (platformCounts[item.platform] || 0) + 1;
     categoryCounts[item.category] = (categoryCounts[item.category] || 0) + 1;
     for (const t of item.tags) {
@@ -1634,26 +1719,31 @@ app.get('/api/stats', (req, res) => {
 app.post('/api/import', (req, res) => {
   try {
     const { links, mode } = req.body;
+    const workspaceId = workspaceFor(req);
     if (!Array.isArray(links)) {
       res.status(400).json({ error: 'Invalid links array payload.' });
       return;
     }
 
     if (mode === 'replace') {
-      linksDatabase = links;
+      omniDb.batchDelete(omniDb.getAllLinks(workspaceId).map((link) => link.id), workspaceId);
+      omniDb.bulkInsert(links, workspaceId);
     } else {
       // Merge unique by URL
-      const existingUrls = new Set(linksDatabase.map((l) => l.url));
+      const existingUrls = new Set(omniDb.getAllLinks(workspaceId).map((l) => l.url));
+      const additions: LinkItem[] = [];
       for (const item of links) {
         if (!existingUrls.has(item.url)) {
-          linksDatabase.push(item);
+          additions.push(item);
           existingUrls.add(item.url);
         }
       }
+      omniDb.bulkInsert(additions, workspaceId);
     }
 
-    saveLinks(linksDatabase);
-    res.json({ success: true, count: links.length, total: linksDatabase.length });
+    const updated = refreshLinksCache(workspaceId);
+    saveLinks(undefined, workspaceId);
+    res.json({ success: true, count: links.length, total: updated.length });
   } catch (err: any) {
     res.status(500).json({ error: err.message || 'Import failed.' });
   }
@@ -1666,11 +1756,13 @@ app.post('/api/import', (req, res) => {
 // GET /api/rss/feeds - List all subscribed feeds with stats
 app.get('/api/rss/feeds', (req, res) => {
   try {
-    const feeds = RssFeedManager.getAll();
+    const workspaceId = workspaceFor(req);
+    const feeds = RssFeedManager.getAll(workspaceId);
+    const workspaceLinks = omniDb.getAllLinks(workspaceId);
     
     // Augment feeds with unread counts and total items present in repository
     const augmentedFeeds = feeds.map((feed) => {
-      const feedLinks = linksDatabase.filter((l) => l.feedId === feed.id);
+      const feedLinks = workspaceLinks.filter((l) => l.feedId === feed.id);
       const unreadCount = feedLinks.filter((l) => l.readStatus === 'unread').length;
       return {
         ...feed,
@@ -1688,6 +1780,7 @@ app.get('/api/rss/feeds', (req, res) => {
 // POST /api/rss/feeds - Subscribe to a new RSS feed
 app.post('/api/rss/feeds', validateBody(AddRssFeedSchema), async (req, res) => {
   try {
+    const workspaceId = workspaceFor(req);
     const { url, title, description, category, defaultTags, autoAiExtract, pollIntervalMinutes, siteUrl, initialSync } = req.body;
 
     let finalFeedUrl = url.trim();
@@ -1720,21 +1813,22 @@ app.post('/api/rss/feeds', validateBody(AddRssFeedSchema), async (req, res) => {
       autoAiExtract: autoAiExtract !== false,
       pollIntervalMinutes: pollIntervalMinutes || 30,
       faviconUrl: `https://www.google.com/s2/favicons?domain=${finalSiteUrl || finalFeedUrl}&sz=128`,
-    });
+    }, workspaceId);
 
     // Optionally perform immediate initial sync
     let newItemsCount = 0;
     if (initialSync !== false) {
       try {
-        const syncResult = await RssFeedManager.syncFeed(createdFeed.id, omniDb.getAllLinks(), getGenAI());
+        const syncResult = await RssFeedManager.syncFeed(createdFeed.id, omniDb.getAllLinks(workspaceId), getGenAI(), workspaceId);
         if (syncResult.newLinks.length > 0) {
-          omniDb.bulkInsert(syncResult.newLinks);
-          refreshLinksCache();
-          saveLinks();
+          omniDb.bulkInsert(syncResult.newLinks, workspaceId);
+          refreshLinksCache(workspaceId);
+          saveLinks(undefined, workspaceId);
           newItemsCount = syncResult.newLinks.length;
-          hybridSearchEngine.runBackgroundIndexing(getGenAI()).catch(() => {});
+          hybridSearchEngine.runBackgroundIndexing(getGenAI(), workspaceId).catch(() => {});
         }
       } catch (syncErr) {
+        if (syncErr instanceof AiQuotaExceededError) throw syncErr;
         console.warn('Initial feed sync warning:', syncErr);
       }
     }
@@ -1745,6 +1839,7 @@ app.post('/api/rss/feeds', validateBody(AddRssFeedSchema), async (req, res) => {
       success: true,
     });
   } catch (err: any) {
+    if (respondToAiQuotaError(err, res)) return;
     console.error('Error subscribing to feed:', err);
     res.status(500).json({ error: err.message || 'Failed to subscribe to feed' });
   }
@@ -1754,7 +1849,7 @@ app.post('/api/rss/feeds', validateBody(AddRssFeedSchema), async (req, res) => {
 app.put('/api/rss/feeds/:id', (req, res) => {
   try {
     const { id } = req.params;
-    const updated = RssFeedManager.updateFeed(id, req.body);
+    const updated = RssFeedManager.updateFeed(id, req.body, workspaceFor(req));
     if (!updated) {
       res.status(404).json({ error: 'Feed not found.' });
       return;
@@ -1769,8 +1864,9 @@ app.put('/api/rss/feeds/:id', (req, res) => {
 app.delete('/api/rss/feeds/:id', (req, res) => {
   try {
     const { id } = req.params;
+    const workspaceId = workspaceFor(req);
     const { deleteAssociatedLinks } = req.query;
-    const success = RssFeedManager.deleteFeed(id);
+    const success = RssFeedManager.deleteFeed(id, workspaceId);
     if (!success) {
       res.status(404).json({ error: 'Feed not found.' });
       return;
@@ -1778,10 +1874,10 @@ app.delete('/api/rss/feeds/:id', (req, res) => {
 
     // Optional purge of associated items
     if (deleteAssociatedLinks === 'true') {
-      const associatedLinks = omniDb.getAllLinks().filter((l) => l.feedId === id);
-      omniDb.batchDelete(associatedLinks.map((l) => l.id));
-      refreshLinksCache();
-      saveLinks();
+      const associatedLinks = omniDb.getAllLinks(workspaceId).filter((l) => l.feedId === id);
+      omniDb.batchDelete(associatedLinks.map((l) => l.id), workspaceId);
+      refreshLinksCache(workspaceId);
+      saveLinks(undefined, workspaceId);
     }
 
     res.json({ success: true, id });
@@ -1810,13 +1906,14 @@ app.post('/api/rss/discover', async (req, res) => {
 app.post('/api/rss/feeds/:id/sync', async (req, res) => {
   try {
     const { id } = req.params;
-    const result = await RssFeedManager.syncFeed(id, omniDb.getAllLinks(), getGenAI());
+    const workspaceId = workspaceFor(req);
+    const result = await RssFeedManager.syncFeed(id, omniDb.getAllLinks(workspaceId), getGenAI(), workspaceId);
     
     if (result.newLinks.length > 0) {
-      omniDb.bulkInsert(result.newLinks);
-      refreshLinksCache();
-      saveLinks();
-      hybridSearchEngine.runBackgroundIndexing(getGenAI()).catch(() => {});
+      omniDb.bulkInsert(result.newLinks, workspaceId);
+      refreshLinksCache(workspaceId);
+      saveLinks(undefined, workspaceId);
+      hybridSearchEngine.runBackgroundIndexing(getGenAI(), workspaceId).catch(() => {});
     }
 
     res.json({
@@ -1827,6 +1924,7 @@ app.post('/api/rss/feeds/:id/sync', async (req, res) => {
       error: result.error,
     });
   } catch (err: any) {
+    if (respondToAiQuotaError(err, res)) return;
     console.error('Feed sync error:', err);
     res.status(500).json({ error: err.message || 'Feed sync failed' });
   }
@@ -1835,13 +1933,14 @@ app.post('/api/rss/feeds/:id/sync', async (req, res) => {
 // POST /api/rss/sync - Sync all enabled feeds
 app.post('/api/rss/sync', async (req, res) => {
   try {
-    const result = await RssFeedManager.syncAllEnabledFeeds(omniDb.getAllLinks(), getGenAI());
+    const workspaceId = workspaceFor(req);
+    const result = await RssFeedManager.syncAllEnabledFeeds(omniDb.getAllLinks(workspaceId), getGenAI(), workspaceId);
     
     if (result.newLinks.length > 0) {
-      omniDb.bulkInsert(result.newLinks);
-      refreshLinksCache();
-      saveLinks();
-      hybridSearchEngine.runBackgroundIndexing(getGenAI()).catch(() => {});
+      omniDb.bulkInsert(result.newLinks, workspaceId);
+      refreshLinksCache(workspaceId);
+      saveLinks(undefined, workspaceId);
+      hybridSearchEngine.runBackgroundIndexing(getGenAI(), workspaceId).catch(() => {});
     }
 
     res.json({
@@ -1851,6 +1950,7 @@ app.post('/api/rss/sync', async (req, res) => {
       errors: result.errors,
     });
   } catch (err: any) {
+    if (respondToAiQuotaError(err, res)) return;
     console.error('All feeds sync error:', err);
     res.status(500).json({ error: err.message || 'All feeds sync failed' });
   }
@@ -1859,7 +1959,7 @@ app.post('/api/rss/sync', async (req, res) => {
 // GET /api/rss/catalog - Curated list of popular dev & tech blogs
 app.get('/api/rss/catalog', (req, res) => {
   try {
-    const subscribedUrls = new Set(RssFeedManager.getAll().map((f) => f.url.toLowerCase()));
+    const subscribedUrls = new Set(RssFeedManager.getAll(workspaceFor(req)).map((f) => f.url.toLowerCase()));
     const catalog = CURATED_DEV_FEEDS.map((feed) => ({
       ...feed,
       isSubscribed: subscribedUrls.has(feed.url.toLowerCase()),
@@ -1873,7 +1973,7 @@ app.get('/api/rss/catalog', (req, res) => {
 // GET /api/rss/opml/export - Export OPML XML
 app.get('/api/rss/opml/export', (req, res) => {
   try {
-    const opmlXml = RssFeedManager.exportOpml();
+    const opmlXml = RssFeedManager.exportOpml(workspaceFor(req));
     res.setHeader('Content-Type', 'text/xml; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename="omnilink-feeds.opml"');
     res.send(opmlXml);
@@ -1885,88 +1985,35 @@ app.get('/api/rss/opml/export', (req, res) => {
 // POST /api/rss/opml/import - Import OPML XML
 app.post('/api/rss/opml/import', async (req, res) => {
   try {
+    const workspaceId = workspaceFor(req);
     const { opmlContent, initialSync } = req.body;
     if (!opmlContent || typeof opmlContent !== 'string') {
       res.status(400).json({ error: 'opmlContent XML string is required' });
       return;
     }
 
-    const importResult = RssFeedManager.importOpml(opmlContent);
+    const importResult = RssFeedManager.importOpml(opmlContent, workspaceId);
 
     if (initialSync !== false && importResult.importedCount > 0) {
       try {
-        const syncRes = await RssFeedManager.syncAllEnabledFeeds(linksDatabase, getGenAI());
+        const syncRes = await RssFeedManager.syncAllEnabledFeeds(omniDb.getAllLinks(workspaceId), getGenAI(), workspaceId);
         if (syncRes.newLinks.length > 0) {
-          linksDatabase.unshift(...syncRes.newLinks);
-          saveLinks(linksDatabase);
+          omniDb.bulkInsert(syncRes.newLinks, workspaceId);
+          refreshLinksCache(workspaceId);
+          saveLinks(undefined, workspaceId);
         }
       } catch (syncErr) {
+        if (syncErr instanceof AiQuotaExceededError) throw syncErr;
         console.warn('Initial sync after OPML import notice:', syncErr);
       }
     }
 
     res.json(importResult);
   } catch (err: any) {
+    if (respondToAiQuotaError(err, res)) return;
     res.status(500).json({ error: err.message || 'Failed to import OPML' });
   }
 });
-
-// Helper: Multi-Model Gemini Caller with Exponential Backoff & Jitter
-const GEMINI_MODELS = [
-  'gemini-3.7-flash',
-  'gemini-flash-latest',
-  'gemini-3.1-flash-lite',
-];
-
-async function callGeminiWithRetry(
-  prompt: string,
-  schemaConfig: any,
-  systemInstruction?: string
-): Promise<string | null> {
-  const ai = getGenAI();
-  if (!ai) return null;
-
-  for (const model of GEMINI_MODELS) {
-    for (let attempt = 0; attempt < 2; attempt++) {
-      try {
-        const response = await ai.models.generateContent({
-          model,
-          contents: prompt,
-          config: {
-            responseMimeType: 'application/json',
-            responseSchema: schemaConfig,
-            ...(systemInstruction ? { systemInstruction } : {}),
-          },
-        });
-        if (response && response.text) {
-          return response.text;
-        }
-      } catch (err: any) {
-        const errMsg = err?.message || String(err);
-        const errStatus = err?.status || err?.code || '';
-        const isTransient =
-          errMsg.includes('503') ||
-          errMsg.includes('high demand') ||
-          errMsg.includes('UNAVAILABLE') ||
-          errMsg.includes('429') ||
-          errMsg.includes('RESOURCE_EXHAUSTED') ||
-          errStatus === 503 ||
-          errStatus === 429;
-
-        console.warn(`[Gemini Engine] Model ${model} attempt ${attempt + 1} notice:`, errMsg);
-
-        if (isTransient && attempt === 0) {
-          // Exponential backoff with random jitter
-          await new Promise((resolve) => setTimeout(resolve, 600 + Math.random() * 400));
-          continue;
-        }
-        // Move to next model in fallback chain
-        break;
-      }
-    }
-  }
-  return null;
-}
 
 // Heuristic Fallback Generator when API is experiencing high demand or offline
 function generateHeuristicExtraction(
@@ -2267,6 +2314,8 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 
 // Vite middleware & Production Serving
 async function start() {
+  // Fail startup before binding when OIDC discovery/JWKS configuration is invalid.
+  await authStackPromise;
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -2294,19 +2343,25 @@ async function start() {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`OmniLink AI Server running on http://localhost:${PORT}`);
+  app.listen(runtimeConfig.port, runtimeConfig.host, () => {
+    console.log(`OmniLink AI Server running on http://${runtimeConfig.host}:${runtimeConfig.port}`);
+    const unsafeWarning = describeUnsafeRemoteWarning(runtimeConfig);
+    if (unsafeWarning) console.warn(unsafeWarning);
     console.log(`SQLite Database active at data/omnilink.db (${omniDb.count()} links)`);
 
-    // Launch non-blocking background vector embedding indexer
-    setTimeout(() => {
-      hybridSearchEngine.runBackgroundIndexing(getGenAI()).catch((err) => {
-        console.warn('[HybridSearch] Initial indexing background notice:', err);
-      });
-    }, 1500);
+    // These legacy startup jobs run without a request actor. Keep them local
+    // until the multi-user scheduler can supply a workspace context and quota
+    // permit for every job.
+    if (runtimeConfig.mode === 'local') {
+      // Launch non-blocking background vector embedding indexer
+      setTimeout(() => {
+        hybridSearchEngine.runBackgroundIndexing(getGenAI()).catch((err) => {
+          console.warn('[HybridSearch] Initial indexing background notice:', err);
+        });
+      }, 1500);
 
-    // Auto-heal existing links with raw Hacker News RSS boilerplate in their summary
-    setTimeout(async () => {
+      // Auto-heal existing links with raw Hacker News RSS boilerplate in their summary
+      setTimeout(async () => {
       try {
         const all = omniDb.getAllLinks();
         const brokenLinks = all.filter((l) =>
@@ -2350,23 +2405,24 @@ async function start() {
       } catch (err) {
         console.warn('[AutoHeal] Startup scan notice:', err);
       }
-    }, 3000);
+      }, 3000);
 
-    // Auto-poll enabled RSS feeds every 15 minutes
-    setInterval(async () => {
-      try {
-        const syncResult = await RssFeedManager.syncAllEnabledFeeds(omniDb.getAllLinks(), getGenAI());
-        if (syncResult.newLinks.length > 0) {
-          omniDb.bulkInsert(syncResult.newLinks);
-          refreshLinksCache();
-          saveLinks();
-          console.log(`[RSS Background Sync] Ingested ${syncResult.newLinks.length} new items into unread list.`);
-          hybridSearchEngine.runBackgroundIndexing(getGenAI()).catch(() => {});
+      // Auto-poll enabled RSS feeds every 15 minutes
+      setInterval(async () => {
+        try {
+          const syncResult = await RssFeedManager.syncAllEnabledFeeds(omniDb.getAllLinks(), getGenAI());
+          if (syncResult.newLinks.length > 0) {
+            omniDb.bulkInsert(syncResult.newLinks);
+            refreshLinksCache();
+            saveLinks();
+            console.log(`[RSS Background Sync] Ingested ${syncResult.newLinks.length} new items into unread list.`);
+            hybridSearchEngine.runBackgroundIndexing(getGenAI()).catch(() => {});
+          }
+        } catch (err: any) {
+          console.warn('[RSS Background Sync] Polling error:', err.message);
         }
-      } catch (err: any) {
-        console.warn('[RSS Background Sync] Polling error:', err.message);
-      }
-    }, 15 * 60 * 1000);
+      }, 15 * 60 * 1000);
+    }
   });
 }
 

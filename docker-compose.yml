@@ -6,11 +6,25 @@ services:
     container_name: omnilink-ai
     restart: unless-stopped
     ports:
-      - "${PORT:-3000}:3000"
+      # Local default is published only on the host loopback interface.
+      - "127.0.0.1:${PORT:-3000}:3000"
     environment:
       - NODE_ENV=production
       - PORT=3000
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - OMNILINK_MODE=${OMNILINK_MODE:-local}
+      - OMNILINK_HOST=0.0.0.0
+      - OMNILINK_UNSAFE_ALLOW_REMOTE_NO_AUTH=${OMNILINK_UNSAFE_ALLOW_REMOTE_NO_AUTH:-false}
+      - OMNILINK_APP_ORIGIN=${OMNILINK_APP_ORIGIN:-}
+      - OMNILINK_OIDC_ISSUER=${OMNILINK_OIDC_ISSUER:-}
+      - OMNILINK_OIDC_CLIENT_ID=${OMNILINK_OIDC_CLIENT_ID:-}
+      - OMNILINK_OIDC_AUDIENCE=${OMNILINK_OIDC_AUDIENCE:-}
+      - OMNILINK_OIDC_REDIRECT_URI=${OMNILINK_OIDC_REDIRECT_URI:-}
+      - OMNILINK_OIDC_CLIENT_SECRET=${OMNILINK_OIDC_CLIENT_SECRET:-}
+      - OMNILINK_OIDC_TOKEN_ENDPOINT_AUTH_METHOD=${OMNILINK_OIDC_TOKEN_ENDPOINT_AUTH_METHOD:-}
+      - OMNILINK_SESSION_SECRET=${OMNILINK_SESSION_SECRET:-}
+      - OMNILINK_SESSION_STORE=${OMNILINK_SESSION_STORE:-sqlite}
+      - OMNILINK_AI_QUOTA_MONTHLY_UNITS=${OMNILINK_AI_QUOTA_MONTHLY_UNITS:-}
     volumes:
       # Persistent host directory for SQLite database (omnilink.db, WAL, backups)
       - ./data:/app/data

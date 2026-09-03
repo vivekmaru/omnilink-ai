@@ -60,6 +60,7 @@ OmniLink exposes a fast headless ingress endpoint: `POST /api/share/quick`.
 ### cURL Example:
 ```bash
 curl -X POST "http://localhost:3000/api/share/quick" \
+  -H "Authorization: Bearer $OMNILINK_SERVICE_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "url": "https://github.com/astral-sh/uv",
@@ -96,6 +97,7 @@ FRONT_URL=$(osascript -e 'tell application "Google Chrome" to get URL of active 
 FRONT_TITLE=$(osascript -e 'tell application "Google Chrome" to get title of active tab of front window')
 
 curl -s -X POST "http://localhost:3000/api/share/quick" \
+  -H "Authorization: Bearer $OMNILINK_SERVICE_TOKEN" \
   -H "Content-Type: application/json" \
   -d "{\"url\": \"$FRONT_URL\", \"title\": \"$FRONT_TITLE\"}"
 

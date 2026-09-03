@@ -133,6 +133,12 @@ export function generateExtensionZip(config: ExtensionConfig): Promise<Blob> {
 </html>`;
 
   const popupJs = `const APP_URL = "${appUrl}";
+const SERVICE_TOKEN_STORAGE_KEY = 'omnilink_service_token';
+async function getApiHeaders(base = {}) {
+  const data = await chrome.storage.local.get([SERVICE_TOKEN_STORAGE_KEY]);
+  const token = typeof data[SERVICE_TOKEN_STORAGE_KEY] === 'string' ? data[SERVICE_TOKEN_STORAGE_KEY].trim() : '';
+  return token ? { ...base, Authorization: 'Bearer ' + token } : { ...base };
+}
 
 document.addEventListener('DOMContentLoaded', async () => {
   const loading = document.getElementById('loading');
@@ -236,7 +242,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       try {
         const res = await fetch(\`\${APP_URL}/api/links\`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: await getApiHeaders({ 'Content-Type': 'application/json' }),
           body: JSON.stringify(payload)
         });
         const data = await res.json();
@@ -302,6 +308,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 </html>`;
 
   const sidepanelJs = `const APP_URL = "${appUrl}";
+const SERVICE_TOKEN_STORAGE_KEY = 'omnilink_service_token';
+async function getApiHeaders(base = {}) {
+  const data = await chrome.storage.local.get([SERVICE_TOKEN_STORAGE_KEY]);
+  const token = typeof data[SERVICE_TOKEN_STORAGE_KEY] === 'string' ? data[SERVICE_TOKEN_STORAGE_KEY].trim() : '';
+  return token ? { ...base, Authorization: 'Bearer ' + token } : { ...base };
+}
 
 document.addEventListener('DOMContentLoaded', async () => {
   const saveCurrentTabBtn = document.getElementById('saveCurrentTabBtn');
@@ -335,7 +347,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const loadRecent = async () => {
     try {
-      const res = await fetch(\`\${APP_URL}/api/links\`);
+      const res = await fetch(\`\${APP_URL}/api/links\`, { headers: await getApiHeaders() });
       if (res.ok) {
         const data = await res.json();
         renderLinks((data.links || []).slice(0, 20));
@@ -352,7 +364,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       try {
         const res = await fetch(\`\${APP_URL}/api/ai/search/hybrid\`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: await getApiHeaders({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({ query: q, limit: 15 })
         });
         if (res.ok) {
@@ -369,7 +381,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (!tab || !tab.url) return;
       const res = await fetch(\`\${APP_URL}/api/share/quick\`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await getApiHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ url: tab.url, title: tab.title || tab.url })
       });
       const data = await res.json();
@@ -386,6 +398,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 });`;
 
   const backgroundJs = `const APP_URL = "${appUrl}";
+const SERVICE_TOKEN_STORAGE_KEY = 'omnilink_service_token';
+async function getApiHeaders(base = {}) {
+  const data = await chrome.storage.local.get([SERVICE_TOKEN_STORAGE_KEY]);
+  const token = typeof data[SERVICE_TOKEN_STORAGE_KEY] === 'string' ? data[SERVICE_TOKEN_STORAGE_KEY].trim() : '';
+  return token ? { ...base, Authorization: 'Bearer ' + token } : { ...base };
+}
 
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.removeAll(() => {
@@ -409,7 +427,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   try {
     const res = await fetch(\`\${APP_URL}/api/share/quick\`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await getApiHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ url: targetUrl, title: title || targetUrl, notes })
     });
     if (res.ok && tab?.id) {
@@ -430,7 +448,7 @@ chrome.omnibox.onInputChanged.addListener(async (text, suggest) => {
   try {
     const res = await fetch(\`\${APP_URL}/api/ai/search/hybrid\`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await getApiHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ query, limit: 5 })
     });
     if (res.ok) {

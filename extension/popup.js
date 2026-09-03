@@ -1,5 +1,17 @@
 // OmniLink AI - Popup Controller
 const DEFAULT_APP_URL = 'http://localhost:3000';
+const SERVICE_TOKEN_STORAGE_KEY = 'omnilink_service_token';
+
+// Service tokens are deliberately kept in chrome.storage.local (never sync
+// storage) and are only sent in an Authorization header. Browser sessions for
+// the web app continue to use HttpOnly cookies instead.
+async function getApiHeaders(base = {}) {
+  const data = await chrome.storage.local.get([SERVICE_TOKEN_STORAGE_KEY]);
+  const token = typeof data[SERVICE_TOKEN_STORAGE_KEY] === 'string'
+    ? data[SERVICE_TOKEN_STORAGE_KEY].trim()
+    : '';
+  return token ? { ...base, Authorization: `Bearer ${token}` } : { ...base };
+}
 
 document.addEventListener('DOMContentLoaded', async () => {
   const loading = document.getElementById('loading');
@@ -19,6 +31,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   const settingsBody = document.getElementById('settingsBody');
   const customAppUrlInput = document.getElementById('customAppUrl');
   const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+  const serviceTokenInput = document.getElementById('serviceToken');
+  const saveTokenBtn = document.getElementById('saveTokenBtn');
+  const clearTokenBtn = document.getElementById('clearTokenBtn');
 
   // Load configured host
   const storage = await chrome.storage.sync.get(['omnilink_app_url']);
@@ -31,6 +46,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     hostBadge.textContent = appUrl;
   }
   customAppUrlInput.value = appUrl;
+  const localCredentials = await chrome.storage.local.get([SERVICE_TOKEN_STORAGE_KEY]);
+  serviceTokenInput.value = typeof localCredentials[SERVICE_TOKEN_STORAGE_KEY] === 'string'
+    ? localCredentials[SERVICE_TOKEN_STORAGE_KEY]
+    : '';
 
   // Settings toggle
   settingsToggle.addEventListener('click', () => {
@@ -53,6 +72,26 @@ document.addEventListener('DOMContentLoaded', async () => {
       statusSuccess.style.display = 'block';
       setTimeout(() => { statusSuccess.style.display = 'none'; }, 2000);
     }
+  });
+
+  saveTokenBtn.addEventListener('click', async () => {
+    const token = serviceTokenInput.value.trim();
+    if (!token.startsWith('olst_') || token.length < 40) {
+      statusError.textContent = 'Enter a valid OmniLink service token.';
+      statusError.style.display = 'block';
+      return;
+    }
+    await chrome.storage.local.set({ [SERVICE_TOKEN_STORAGE_KEY]: token });
+    statusError.style.display = 'none';
+    statusSuccess.textContent = '✓ Service token saved to this browser profile.';
+    statusSuccess.style.display = 'block';
+  });
+
+  clearTokenBtn.addEventListener('click', async () => {
+    await chrome.storage.local.remove([SERVICE_TOKEN_STORAGE_KEY]);
+    serviceTokenInput.value = '';
+    statusSuccess.textContent = '✓ Service token removed.';
+    statusSuccess.style.display = 'block';
   });
 
   // Open side panel
@@ -152,7 +191,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       try {
         const res = await fetch(`${appUrl}/api/links`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: await getApiHeaders({ 'Content-Type': 'application/json' }),
           body: JSON.stringify(payload),
         });
 

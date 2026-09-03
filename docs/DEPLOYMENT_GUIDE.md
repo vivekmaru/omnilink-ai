@@ -2,6 +2,12 @@
 
 This guide covers production deployment strategies for OmniLink AI across **Unraid Server**, **Docker & Docker Compose**, **Fly.io**, **Railway / Render**, and **Cloudflare Tunnels**.
 
+### Runtime safety and authentication
+
+The server defaults to login-free `OMNILINK_MODE=local` on `127.0.0.1`. A remote bind is allowed in `multi-user` mode only after the complete OIDC, persistent-session, application-origin, and AI-quota configuration passes startup validation and OIDC discovery succeeds. The temporary `OMNILINK_UNSAFE_ALLOW_REMOTE_NO_AUTH=true` override is only for loopback-published container development and must never be used for public hosting.
+
+For the complete environment contract, staging checklist, and rollback procedure, see [Phase 1B authentication deployment](./PHASE_1B_AUTHENTICATION.md).
+
 > [!TIP]
 > **Running Unraid Server?**
 > See our dedicated [**Unraid Server Deployment & 1-Click Update Guide**](file:///Users/vivek/antigravity/OmniLink-AI---Smart-Link-Repository/docs/UNRAID_DEPLOYMENT_GUIDE.md) featuring native XML templates and automated GHCR workflows.
@@ -28,6 +34,8 @@ cd omnilink-ai
 # 2. Configure environment
 cp .env.example .env
 # Edit .env and set your GEMINI_API_KEY (optional, heuristic mode works without it)
+# For loopback-published local container testing only, explicitly set:
+# OMNILINK_UNSAFE_ALLOW_REMOTE_NO_AUTH=true
 
 # 3. Build and launch container in background
 docker compose up -d --build
@@ -37,7 +45,7 @@ docker compose ps
 docker compose logs -f
 ```
 
-Your OmniLink AI instance will now be running at `http://localhost:3000` with the SQLite database safely persisted in `./data/`.
+The default Compose profile is published only at `http://127.0.0.1:3000`; SQLite is persisted in `./data/`. Before changing the published address or placing a reverse proxy in front of it, configure and validate multi-user mode as described in the Phase 1B guide.
 
 ### 5. Reverse Proxy with Caddy (Automatic HTTPS)
 If deploying on a VPS with a custom domain (`omnilink.yourdomain.com`), use Caddy for automatic SSL:

@@ -2,19 +2,55 @@ import dotenv from 'dotenv';
 import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
-import { omniDb } from './db.js';
+import { LOCAL_WORKSPACE_ID, omniDb } from './db.js';
 import { hybridSearchEngine } from './hybridSearch.js';
 import { ReadabilityService } from './readabilityService.js';
 import { GoogleGenAI } from '@google/genai';
 import { LinkItem, LinkSummary, PlatformType } from '../src/types.js';
+import { AiQuotaExceededError, beginAiProviderAttempt, createServiceAiPermit, recordAiProviderAttempt, runWithAiUsagePermit } from './aiUsage.js';
+import type { RequestContext } from './securityBoundary.js';
+import { loadRuntimeConfig } from './runtimeConfig.js';
 
 dotenv.config();
+
+const GEMINI_HTTP_TIMEOUT_MS = 30_000;
 
 // Initialize Gemini Client if API key is provided
 function getGenAI(): GoogleGenAI | null {
   const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
   if (!apiKey) return null;
-  return new GoogleGenAI({ apiKey });
+  return new GoogleGenAI({
+    apiKey,
+    httpOptions: { timeout: GEMINI_HTTP_TIMEOUT_MS },
+  });
+}
+
+const MCP_SERVICE_TOKEN_ENV = 'OMNILINK_SERVICE_TOKEN';
+const MCP_API_TOKEN_ENV = 'OMNILINK_API_TOKEN';
+
+/**
+ * Read the MCP service credential without ever printing it.  STDIO clients
+ * cannot use the browser's HttpOnly session cookie, so a scoped service token
+ * is the future multi-user authentication seam.  Local mode intentionally
+ * remains tokenless for backwards compatibility.
+ */
+export function resolveMcpServiceToken(env: NodeJS.ProcessEnv = process.env): string | null {
+  const token = env[MCP_SERVICE_TOKEN_ENV] ?? env[MCP_API_TOKEN_ENV];
+  const normalized = typeof token === 'string' ? token.trim() : '';
+  return normalized || null;
+}
+
+/**
+ * Build headers for a future authenticated HTTP/API transport.  Credentials
+ * are never encoded into a URL and this helper does not log or expose them.
+ */
+export function getMcpAuthorizationHeaders(serviceToken = resolveMcpServiceToken()): Record<string, string> {
+  return serviceToken ? { Authorization: `Bearer ${serviceToken}` } : {};
+}
+
+export interface OmniLinkMcpServerOptions {
+  /** Explicit token is useful for embedding/tests; env remains the default. */
+  serviceToken?: string | null;
 }
 
 function detectPlatform(url: string): PlatformType {
@@ -28,7 +64,61 @@ function detectPlatform(url: string): PlatformType {
   return 'article';
 }
 
-export function createOmniLinkMcpServer(): McpServer {
+export function createOmniLinkMcpServer(options: OmniLinkMcpServerOptions = {}): McpServer {
+  const mode = (process.env.OMNILINK_MODE ?? 'local').trim().toLowerCase();
+  if (mode === 'multi-user') loadRuntimeConfig(process.env);
+  const serviceToken = options.serviceToken === undefined
+    ? resolveMcpServiceToken()
+    : (typeof options.serviceToken === 'string' ? options.serviceToken.trim() || null : null);
+
+  // A remote/multi-user MCP process must prove possession of its scoped
+  // service token before tools can be exposed. Local stdio usage is unchanged.
+  if (mode === 'multi-user' && !serviceToken) {
+    throw new Error('MCP service token is required when OMNILINK_MODE=multi-user.');
+  }
+  const tokenRecord = mode === 'multi-user' && serviceToken ? omniDb.getServiceToken(serviceToken) : null;
+  if (mode === 'multi-user' && !tokenRecord) {
+    throw new Error('MCP service token is invalid, expired, or revoked.');
+  }
+  const workspaceId = tokenRecord?.workspaceId || LOCAL_WORKSPACE_ID;
+  const mcpContext: RequestContext = tokenRecord ? {
+    actor: { id: tokenRecord.id, kind: 'service' },
+    workspace: { id: workspaceId, role: 'owner' },
+    authMethod: 'service-token',
+    mode: 'multi-user',
+  } : {
+    actor: { id: 'local-user', kind: 'local' },
+    workspace: { id: LOCAL_WORKSPACE_ID, role: 'owner' },
+    authMethod: 'local',
+    mode: 'local-single-user',
+  };
+  const requireScope = (scope: string): void => {
+    if (mode === 'multi-user') {
+      // Re-resolve on every invocation so expiry and revocation take effect
+      // without requiring a long-lived MCP process to restart.
+      const activeToken = serviceToken
+        ? omniDb.getServiceToken(serviceToken, scope, workspaceId)
+        : null;
+      if (!activeToken) {
+        throw new Error(`MCP service token is invalid, expired, revoked, or lacks required scope: ${scope}`);
+      }
+    }
+  };
+  const withAi = <T>(operation: string, inputCharacters: number, action: () => Promise<T>): Promise<T> => {
+    requireScope('ai:execute');
+    const permit = createServiceAiPermit(
+      mcpContext,
+      omniDb,
+      operation,
+      'mcp',
+      Number(process.env.OMNILINK_AI_QUOTA_MONTHLY_UNITS),
+      Math.max(1, Math.ceil(inputCharacters / 4)),
+    );
+    return runWithAiUsagePermit(permit, action).finally(() => {
+      if (permit.reservationId && !permit.reservationReleased) omniDb.releaseAiUsageReservation(permit.reservationId);
+    });
+  };
+
   const server = new McpServer({
     name: 'omnilink-mcp-server',
     version: '1.2.0',
@@ -48,13 +138,15 @@ export function createOmniLinkMcpServer(): McpServer {
       limit: z.number().min(1).max(50).default(10).describe('Maximum number of matching bookmarks to return (default: 10)'),
     },
     async ({ query, category, platform, readStatus, limit }) => {
+      requireScope('repository:read');
+      return withAi('embedding-query', query.length, async () => {
       const genAi = getGenAI();
       const results = await hybridSearchEngine.search(query, genAi, {
         category,
         platform,
         readStatus,
         limit,
-      });
+      }, workspaceId);
 
       if (!results || results.length === 0) {
         return {
@@ -92,6 +184,7 @@ export function createOmniLinkMcpServer(): McpServer {
           },
         ],
       };
+      });
     }
   );
 
@@ -109,7 +202,9 @@ export function createOmniLinkMcpServer(): McpServer {
       category: z.string().optional().describe('Optional category override'),
     },
     async ({ url, title, notes, tags, category }) => {
-      const existing = omniDb.getLinkByUrl(url);
+      requireScope('repository:write');
+      return withAi('embedding-indexing', url.length + (title?.length || 0) + (notes?.length || 0), async () => {
+      const existing = omniDb.getLinkByUrl(url, workspaceId);
       if (existing) {
         return {
           content: [
@@ -148,14 +243,21 @@ export function createOmniLinkMcpServer(): McpServer {
         aiScore: 85,
       };
 
-      omniDb.insertLink(newLink);
+      omniDb.insertLink(newLink, workspaceId);
 
-      // Trigger background vector indexing & full article snapshot
+      // Multi-user MCP calls must not report success while a quota denial is
+      // hidden in a detached indexing promise. Roll back the newly inserted
+      // row if admission fails before the provider call.
       const genAi = getGenAI();
-      hybridSearchEngine.indexLink(newLink, genAi).catch(() => {});
+      try {
+        await hybridSearchEngine.indexLink(newLink, genAi, workspaceId);
+      } catch (error) {
+        if (error instanceof AiQuotaExceededError) omniDb.deleteLink(newLink.id, workspaceId);
+        throw error;
+      }
       ReadabilityService.extractFromUrl(newLink.url).then((snapshot) => {
         if (snapshot) {
-          omniDb.updateLink(newLink.id, { readerSnapshot: snapshot });
+          omniDb.updateLink(newLink.id, { readerSnapshot: snapshot }, workspaceId);
         }
       }).catch(() => {});
 
@@ -172,6 +274,7 @@ export function createOmniLinkMcpServer(): McpServer {
           },
         ],
       };
+      });
     }
   );
 
@@ -185,7 +288,8 @@ export function createOmniLinkMcpServer(): McpServer {
       id_or_url: z.string().describe('The bookmark ID or target URL to read'),
     },
     async ({ id_or_url }) => {
-      let link = omniDb.getLinkById(id_or_url) || omniDb.getLinkByUrl(id_or_url);
+      requireScope('repository:read');
+      let link = omniDb.getLinkById(id_or_url, workspaceId) || omniDb.getLinkByUrl(id_or_url, workspaceId);
 
       if (link && link.readerSnapshot) {
         const snap = link.readerSnapshot;
@@ -220,7 +324,7 @@ ${snap.contentMarkdown || snap.excerpt || 'No snapshot content available.'}`,
       }
 
       if (link) {
-        omniDb.updateLink(link.id, { readerSnapshot: liveSnapshot });
+        omniDb.updateLink(link.id, { readerSnapshot: liveSnapshot }, workspaceId);
       }
 
       return {
@@ -250,11 +354,14 @@ ${liveSnapshot.contentMarkdown}`,
       category: z.string().optional().describe('Optional category filter to constrain RAG context'),
     },
     async ({ question, category }) => {
+      requireScope('repository:read');
+      requireScope('ai:execute');
       const genAi = getGenAI();
+      return withAi('mcp-synthesis', question.length, async () => {
       const matches = await hybridSearchEngine.search(question, genAi, {
         category,
         limit: 6,
-      });
+      }, workspaceId);
 
       if (!matches || matches.length === 0) {
         return {
@@ -281,6 +388,7 @@ Excerpt: ${l.readerSnapshot?.excerpt || 'N/A'}`;
       }).join('\n\n---\n\n');
 
       if (genAi) {
+        let attemptReservationId: string | undefined;
         try {
           const prompt = `You are OmniLink AI's knowledge synthesis engine. Answer the user's question accurately using ONLY the provided bookmarks from their personal library. Cite sources using [Source #] notation with corresponding URLs.
 
@@ -291,9 +399,18 @@ ${contextBlocks}
 
 Synthesize a comprehensive, well-structured answer:`;
 
+          attemptReservationId = beginAiProviderAttempt({ model: 'gemini-2.5-flash', inputCharacters: prompt.length });
           const response = await (genAi as any).models.generateContent({
             model: 'gemini-2.5-flash',
             contents: prompt,
+          });
+          recordAiProviderAttempt({
+            model: 'gemini-2.5-flash',
+            inputCharacters: prompt.length,
+            outputCharacters: response?.text?.length || 0,
+            status: 'completed',
+            attempt: 1,
+            reservationId: attemptReservationId,
           });
 
           return {
@@ -306,6 +423,8 @@ Synthesize a comprehensive, well-structured answer:`;
             ],
           };
         } catch (e: any) {
+          if (e instanceof AiQuotaExceededError) throw e;
+          recordAiProviderAttempt({ model: 'gemini-2.5-flash', inputCharacters: question.length, status: 'failed', attempt: 1, reservationId: attemptReservationId });
           console.warn('[MCP Server] Gemini RAG synthesis error:', e);
         }
       }
@@ -320,6 +439,7 @@ Synthesize a comprehensive, well-structured answer:`;
           },
         ],
       };
+      });
     }
   );
 
@@ -335,11 +455,12 @@ Synthesize a comprehensive, well-structured answer:`;
       category: z.string().optional().describe('Filter by category'),
     },
     async ({ limit, readStatus, category }) => {
+      requireScope('repository:read');
       const items = omniDb.getFilteredLinks({
         readStatus,
         category,
         limit,
-      });
+      }, workspaceId);
 
       if (!items || items.length === 0) {
         return {
@@ -378,11 +499,12 @@ Synthesize a comprehensive, well-structured answer:`;
     'Get overall repository health, total bookmark counts, reading status breakdown, and top categories.',
     {},
     async () => {
-      const total = omniDb.count();
-      const unread = omniDb.getUnreadCount();
-      const read = omniDb.getReadCount();
-      const reading = omniDb.getReadingCount();
-      const unindexed = omniDb.getUnindexedLinkIds().length;
+      requireScope('repository:read');
+      const total = omniDb.count(workspaceId);
+      const unread = omniDb.getUnreadCount(workspaceId);
+      const read = omniDb.getReadCount(workspaceId);
+      const reading = omniDb.getReadingCount(workspaceId);
+      const unindexed = omniDb.getUnindexedLinkIds(workspaceId).length;
 
       const stats = {
         totalBookmarks: total,
@@ -411,26 +533,30 @@ Synthesize a comprehensive, well-structured answer:`;
   server.resource(
     'library-stats',
     'omnilink://library/stats',
-    async (uri) => ({
-      contents: [
-        {
-          uri: uri.href,
-          text: JSON.stringify({
-            total: omniDb.count(),
-            unread: omniDb.getUnreadCount(),
-            read: omniDb.getReadCount(),
-            reading: omniDb.getReadingCount(),
-          }, null, 2),
-        },
-      ],
-    })
+    async (uri) => {
+      requireScope('repository:read');
+      return {
+        contents: [
+          {
+            uri: uri.href,
+            text: JSON.stringify({
+              total: omniDb.count(workspaceId),
+              unread: omniDb.getUnreadCount(workspaceId),
+              read: omniDb.getReadCount(workspaceId),
+              reading: omniDb.getReadingCount(workspaceId),
+            }, null, 2),
+          },
+        ],
+      };
+    }
   );
 
   server.resource(
     'library-unread',
     'omnilink://library/unread',
     async (uri) => {
-      const unread = omniDb.getFilteredLinks({ readStatus: 'unread', limit: 25 });
+      requireScope('repository:read');
+      const unread = omniDb.getFilteredLinks({ readStatus: 'unread', limit: 25 }, workspaceId);
       const md = unread.map((l) => `- [${l.title}](${l.url}) (\`${l.category}\`) - ${l.summary?.tldr || ''}`).join('\n');
       return {
         contents: [

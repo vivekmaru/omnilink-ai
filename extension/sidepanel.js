@@ -1,5 +1,34 @@
 // OmniLink AI - Side Panel Controller
 const DEFAULT_APP_URL = 'http://localhost:3000';
+const SERVICE_TOKEN_STORAGE_KEY = 'omnilink_service_token';
+
+// Keep service credentials local to this extension profile and out of sync
+// storage. Tokens are sent only in Authorization headers, never in URLs.
+async function getApiHeaders(base = {}) {
+  const data = await chrome.storage.local.get([SERVICE_TOKEN_STORAGE_KEY]);
+  const token = typeof data[SERVICE_TOKEN_STORAGE_KEY] === 'string'
+    ? data[SERVICE_TOKEN_STORAGE_KEY].trim()
+    : '';
+  return token ? { ...base, Authorization: `Bearer ${token}` } : { ...base };
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function safeLinkHref(value) {
+  try {
+    const parsed = new URL(String(value ?? ''));
+    return /^https?:$/.test(parsed.protocol) ? parsed.href : '#';
+  } catch {
+    return '#';
+  }
+}
 
 document.addEventListener('DOMContentLoaded', async () => {
   const saveCurrentTabBtn = document.getElementById('saveCurrentTabBtn');
@@ -35,14 +64,20 @@ document.addEventListener('DOMContentLoaded', async () => {
       const card = document.createElement('div');
       card.className = 'link-item';
 
-      const tagsHtml = (link.tags || []).slice(0, 3).map((t) => `<span class="tag-chip">#${t}</span>`).join(' ');
+      const tagsHtml = (link.tags || []).slice(0, 3)
+        .map((t) => `<span class="tag-chip">#${escapeHtml(t)}</span>`)
+        .join(' ');
+      const href = escapeHtml(safeLinkHref(link.url));
+      const title = escapeHtml(link.title || link.url);
+      const category = escapeHtml(link.category || 'General');
+      const platform = escapeHtml(link.platform || 'web');
 
       card.innerHTML = `
-        <a href="${link.url}" target="_blank" class="link-title">${link.title || link.url}</a>
+        <a href="${href}" target="_blank" rel="noopener noreferrer" class="link-title">${title}</a>
         <div class="link-meta">
-          <span>${link.category || 'General'}</span>
+          <span>${category}</span>
           <span>•</span>
-          <span>${link.platform || 'web'}</span>
+          <span>${platform}</span>
           ${tagsHtml ? `<span>•</span> ${tagsHtml}` : ''}
         </div>
       `;
@@ -52,7 +87,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const loadRecent = async () => {
     try {
-      const res = await fetch(`${appUrl}/api/links`);
+      const res = await fetch(`${appUrl}/api/links`, {
+        headers: await getApiHeaders(),
+      });
       if (res.ok) {
         const data = await res.json();
         renderLinks((data.links || []).slice(0, 20));
@@ -81,7 +118,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       try {
         const res = await fetch(`${appUrl}/api/ai/search/hybrid`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: await getApiHeaders({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({ query, limit: 15 }),
         });
         if (res.ok) {
@@ -107,7 +144,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const res = await fetch(`${appUrl}/api/share/quick`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await getApiHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           url: tab.url,
           title: tab.title || tab.url,
