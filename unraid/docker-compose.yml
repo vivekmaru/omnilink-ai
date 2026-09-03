@@ -11,7 +11,7 @@
 
 services:
   omnilink-ai:
-    image: ghcr.io/YOUR_GITHUB_USERNAME/omnilink-ai:latest
+    image: ghcr.io/vivekmaru/omnilink-ai:latest
     # Or build locally on Unraid:
     # build:
     #   context: .
@@ -25,6 +25,22 @@ services:
       - PORT=3000
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
       - APP_URL=${APP_URL:-http://localhost:3000}
+      # Local is the safe default. Set multi-user and provide the complete
+      # OIDC/session/quota contract before publishing through a proxy.
+      - OMNILINK_MODE=${OMNILINK_MODE:-local}
+      - OMNILINK_HOST=${OMNILINK_HOST:-127.0.0.1}
+      - OMNILINK_UNSAFE_ALLOW_REMOTE_NO_AUTH=${OMNILINK_UNSAFE_ALLOW_REMOTE_NO_AUTH:-false}
+      - OMNILINK_APP_ORIGIN=${OMNILINK_APP_ORIGIN:-}
+      - OMNILINK_OIDC_ISSUER=${OMNILINK_OIDC_ISSUER:-}
+      - OMNILINK_OIDC_DISCOVERY_URL=${OMNILINK_OIDC_DISCOVERY_URL:-}
+      - OMNILINK_OIDC_CLIENT_ID=${OMNILINK_OIDC_CLIENT_ID:-}
+      - OMNILINK_OIDC_AUDIENCE=${OMNILINK_OIDC_AUDIENCE:-}
+      - OMNILINK_OIDC_REDIRECT_URI=${OMNILINK_OIDC_REDIRECT_URI:-}
+      - OMNILINK_OIDC_CLIENT_SECRET=${OMNILINK_OIDC_CLIENT_SECRET:-}
+      - OMNILINK_OIDC_TOKEN_ENDPOINT_AUTH_METHOD=${OMNILINK_OIDC_TOKEN_ENDPOINT_AUTH_METHOD:-}
+      - OMNILINK_SESSION_SECRET=${OMNILINK_SESSION_SECRET:-}
+      - OMNILINK_SESSION_STORE=${OMNILINK_SESSION_STORE:-sqlite}
+      - OMNILINK_AI_QUOTA_MONTHLY_UNITS=${OMNILINK_AI_QUOTA_MONTHLY_UNITS:-}
       - AUTO_BACKUP_DAYS=7
     volumes:
       - /mnt/user/appdata/omnilink/data:/app/data
