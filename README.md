@@ -11,7 +11,7 @@ Engineered with a refined **Linear × Raycast × Arc** dark developer aesthetic,
 ### 🔍 1. Native SQLite + Hybrid Search Engine (BM25 + Dense Vectors + RRF)
 - **High-Performance SQLite Backend**: Backed by `better-sqlite3` with `PRAGMA journal_mode = WAL`, synchronous writes, foreign key cascading, and ACID durability.
 - **FTS5 Lexical Search**: Full-text BM25 index across `title`, `url`, `category`, `tags`, `notes`, and `summary` with automated SQLite synchronization triggers.
-- **Dense Vector Semantic Embeddings**: 768-dimensional dense vector embeddings generated via Gemini `text-embedding-004` (with offline term-hash fallback).
+- **Dense Vector Semantic Embeddings**: 768-dimensional dense vector embeddings generated via Gemini `gemini-embedding-001` with Matryoshka Representation Learning (and offline `term-hash-v1` fallback). *(See [docs/HYBRID_SEARCH_AND_EMBEDDINGS.md](docs/HYBRID_SEARCH_AND_EMBEDDINGS.md) for architectural details).*
 - **Reciprocal Rank Fusion (RRF)**: Merges lexical full-text rankings and dense vector semantic similarities using the formula:
   $$\text{RRF}(d) = \frac{1}{60 + \text{rank}_{\text{FTS}}(d)} + \frac{1}{60 + \text{rank}_{\text{Vector}}(d)}$$
 - **Background Indexing Worker**: Automatically calculates and persists vector embeddings for newly ingested links without blocking UI threads.
@@ -162,7 +162,7 @@ OmniLink-AI/
 │   └── sw.js                  # PWA Service Worker
 ├── server/                    # Node.js Express & Backend Services
 │   ├── db.ts                  # SQLite WAL + FTS5 + Embeddings database engine
-│   ├── hybridSearch.ts        # FTS5 BM25 + Gemini text-embedding-004 + RRF
+│   ├── hybridSearch.ts        # FTS5 BM25 + Gemini gemini-embedding-001 + RRF
 │   ├── mcpServer.ts           # Official Model Context Protocol (MCP) STDIO server
 │   ├── readabilityService.ts  # Mozilla Readability DOM parsing & Markdown archiver
 │   ├── modelOrchestrator.ts   # Multi-tier Gemini model routing & fallback chain

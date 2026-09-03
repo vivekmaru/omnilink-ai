@@ -154,7 +154,7 @@ export const AskRepoModal: React.FC<AskRepoModalProps> = ({
                 <div className="flex items-center gap-1.5 flex-wrap">
                   {(response as any).retrieval && (
                     <span className="text-[10px] normal-case text-emerald-600 dark:text-emerald-400 font-mono flex items-center gap-1 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                      <span>Hybrid RAG (FTS5 + text-embedding-004)</span>
+                      <span>Hybrid RAG (FTS5 + gemini-embedding-001)</span>
                     </span>
                   )}
                   {response.orchestration && (

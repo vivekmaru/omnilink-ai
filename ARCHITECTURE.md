@@ -125,7 +125,7 @@ CREATE TABLE IF NOT EXISTS embeddings (
   link_id TEXT PRIMARY KEY,
   vector BLOB NOT NULL,                -- 768 Float32 numbers (3072 bytes)
   dimensions INTEGER NOT NULL,
-  model TEXT NOT NULL,                 -- 'text-embedding-004' or fallback 'term-hash-v1'
+  model TEXT NOT NULL,                 -- 'gemini-embedding-001' or fallback 'term-hash-v1'
   indexed_text TEXT NOT NULL,
   created_at TEXT NOT NULL,
   FOREIGN KEY(link_id) REFERENCES links(id) ON DELETE CASCADE
@@ -134,12 +134,14 @@ CREATE TABLE IF NOT EXISTS embeddings (
 
 ### Hybrid Retrieval & Reciprocal Rank Fusion Algorithm
 
+> For an in-depth breakdown of Generative LLMs vs Embedding Models vs `term-hash-v1`, see [docs/HYBRID_SEARCH_AND_EMBEDDINGS.md](file:///Users/vivek/antigravity/OmniLink-AI---Smart-Link-Repository/docs/HYBRID_SEARCH_AND_EMBEDDINGS.md).
+
 1. **Step 1 (Lexical FTS5 Retrieval)**:
    Executes BM25 query over `links_fts` virtual table, yielding a ranked candidate list:
    $$\text{FTS Candidates} = [(\text{id}_1, \text{rank}_1), (\text{id}_2, \text{rank}_2), \dots]$$
 
 2. **Step 2 (Semantic Vector Retrieval)**:
-   Generates a 768-dimensional normalized query embedding $\vec{q}$ via `text-embedding-004` (or offline hash vector). Computes Cosine Similarity against all cached bookmark embeddings:
+   Generates a 768-dimensional normalized query embedding $\vec{q}$ via `gemini-embedding-001` with Matryoshka Representation Learning (`outputDimensionality: 768`) (or offline deterministic `term-hash-v1` vector). Computes Cosine Similarity against all cached bookmark embeddings:
    $$\text{Sim}(\vec{q}, \vec{v}_i) = \frac{\vec{q} \cdot \vec{v}_i}{\|\vec{q}\|_2 \|\vec{v}_i\|_2}$$
    Sorts candidates by similarity $\ge 0.1$ and ranks top matches: $[(\text{id}_1, \text{rank}_1), (\text{id}_2, \text{rank}_2), \dots]$.
 

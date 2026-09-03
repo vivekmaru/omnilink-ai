@@ -1,8 +1,17 @@
-import { describe, it, expect } from 'vitest';
+import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
 import { createOmniLinkMcpServer } from '../server/mcpServer';
 import { omniDb } from '../server/db';
 
 describe('OmniLink MCP Server Suite', () => {
+  beforeEach(() => {
+    // Test the default local MCP contract independently of a developer's .env.
+    vi.stubEnv('OMNILINK_MODE', 'local');
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it('creates and registers all required MCP tools and resources', () => {
     const server = createOmniLinkMcpServer();
     expect(server).toBeDefined();

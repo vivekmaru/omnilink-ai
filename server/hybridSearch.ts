@@ -83,7 +83,7 @@ export class HybridSearchEngine {
     return score;
   }
 
-  // Generate embedding using Gemini text-embedding-004
+  // Generate embedding using Gemini gemini-embedding-001 (768-d MRL)
   async generateEmbedding(text: string, genAi: GoogleGenAI | null): Promise<number[]> {
     if (!text || !text.trim()) {
       return new Array(768).fill(0);
@@ -92,19 +92,24 @@ export class HybridSearchEngine {
     if (genAi) {
       let attemptReservationId: string | undefined;
       try {
-        attemptReservationId = beginAiProviderAttempt({ model: 'text-embedding-004', inputCharacters: text.length });
+        attemptReservationId = beginAiProviderAttempt({ model: 'gemini-embedding-001', inputCharacters: text.length });
         const response = await (genAi as any).models.embedContent({
-          model: 'text-embedding-004',
+          model: 'gemini-embedding-001',
           contents: text,
+          config: {
+            outputDimensionality: 768,
+          },
         });
 
-        if (response?.embedding?.values && Array.isArray(response.embedding.values)) {
-          recordAiProviderAttempt({ model: 'text-embedding-004', inputCharacters: text.length, status: 'completed', attempt: 1, reservationId: attemptReservationId });
-          return response.embedding.values;
+        const embeddingValues =
+          response?.embeddings?.[0]?.values || response?.embedding?.values;
+        if (embeddingValues && Array.isArray(embeddingValues)) {
+          recordAiProviderAttempt({ model: 'gemini-embedding-001', inputCharacters: text.length, status: 'completed', attempt: 1, reservationId: attemptReservationId });
+          return embeddingValues;
         }
       } catch (err) {
         if (err instanceof AiQuotaExceededError) throw err;
-        recordAiProviderAttempt({ model: 'text-embedding-004', inputCharacters: text.length, status: 'failed', attempt: 1, reservationId: attemptReservationId });
+        recordAiProviderAttempt({ model: 'gemini-embedding-001', inputCharacters: text.length, status: 'failed', attempt: 1, reservationId: attemptReservationId });
         console.warn('[HybridSearch] Gemini embedding failed, falling back to term hash vector:', err);
       }
     }
@@ -148,7 +153,7 @@ export class HybridSearchEngine {
     try {
       const text = HybridSearchEngine.formatLinkForEmbedding(link);
       const vector = await this.generateEmbedding(text, genAi);
-      this.db.storeEmbedding(link.id, vector, genAi ? 'text-embedding-004' : 'term-hash-v1', text, workspaceId);
+      this.db.storeEmbedding(link.id, vector, genAi ? 'gemini-embedding-001' : 'term-hash-v1', text, workspaceId);
     } catch (err) {
       if (err instanceof AiQuotaExceededError) throw err;
       console.warn(`[HybridSearch] Failed to index link ${link.id}:`, err);
@@ -189,7 +194,7 @@ export class HybridSearchEngine {
     return { indexed: count, total: this.db.count(workspaceId) };
   }
 
-  // HYBRID SEARCH: BM25 Lexical (FTS5) + Dense Vector Semantic (text-embedding-004) + Reciprocal Rank Fusion (RRF)
+  // HYBRID SEARCH: BM25 Lexical (FTS5) + Dense Vector Semantic (gemini-embedding-001) + Reciprocal Rank Fusion (RRF)
   async search(
     query: string,
     genAi: GoogleGenAI | null,

@@ -1513,7 +1513,7 @@ app.post('/api/ai/ask', validateBody(AskRepoSchema), async (req, res) => {
 
     const genAi = getGenAI();
 
-    // Stage 1 & 2: Hybrid Retrieval (SQLite FTS5 BM25 + Gemini text-embedding-004 dense vectors + RRF)
+    // Stage 1 & 2: Hybrid Retrieval (SQLite FTS5 BM25 + Gemini gemini-embedding-001 dense vectors + RRF)
     const hybridMatches = await hybridSearchEngine.search(question, genAi, { limit: 8 }, workspaceId);
     const relevantLinks = hybridMatches.length > 0
       ? hybridMatches.map((m) => m.link)
@@ -1658,7 +1658,7 @@ app.get('/api/ai/embeddings/status', (req, res) => {
     indexed,
     unindexed,
     percentage: total > 0 ? Math.round((indexed / total) * 100) : 100,
-    model: 'text-embedding-004 (768-d)',
+    model: 'gemini-embedding-001 (768-d)',
   });
 });
 
