@@ -63,6 +63,21 @@ describe('AI quota admission and accounting', () => {
     expect(next).not.toHaveBeenCalled();
   });
 
+  it('allows repository-only link saves when AI extraction is disabled', () => {
+    const db = database();
+    db.ensureWorkspace('workspace-1');
+    const runtime = { mode: 'multi-user', quotaMonthlyUnits: 1 } as RuntimeConfig;
+    const request: any = {
+      path: '/api/links', method: 'POST', body: { url: 'https://example.test', autoAiExtract: false }, endpointPolicy: 'repository:write',
+      securityContext: context, serviceTokenScopes: ['repository:write'], get: () => undefined,
+    };
+    const response: any = { statusCode: 200, status(code: number) { this.statusCode = code; return this; }, json() { return this; } };
+    const next = vi.fn();
+    createAiAdmissionMiddleware(runtime, db)(request, response, next);
+    expect(response.statusCode).toBe(200);
+    expect(next).toHaveBeenCalledOnce();
+  });
+
   it('records retries and fallbacks as separate provider attempts', async () => {
     const db = database();
     db.ensureWorkspace('workspace-1');

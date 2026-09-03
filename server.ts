@@ -530,7 +530,8 @@ app.post('/api/links', validateBody(CreateLinkSchema), async (req, res) => {
         if (ai) {
           const aiData = await extractWithGemini(url, title, notes, platform);
           if (aiData) {
-            extractedTitle = aiData.title || extractedTitle;
+            // A title explicitly supplied by the user is authoritative.
+            extractedTitle = title?.trim() || aiData.title || extractedTitle;
             extractedCategory = aiData.category || extractedCategory;
             extractedTags = Array.from(new Set([...extractedTags, ...(aiData.tags || [])]));
             extractedAuthor = aiData.author || extractedAuthor;
@@ -572,10 +573,14 @@ app.post('/api/links', validateBody(CreateLinkSchema), async (req, res) => {
     refreshLinksCache(workspaceId);
     saveLinks(undefined, workspaceId);
 
-    // Trigger background vector indexing
-    hybridSearchEngine.indexLink(newLink, getGenAI(), workspaceId).catch((err) => {
-      console.warn('[HybridSearch] Background embedding generation notice:', err);
-    });
+    // A repository-only save must not trigger any provider call either. The
+    // embedding can be indexed later when the user explicitly requests AI
+    // enrichment (or when a background job has quota admission).
+    if (autoAiExtract !== false) {
+      hybridSearchEngine.indexLink(newLink, getGenAI(), workspaceId).catch((err) => {
+        console.warn('[HybridSearch] Background embedding generation notice:', err);
+      });
+    }
 
     res.status(201).json({ link: newLink });
   } catch (err: any) {
@@ -661,7 +666,7 @@ app.post('/api/share/quick', async (req, res) => {
       if (ai) {
         const aiData = await extractWithGemini(url, title, notes, platform);
         if (aiData) {
-          extractedTitle = aiData.title || extractedTitle;
+          extractedTitle = title?.trim() || aiData.title || extractedTitle;
           extractedCategory = aiData.category || extractedCategory;
           extractedTags = Array.from(new Set([...extractedTags, ...(aiData.tags || [])]));
           extractedAuthor = aiData.author || extractedAuthor;
@@ -1042,11 +1047,22 @@ app.post('/api/links/preview-metadata', async (req, res) => {
     let scrapedDescription = '';
     let author = '';
 
+    // Fetch document metadata independently first. This is intentionally a
+    // small, bounded request so a slow/large article cannot erase a title that
+    // is available in its <head> (for example OzBargain numeric URLs).
+    try {
+      const metadata = await ReadabilityService.extractMetadataFromUrl(url, 2500);
+      scrapedTitle = metadata.title || '';
+      scrapedDescription = metadata.description || '';
+    } catch {
+      // Full extraction and URL fallback below remain best-effort.
+    }
+
     // Fast extraction via ReadabilityService (covers Reddit, GitHub, YouTube, ArXiv, articles)
     try {
       const snapshot = await ReadabilityService.extractFromUrl(url, 4500);
       if (snapshot) {
-        scrapedTitle = snapshot.title || '';
+        scrapedTitle = scrapedTitle || snapshot.title || '';
         scrapedDescription = snapshot.excerpt || '';
         author = snapshot.byline || '';
       }
@@ -1194,6 +1210,27 @@ app.get('/api/ai/orchestrator-stats', (req, res) => {
     res.json({ success: true, stats });
   } catch (err: any) {
     res.status(500).json({ error: err.message || 'Failed to fetch orchestrator stats' });
+  }
+});
+
+// GET /api/ai/usage - Current workspace's monthly AI allowance.
+app.get('/api/ai/usage', (req, res) => {
+  try {
+    const workspaceId = workspaceFor(req);
+    const now = new Date();
+    const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+    const resetAt = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
+    const used = omniDb.getAiUsageTotal(workspaceId, monthStart.toISOString());
+    const limit = runtimeConfig.mode === 'local' ? null : runtimeConfig.quotaMonthlyUnits;
+    res.json({
+      used,
+      limit,
+      remaining: limit === null ? null : Math.max(0, limit - used),
+      resetAt: resetAt.toISOString(),
+      unlimited: limit === null,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to load AI usage.' });
   }
 });
 
@@ -1388,7 +1425,7 @@ app.post('/api/ai/extract', async (req, res) => {
       const existing = omniDb.getLinkById(linkId, workspaceId);
       if (existing) {
         const updated = omniDb.updateLink(linkId, {
-          title: aiData.title || existing.title,
+          title: title?.trim() || existing.title || aiData.title,
           author: aiData.author || existing.author,
           category: aiData.category || existing.category,
           tags: Array.from(new Set([...existing.tags, ...(aiData.tags || [])])),
