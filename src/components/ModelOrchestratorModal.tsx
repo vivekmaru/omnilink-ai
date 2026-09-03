@@ -54,12 +54,9 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
   const fetchStats = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/ai/orchestrator-stats');
-      if (res.ok) {
-        const data = await res.json();
-        if (data.stats) {
-          setStats(data.stats);
-        }
+      const data = await ApiService.getOrchestratorStats();
+      if (data) {
+        setStats(data);
       }
       try {
         setAiUsage(await ApiService.getAiUsage());

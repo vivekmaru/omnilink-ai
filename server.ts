@@ -1063,7 +1063,7 @@ app.post('/api/links/preview-metadata', async (req, res) => {
       const snapshot = await ReadabilityService.extractFromUrl(url, 4500);
       if (snapshot) {
         scrapedTitle = scrapedTitle || snapshot.title || '';
-        scrapedDescription = snapshot.excerpt || '';
+        scrapedDescription = scrapedDescription || snapshot.excerpt || '';
         author = snapshot.byline || '';
       }
     } catch (fetchErr) {
@@ -1425,7 +1425,7 @@ app.post('/api/ai/extract', async (req, res) => {
       const existing = omniDb.getLinkById(linkId, workspaceId);
       if (existing) {
         const updated = omniDb.updateLink(linkId, {
-          title: title?.trim() || existing.title || aiData.title,
+          title: title?.trim() || aiData.title || existing.title,
           author: aiData.author || existing.author,
           category: aiData.category || existing.category,
           tags: Array.from(new Set([...existing.tags, ...(aiData.tags || [])])),

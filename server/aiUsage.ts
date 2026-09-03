@@ -203,6 +203,10 @@ function buildPermit(context: RequestContext, req: Request, runtime: RuntimeConf
 }
 
 function isAiOperation(req: Request): boolean {
+  // Read-only telemetry, usage, and status endpoints must remain available
+  // when a workspace is exhausted; quota admission applies to work that can
+  // invoke a provider or enqueue an AI job, not to inspecting its status.
+  if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') return false;
   if (req.endpointPolicy === 'ai:execute') return true;
   if (req.method === 'POST' && req.path.startsWith('/api/ai/') && req.path !== '/api/ai/route-preview') return true;
   if (req.path === '/api/share/quick') return true;

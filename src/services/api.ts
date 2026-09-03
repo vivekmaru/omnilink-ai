@@ -380,9 +380,13 @@ export class ApiService {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url }),
       });
-      if (!res.ok) throw new Error('Preview failed');
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new ApiHttpError(res.status, err.error || `Preview failed (HTTP ${res.status})`);
+      }
       return await res.json();
-    } catch {
+    } catch (err) {
+      if (this.isAuthenticationError(err) || err instanceof ApiHttpError) throw err;
       return {
         url,
         title: '',
