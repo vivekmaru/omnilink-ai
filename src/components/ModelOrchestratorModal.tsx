@@ -23,7 +23,6 @@ import {
   ModelTaskType,
   GeminiModelId,
 } from '../types';
-import { ApiService } from '../services/api';
 
 interface ModelOrchestratorModalProps {
   isOpen: boolean;
@@ -35,14 +34,17 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
   onClose,
 }) => {
   const [stats, setStats] = useState<ModelOrchestratorStats | null>(null);
-  const [aiUsage, setAiUsage] = useState<{ used: number; limit: number | null; remaining: number | null; resetAt?: string } | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'models' | 'logs' | 'simulator'>('models');
   
   // Gated Developer Mode: can be enabled via localStorage or dev toggle
-  // Simulator controls are development-only. They are intentionally not
-  // enabled from localStorage, which would expose production tooling to users.
-  const devMode = import.meta.env.DEV;
+  const [devMode, setDevMode] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('OMNILINK_DEV_MODE') === 'true';
+    } catch {
+      return false;
+    }
+  });
 
   // Simulator Test State (Only active in Dev Mode)
   const [testUrl, setTestUrl] = useState('https://github.com/astral-sh/uv');
@@ -51,18 +53,26 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
   const [simulatedDecision, setSimulatedDecision] = useState<ModelRouteDecision | null>(null);
   const [simulating, setSimulating] = useState(false);
 
+  const toggleDevMode = () => {
+    const next = !devMode;
+    setDevMode(next);
+    try {
+      localStorage.setItem('OMNILINK_DEV_MODE', String(next));
+    } catch {}
+    if (!next && activeTab === 'simulator') {
+      setActiveTab('models');
+    }
+  };
+
   const fetchStats = async () => {
     setLoading(true);
     try {
-      const data = await ApiService.getOrchestratorStats();
-      if (data) {
-        setStats(data);
-      }
-      try {
-        setAiUsage(await ApiService.getAiUsage());
-      } catch {
-        // Older servers may not expose usage yet; keep the dashboard usable.
-        setAiUsage(null);
+      const res = await fetch('/api/ai/orchestrator-stats');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.stats) {
+          setStats(data.stats);
+        }
       }
     } catch (err) {
       console.error('Failed to fetch orchestrator telemetry:', err);
@@ -147,11 +157,17 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            {devMode && (
-              <span className="px-2 py-1 rounded text-[10px] font-mono bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-semibold" title="Development-only simulator tools are enabled">
-                Developer tools
-              </span>
-            )}
+            <button
+              onClick={toggleDevMode}
+              className={`px-2 py-1 rounded text-[10px] font-mono transition-colors border ${
+                devMode
+                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400 font-semibold'
+                  : 'bg-black/5 dark:bg-white/5 border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+              }`}
+              title="Toggle Developer Simulator & Debugging Tools"
+            >
+              {devMode ? '🛠️ DEV MODE' : 'Dev Mode'}
+            </button>
 
             <button
               id="orchestrator-refresh-btn"
@@ -174,17 +190,6 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
 
         {/* Global Summary Metrics Strip */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 px-6 py-4 border-b border-black/10 dark:border-white/10 bg-black/[0.01] dark:bg-white/[0.01]">
-          {aiUsage && (
-            <div className="col-span-2 sm:col-span-4 p-3 rounded-xl bg-[#d97757]/10 border border-[#d97757]/20">
-              <div className="flex items-center justify-between text-[11px] font-mono">
-                <span className="uppercase tracking-wider text-slate-500 dark:text-slate-400">AI quota</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200">
-                  {aiUsage.used.toLocaleString()} used {aiUsage.limit === null ? '· Unlimited' : `of ${aiUsage.limit.toLocaleString()}`}
-                </span>
-              </div>
-              {aiUsage.limit !== null && <div className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">{Math.max(0, aiUsage.remaining ?? 0).toLocaleString()} units remaining{aiUsage.resetAt ? ` · resets ${new Date(aiUsage.resetAt).toLocaleDateString()}` : ''}</div>}
-            </div>
-          )}
           <div className="p-3 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-black/5 dark:border-white/5">
             <span className="text-[10px] uppercase font-mono tracking-wider text-slate-400 block mb-0.5">Total AI Calls</span>
             <span className="text-base font-bold font-mono text-slate-900 dark:text-[#f7f6f3]">

@@ -51,16 +51,6 @@ export class ApiAuthenticationError extends Error {
   }
 }
 
-/** An HTTP failure that must never be mistaken for an offline transport error. */
-export class ApiHttpError extends Error {
-  readonly status: number;
-  constructor(status: number, message: string) {
-    super(message);
-    this.name = 'ApiHttpError';
-    this.status = status;
-  }
-}
-
 export class ApiService {
   /**
    * Optional in-memory bearer token for non-browser callers embedding the API
@@ -380,13 +370,9 @@ export class ApiService {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url }),
       });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new ApiHttpError(res.status, err.error || `Preview failed (HTTP ${res.status})`);
-      }
+      if (!res.ok) throw new Error('Preview failed');
       return await res.json();
-    } catch (err) {
-      if (this.isAuthenticationError(err) || err instanceof ApiHttpError) throw err;
+    } catch {
       return {
         url,
         title: '',
@@ -414,17 +400,14 @@ export class ApiService {
         body: JSON.stringify(payload),
       });
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new ApiHttpError(res.status, err.error || `Failed to add link (HTTP ${res.status})`);
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to add link');
       }
       const data = await res.json();
       return data.link;
     } catch (err) {
       if (cacheGeneration !== this.workspaceGeneration) throw err;
-      if (this.isAuthenticationError(err) || err instanceof ApiHttpError) throw err;
-      // Only a genuine transport failure may use the local fallback. HTTP
-      // errors (including quota exhaustion) are actionable and must be shown.
-      if (err instanceof Error && err.name !== 'TypeError' && this.isOnline()) throw err;
+      if (this.isAuthenticationError(err)) throw err;
       // Offline fallback: create item locally
       const localItem: LinkItem = {
         id: 'local-' + Date.now(),
@@ -434,8 +417,8 @@ export class ApiService {
         category: payload.category || 'Dev & Tech',
         tags: payload.tags || ['offline-queued'],
         summary: {
-          tldr: 'Saved locally while the server is unreachable. This item is not synchronized automatically.',
-          keyTakeaways: ['Offline bookmark; save again when the server is available'],
+          tldr: 'Saved in offline mode. Will synchronize when connected.',
+          keyTakeaways: ['Offline bookmark pending AI extraction'],
         },
         isFavorite: false,
         isArchived: false,
@@ -693,12 +676,6 @@ export class ApiService {
       console.warn('getOrchestratorStats fallback:', e);
       return null;
     }
-  }
-
-  static async getAiUsage(): Promise<{ used: number; limit: number | null; remaining: number | null; resetAt?: string }> {
-    const res = await this.request('/api/ai/usage');
-    if (!res.ok) throw new ApiHttpError(res.status, 'Unable to load AI usage');
-    return res.json();
   }
 
   // Model Route Preview

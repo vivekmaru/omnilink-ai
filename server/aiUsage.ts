@@ -203,16 +203,10 @@ function buildPermit(context: RequestContext, req: Request, runtime: RuntimeConf
 }
 
 function isAiOperation(req: Request): boolean {
-  // Read-only telemetry, usage, and status endpoints must remain available
-  // when a workspace is exhausted; quota admission applies to work that can
-  // invoke a provider or enqueue an AI job, not to inspecting its status.
-  if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') return false;
   if (req.endpointPolicy === 'ai:execute') return true;
   if (req.method === 'POST' && req.path.startsWith('/api/ai/') && req.path !== '/api/ai/route-preview') return true;
   if (req.path === '/api/share/quick') return true;
-  // Saving a link without enrichment is a repository operation, not an AI
-  // operation.  Do not reserve quota (or reject the save) in that mode.
-  if (req.method === 'POST' && req.path === '/api/links') return req.body?.autoAiExtract !== false;
+  if (req.method === 'POST' && req.path === '/api/links') return true;
   if (req.method === 'PUT' && /^\/api\/links\/[^/]+$/.test(req.path)) return true;
   if (req.path.includes('/merge/')) return req.body?.autoAiExtract === true;
   if (req.path.includes('/rss/sync') || req.path.endsWith('/sync')) return true;
