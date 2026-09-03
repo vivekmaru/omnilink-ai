@@ -414,10 +414,10 @@ export default function App() {
         setLinks(fetchedLinksRes.links);
       }
       setStats(fetchedStats);
-      setSyncStatus('synced');
+      setSyncStatus(fetchedLinksRes.isOffline ? 'offline' : 'synced');
     } catch (e) {
       console.error('Failed to load links:', e);
-      setSyncStatus('offline');
+      setSyncStatus('error');
     } finally {
       setLoading(false);
     }
@@ -523,6 +523,11 @@ export default function App() {
   // Event Handlers for Link Management
   const handleLinkAdded = (newLink: LinkItem) => {
     setLinks((prev) => [newLink, ...prev]);
+    if (newLink.id.startsWith('local-')) {
+      setSyncStatus('offline');
+      addToast('info', 'Saved locally only; it will not sync automatically. Save again when connected.');
+      return;
+    }
     addToast('success', 'Link saved to repository');
     ApiService.fetchStats().then(setStats).catch(() => {});
   };
