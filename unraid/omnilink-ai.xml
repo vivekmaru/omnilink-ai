@@ -1,19 +1,19 @@
 <?xml version="1.0"?>
 <Container version="2">
   <Name>OmniLink-AI</Name>
-  <Repository>ghcr.io/YOUR_GITHUB_USERNAME/omnilink-ai:latest</Repository>
+  <Repository>ghcr.io/vivekmaru/omnilink-ai:latest</Repository>
   <Registry>https://ghcr.io</Registry>
   <Network>bridge</Network>
   <MyIP/>
   <Shell>sh</Shell>
   <Privileged>false</Privileged>
-  <Support>https://github.com/YOUR_GITHUB_USERNAME/omnilink-ai/issues</Support>
-  <Project>https://github.com/YOUR_GITHUB_USERNAME/omnilink-ai</Project>
+  <Support>https://github.com/vivekmaru/omnilink-ai/issues</Support>
+  <Project>https://github.com/vivekmaru/omnilink-ai</Project>
   <Overview>OmniLink AI is an intelligent, self-hosted knowledge repository and link curation hub. Powered by Gemini 3.7 Flash, native SQLite with hybrid BM25 + dense vector semantic search, offline Readability markdown archiving, multi-platform scrapers (GitHub, Reddit, YouTube, X, Papers), Chrome Extension, PWA Mobile Quick Share, and built-in Model Context Protocol (MCP) server.</Overview>
   <Category>Productivity: Tools: Other: AI: Network:Web</Category>
   <WebUI>http://[IP]:[PORT:3000]/</WebUI>
-  <TemplateURL>https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/omnilink-ai/main/unraid/omnilink-ai.xml</TemplateURL>
-  <Icon>https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/omnilink-ai/main/public/icon.svg</Icon>
+  <TemplateURL>https://raw.githubusercontent.com/vivekmaru/omnilink-ai/main/unraid/omnilink-ai.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/vivekmaru/omnilink-ai/main/public/icon.svg</Icon>
   <ExtraParams>--restart unless-stopped</ExtraParams>
   <PostArgs/>
   <CPUset/>
@@ -33,6 +33,23 @@
 
   <!-- Public Host / Domain URL -->
   <Config Name="App Public URL" Target="APP_URL" Default="http://[IP]:[PORT:3000]" Mode="" Description="Public base URL or domain (e.g., https://links.yourdomain.com) for Web Share Target and mobile shortcuts" Type="Variable" Display="always" Required="false" Mask="false">http://[IP]:[PORT:3000]</Config>
+
+  <!-- Runtime safety: local is the safe default; multi-user is required for public hosting -->
+  <Config Name="OmniLink Mode" Target="OMNILINK_MODE" Default="local" Mode="" Description="Use local for loopback-only login-free mode, or multi-user only with complete OIDC and quota configuration" Type="Variable" Display="always" Required="true" Mask="false">local</Config>
+  <Config Name="Bind Host" Target="OMNILINK_HOST" Default="127.0.0.1" Mode="" Description="Listener bind address. Use 0.0.0.0 only when OMNILINK_MODE=multi-user is configured" Type="Variable" Display="advanced" Required="true" Mask="false">127.0.0.1</Config>
+  <Config Name="Application Origin" Target="OMNILINK_APP_ORIGIN" Default="" Mode="" Description="Exact HTTPS browser origin, for example https://omnilink.example.com" Type="Variable" Display="advanced" Required="false" Mask="false"/>
+
+  <!-- Managed OIDC configuration -->
+  <Config Name="OIDC Issuer" Target="OMNILINK_OIDC_ISSUER" Default="" Mode="" Description="OIDC issuer URL, for example https://accounts.google.com" Type="Variable" Display="advanced" Required="false" Mask="false"/>
+  <Config Name="OIDC Discovery URL" Target="OMNILINK_OIDC_DISCOVERY_URL" Default="" Mode="" Description="Optional OIDC discovery URL when it differs from the issuer" Type="Variable" Display="advanced" Required="false" Mask="false"/>
+  <Config Name="OIDC Client ID" Target="OMNILINK_OIDC_CLIENT_ID" Default="" Mode="" Description="OIDC application client ID" Type="Variable" Display="advanced" Required="false" Mask="false"/>
+  <Config Name="OIDC Audience" Target="OMNILINK_OIDC_AUDIENCE" Default="" Mode="" Description="Expected ID-token audience, normally the OIDC client ID" Type="Variable" Display="advanced" Required="false" Mask="false"/>
+  <Config Name="OIDC Redirect URI" Target="OMNILINK_OIDC_REDIRECT_URI" Default="" Mode="" Description="Exact registered callback URL ending in /auth/callback" Type="Variable" Display="advanced" Required="false" Mask="false"/>
+  <Config Name="OIDC Client Secret" Target="OMNILINK_OIDC_CLIENT_SECRET" Default="" Mode="" Description="OIDC confidential-client secret" Type="Variable" Display="advanced" Required="false" Mask="true"/>
+  <Config Name="OIDC Token Auth Method" Target="OMNILINK_OIDC_TOKEN_ENDPOINT_AUTH_METHOD" Default="" Mode="" Description="Use client_secret_post, client_secret_basic, or none to match the provider registration" Type="Variable" Display="advanced" Required="false" Mask="false"/>
+  <Config Name="Session Secret" Target="OMNILINK_SESSION_SECRET" Default="" Mode="" Description="At least 32 random characters; keep stable across restarts and never commit" Type="Variable" Display="advanced" Required="false" Mask="true"/>
+  <Config Name="Session Store" Target="OMNILINK_SESSION_STORE" Default="sqlite" Mode="" Description="Persistent session store. SQLite requires the AppData volume above" Type="Variable" Display="advanced" Required="false" Mask="false">sqlite</Config>
+  <Config Name="Monthly AI Quota Units" Target="OMNILINK_AI_QUOTA_MONTHLY_UNITS" Default="" Mode="" Description="Positive model-weighted monthly AI usage limit; required in multi-user mode" Type="Variable" Display="advanced" Required="false" Mask="false"/>
 
   <!-- Advanced: Container Environment -->
   <Config Name="Node Environment" Target="NODE_ENV" Default="production" Mode="" Description="Node runtime environment mode" Type="Variable" Display="advanced" Required="false" Mask="false">production</Config>

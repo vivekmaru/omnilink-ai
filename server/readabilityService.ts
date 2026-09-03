@@ -21,6 +21,11 @@ export interface ReaderArticle {
   extractedAt: string;
 }
 
+export interface PageMetadata {
+  title?: string;
+  description?: string;
+}
+
 export class ReadabilityService {
   private static turndown = new TurndownService({
     headingStyle: 'atx',
@@ -40,6 +45,56 @@ export class ReadabilityService {
         return `\n\`\`\`${lang}\n${pre.textContent?.trim() || content.trim()}\n\`\`\`\n`;
       },
     });
+  }
+
+  /**
+   * Read only the beginning of a document to recover <title>/OpenGraph
+   * metadata before attempting expensive Readability extraction. The stream
+   * is cancelled as soon as </head> is seen and is capped at 128 KiB.
+   */
+  static async extractMetadataFromUrl(url: string, timeoutMs = 2500): Promise<PageMetadata> {
+    const res = await safeFetch(url, {
+      timeoutMs,
+      headers: {
+        'User-Agent': 'OmniLink/1.0 metadata preview',
+        Accept: 'text/html,application/xhtml+xml;q=0.9',
+      },
+    });
+    if (!res.ok) return {};
+    assertResponseMediaType(res, ['html']);
+    const maxBytes = 128 * 1024;
+    let html = '';
+    if (!res.body) html = (await res.text()).slice(0, maxBytes);
+    else {
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let total = 0;
+      try {
+        while (total < maxBytes) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          total += value.byteLength;
+          html += decoder.decode(value, { stream: true });
+          if (/<\/head\s*>/i.test(html)) break;
+        }
+      } finally {
+        await reader.cancel().catch(() => undefined);
+        reader.releaseLock();
+      }
+    }
+    const dom = new JSDOM(html, { url });
+    const doc = dom.window.document;
+    const meta = (selectors: string[]): string => {
+      for (const selector of selectors) {
+        const value = doc.querySelector(selector)?.getAttribute('content')?.trim();
+        if (value) return value;
+      }
+      return '';
+    };
+    return {
+      title: meta(['meta[property="og:title"]', 'meta[name="twitter:title"]']) || doc.querySelector('title')?.textContent?.trim() || undefined,
+      description: meta(['meta[property="og:description"]', 'meta[name="description"]', 'meta[name="twitter:description"]']) || undefined,
+    };
   }
 
   // --- Specialized Platform Scrapers ---
