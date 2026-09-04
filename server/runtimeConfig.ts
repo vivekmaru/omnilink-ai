@@ -7,6 +7,7 @@ export interface RuntimeConfig {
   host: string;
   port: number;
   unsafeAllowRemoteNoAuth: boolean;
+  unsafeBypassAuth: boolean;
   isLoopbackHost: boolean;
   auth: MultiUserAuthEnvironment | null;
   appOrigin: string | null;
@@ -21,6 +22,7 @@ export interface RuntimeConfigEnv {
   OMNILINK_HOST?: string;
   OMNILINK_BIND_HOST?: string;
   OMNILINK_UNSAFE_ALLOW_REMOTE_NO_AUTH?: string;
+  OMNILINK_UNSAFE_BYPASS_AUTH?: string;
   OMNILINK_APP_ORIGIN?: string;
   OMNILINK_AI_QUOTA_MONTHLY_UNITS?: string;
   OMNILINK_OIDC_ISSUER?: string;
@@ -64,8 +66,12 @@ export function loadRuntimeConfig(env: RuntimeConfigEnv = process.env): RuntimeC
   }
 
   const unsafeAllowRemoteNoAuth = parseBoolean(env.OMNILINK_UNSAFE_ALLOW_REMOTE_NO_AUTH);
+  const unsafeBypassAuth = parseBoolean(env.OMNILINK_UNSAFE_BYPASS_AUTH);
   const isLoopbackHost = isLoopback(host);
-  const auth = mode === 'multi-user' ? loadMultiUserAuthEnvironment(env) : null;
+  if (unsafeBypassAuth && (mode !== 'multi-user' || !isLoopbackHost || (env.NODE_ENV ?? '').trim().toLowerCase() === 'production')) {
+    throw new Error('OMNILINK_UNSAFE_BYPASS_AUTH is only allowed for multi-user loopback development.');
+  }
+  const auth = mode === 'multi-user' && !unsafeBypassAuth ? loadMultiUserAuthEnvironment(env) : null;
   const appOrigin = mode === 'multi-user' ? requireOrigin(env.OMNILINK_APP_ORIGIN) : null;
   const quotaMonthlyUnits = mode === 'multi-user'
     ? parsePositiveNumber(env.OMNILINK_AI_QUOTA_MONTHLY_UNITS, 'OMNILINK_AI_QUOTA_MONTHLY_UNITS')
@@ -79,7 +85,7 @@ export function loadRuntimeConfig(env: RuntimeConfigEnv = process.env): RuntimeC
     );
   }
 
-  return { mode, host, port, unsafeAllowRemoteNoAuth, isLoopbackHost, auth, appOrigin, quotaMonthlyUnits };
+  return { mode, host, port, unsafeAllowRemoteNoAuth, unsafeBypassAuth, isLoopbackHost, auth, appOrigin, quotaMonthlyUnits };
 }
 
 export function describeUnsafeRemoteWarning(config: RuntimeConfig): string | null {

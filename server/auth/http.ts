@@ -34,6 +34,25 @@ export interface AuthStack {
 /** Build the mode-aware security boundary. Multi-user initialization performs discovery before listen(). */
 export async function createAuthStack(runtime: RuntimeConfig, db: OmniLinkDB): Promise<AuthStack> {
   const router = express.Router();
+  if (runtime.unsafeBypassAuth) {
+    const developmentContext: RequestContext = Object.freeze({
+      actor: Object.freeze({ id: 'local-user', kind: 'local' as const }),
+      workspace: Object.freeze({ id: 'local-default', role: 'owner' as const }),
+      authMethod: 'local' as const,
+      mode: 'multi-user' as const,
+    });
+    router.get(['/auth/session', '/api/auth/session'], (_req, res) => {
+      res.json({ authenticated: true, context: developmentContext, developmentBypass: true });
+    });
+    router.post('/auth/logout', (_req, res) => res.status(204).end());
+    return {
+      middleware: [
+        (req, _res, next) => { req.securityContext = developmentContext; next(); },
+        authorizeRequest,
+      ],
+      router,
+    };
+  }
   if (runtime.mode === 'local') {
     router.get(['/auth/session', '/api/auth/session'], (_req, res) => {
       res.json({ authenticated: true, context: LOCAL_REQUEST_CONTEXT });

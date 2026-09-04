@@ -424,7 +424,11 @@ export class ApiService {
       if (this.isAuthenticationError(err) || err instanceof ApiHttpError) throw err;
       // Only a genuine transport failure may use the local fallback. HTTP
       // errors (including quota exhaustion) are actionable and must be shown.
-      if (err instanceof Error && err.name !== 'TypeError' && this.isOnline()) throw err;
+      // A browser can remain "online" while the configured server, reverse
+      // proxy, or container is unavailable. Do not convert that failure into
+      // a misleading local-only save; offline fallback is reserved for an
+      // explicitly offline browser state.
+      if (this.isOnline()) throw err;
       // Offline fallback: create item locally
       const localItem: LinkItem = {
         id: 'local-' + Date.now(),

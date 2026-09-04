@@ -17,6 +17,20 @@ describe('runtime configuration', () => {
     expect(describeUnsafeRemoteWarning(config)).toMatch(/without authentication/);
   });
 
+  it('allows a loopback multi-user auth bypass only outside production', () => {
+    const config = loadRuntimeConfig({
+      NODE_ENV: 'development', OMNILINK_MODE: 'multi-user', OMNILINK_HOST: '127.0.0.1',
+      OMNILINK_APP_ORIGIN: 'http://127.0.0.1:4000', OMNILINK_UNSAFE_BYPASS_AUTH: 'true',
+      OMNILINK_AI_QUOTA_MONTHLY_UNITS: '10',
+    });
+    expect(config.unsafeBypassAuth).toBe(true);
+    expect(() => loadRuntimeConfig({
+      NODE_ENV: 'production', OMNILINK_MODE: 'multi-user', OMNILINK_HOST: '127.0.0.1',
+      OMNILINK_APP_ORIGIN: 'http://127.0.0.1:4000', OMNILINK_UNSAFE_BYPASS_AUTH: 'true',
+      OMNILINK_AI_QUOTA_MONTHLY_UNITS: '10',
+    })).toThrow(/only allowed/);
+  });
+
   it('refuses multi-user startup until the complete auth and quota policy exists', () => {
     expect(() => loadRuntimeConfig({
       OMNILINK_MODE: 'multi-user',

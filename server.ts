@@ -1052,7 +1052,7 @@ app.post('/api/links/preview-metadata', async (req, res) => {
     // is available in its <head> (for example OzBargain numeric URLs).
     try {
       const metadata = await ReadabilityService.extractMetadataFromUrl(url, 2500);
-      scrapedTitle = metadata.title || '';
+      scrapedTitle = isWeakExtractedTitle(metadata.title) ? '' : (metadata.title || '');
       scrapedDescription = metadata.description || '';
     } catch {
       // Full extraction and URL fallback below remain best-effort.
@@ -1062,7 +1062,7 @@ app.post('/api/links/preview-metadata', async (req, res) => {
     try {
       const snapshot = await ReadabilityService.extractFromUrl(url, 4500);
       if (snapshot) {
-        scrapedTitle = scrapedTitle || snapshot.title || '';
+        if (!scrapedTitle && !isWeakExtractedTitle(snapshot.title)) scrapedTitle = snapshot.title || '';
         scrapedDescription = scrapedDescription || snapshot.excerpt || '';
         author = snapshot.byline || '';
       }
@@ -1079,6 +1079,13 @@ app.post('/api/links/preview-metadata', async (req, res) => {
           scrapedTitle = pathSegments[pathSegments.length - 1]
             .replace(/[-_]/g, ' ')
             .replace(/\.(html|php|asp|aspx)$/i, '');
+          // Numeric resource IDs are identifiers, not useful titles. Keep the
+          // source label so a blocked/slow page does not produce a misleading
+          // title such as "973820".
+          if (/^\d+$/.test(scrapedTitle.trim())) {
+            const sourceName = parsed.hostname.replace(/^www\./i, '').split('.')[0];
+            scrapedTitle = `${sourceName} item ${scrapedTitle.trim()}`;
+          }
           scrapedTitle = scrapedTitle.charAt(0).toUpperCase() + scrapedTitle.slice(1);
         } else {
           scrapedTitle = parsed.hostname;
@@ -1099,6 +1106,10 @@ app.post('/api/links/preview-metadata', async (req, res) => {
     res.status(500).json({ error: err.message || 'Failed to preview metadata' });
   }
 });
+
+function isWeakExtractedTitle(title: unknown): boolean {
+  return typeof title !== 'string' || !title.trim() || /^\d+$/.test(title.trim());
+}
 
 // POST /api/links/suggest-tags - Auto-tagging suggestions based on title, description, and keywords
 app.post('/api/links/suggest-tags', async (req, res) => {
@@ -1207,6 +1218,45 @@ Allowed Categories: Dev & Tech, AI & Machine Learning, Design & UI, Reddit Discu
 app.get('/api/ai/orchestrator-stats', (req, res) => {
   try {
     const stats = ModelOrchestrator.getStats();
+    // The in-memory orchestrator buffer is useful for latency details, but it
+    // is cleared on every container restart. Use persisted provider-attempt
+    // records as the source of truth for counts shown in the dashboard.
+    const now = new Date();
+    const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
+    const usage = omniDb.getAiUsage(workspaceFor(req), monthStart)
+      .filter((record) => record.status === 'completed' || record.status === 'failed');
+    if (usage.length > 0) {
+      const successful = usage.filter((record) => record.status === 'completed').length;
+      const modelBreakdown: Record<string, number> = {};
+      const taskBreakdown: Record<string, number> = {};
+      for (const record of usage) {
+        modelBreakdown[record.model] = (modelBreakdown[record.model] || 0) + 1;
+        taskBreakdown[record.operation] = (taskBreakdown[record.operation] || 0) + 1;
+      }
+      stats.totalRequests = usage.length;
+      stats.successCount = successful;
+      stats.failureCount = usage.length - successful;
+      stats.fallbackCount = usage.filter((record) => record.operation.includes('fallback')).length;
+      stats.modelBreakdown = modelBreakdown;
+      stats.taskBreakdown = taskBreakdown;
+      stats.recentLogs = usage.slice(0, 30).map((record) => ({
+        id: record.id,
+        timestamp: record.createdAt,
+        taskType: record.operation as any,
+        requestedModel: record.model as any,
+        executedModel: record.model as any,
+        latencyMs: 0,
+        fallbackUsed: false,
+        fallbackHops: 0,
+        success: record.status === 'completed',
+        tokenEstimate: record.inputTokens + record.outputTokens,
+        targetUrlOrPrompt: '[redacted]',
+        error: record.status === 'failed' ? 'Provider attempt failed.' : undefined,
+      }));
+      for (const model of stats.activeModels) {
+        model.usageCount = modelBreakdown[model.id] || 0;
+      }
+    }
     res.json({ success: true, stats });
   } catch (err: any) {
     res.status(500).json({ error: err.message || 'Failed to fetch orchestrator stats' });

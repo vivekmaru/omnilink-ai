@@ -111,6 +111,18 @@ describe('AI quota admission and accounting', () => {
     expect(records.map((record) => record.status).sort()).toEqual(['completed', 'failed']);
   });
 
+  it('does not consume monthly quota for failed provider attempts', () => {
+    const db = database();
+    db.ensureWorkspace('workspace-1');
+    db.recordAiUsage({
+      id: 'failed', actorId: 'service-1', workspaceId: 'workspace-1', operation: 'qa', model: 'flash', source: 'test',
+      inputTokens: 100, outputTokens: 0, weightedUnits: 100, status: 'failed',
+    });
+    const monthStart = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1)).toISOString();
+    expect(db.getAiUsageTotal('workspace-1', monthStart)).toBe(0);
+    expect(db.getAiUsageCommittedTotal('workspace-1', monthStart)).toBe(0);
+  });
+
   it('admits each provider attempt atomically before the provider call', async () => {
     const db = database();
     db.ensureWorkspace('workspace-1');

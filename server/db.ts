@@ -1208,7 +1208,9 @@ export class OmniLinkDB {
   tryReserveAiUsage(input: Omit<AiUsageRecord, 'createdAt' | 'status'>, quotaUnits: number): AiUsageRecord | null {
     const tx = this.db.transaction(() => {
       const since = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1)).toISOString();
-      const used = this.getAiUsageTotal(input.workspaceId, since);
+      // Include active reservations when admitting concurrent requests, but do
+      // not treat failed attempts as consumed quota in the user-facing total.
+      const used = this.getAiUsageCommittedTotal(input.workspaceId, since);
       if (used + input.weightedUnits > quotaUnits) return null;
       return this.recordAiUsage({ ...input, status: 'reserved' });
     });
@@ -1255,7 +1257,21 @@ export class OmniLinkDB {
   getAiUsageTotal(workspaceId: string, since: string): number {
     const row = this.db.prepare(`
       SELECT COALESCE(SUM(weighted_units), 0) AS total
-      FROM ai_usage WHERE workspace_id = ? AND created_at >= ?
+      FROM ai_usage WHERE workspace_id = ? AND created_at >= ? AND status = 'completed'
+    `).get(workspaceId, since) as { total: number };
+    return Number(row.total) || 0;
+  }
+
+  /**
+   * Quota-admission total. Active reservations protect against concurrent
+   * oversubscription; failed and released attempts are retained for audit but
+   * do not consume the monthly allowance.
+   */
+  getAiUsageCommittedTotal(workspaceId: string, since: string): number {
+    const row = this.db.prepare(`
+      SELECT COALESCE(SUM(weighted_units), 0) AS total
+      FROM ai_usage
+      WHERE workspace_id = ? AND created_at >= ? AND status IN ('completed', 'reserved')
     `).get(workspaceId, since) as { total: number };
     return Number(row.total) || 0;
   }

@@ -74,6 +74,8 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       fetchStats();
+      const refreshTimer = window.setInterval(fetchStats, 5_000);
+      return () => window.clearInterval(refreshTimer);
     }
   }, [isOpen]);
 

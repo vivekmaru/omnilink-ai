@@ -36,6 +36,7 @@ cp .env.example .env
 # Edit .env and set your GEMINI_API_KEY (optional, heuristic mode works without it)
 # For loopback-published local container testing only, explicitly set:
 # OMNILINK_UNSAFE_ALLOW_REMOTE_NO_AUTH=true
+# OMNILINK_UNSAFE_BYPASS_AUTH=true  # loopback development only; keeps multi-user quota/policy paths active
 
 # 3. Build and launch container in background
 docker compose up -d --build
