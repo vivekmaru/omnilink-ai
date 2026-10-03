@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   ExternalLink,
   Star,
-  Clock,
   Github,
   MessageSquare,
   Instagram,
@@ -12,9 +11,6 @@ import {
   Copy,
   Check,
   MoreVertical,
-  Sparkles,
-  Code2,
-  Quote,
   Trash2,
   Archive,
   RotateCw,
@@ -130,28 +126,25 @@ export const LinkCard: React.FC<LinkCardProps> = ({
 
   const platformMeta = getPlatformMeta(link.platform);
 
-  // Status badge config with disciplined muted tones
+  // Status is a quiet dot; unread is the default, so only show it when it carries meaning
   const getStatusBadge = (status: ReadStatus) => {
     switch (status) {
       case 'read':
         return (
-          <span className="flex items-center gap-1 text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md">
-            <CheckCircle2 className="w-2.5 h-2.5" />
-            <span>Reviewed</span>
+          <span title="Reviewed" aria-label="Reviewed" className="flex items-center px-1">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
           </span>
         );
       case 'reading':
         return (
-          <span className="flex items-center gap-1 text-[10px] font-medium text-[#c25e3e] dark:text-[#e08264] bg-[#d97757]/10 border border-[#d97757]/20 px-2 py-0.5 rounded-md">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#d97757] dark:bg-[#e08264]" />
-            <span>Reading</span>
+          <span title="In progress" aria-label="In progress" className="flex items-center px-1.5">
+            <span className="w-2 h-2 rounded-full bg-[#d97757] dark:bg-[#e08264]" />
           </span>
         );
       default:
         return (
-          <span className="flex items-center gap-1.5 text-[10px] font-medium text-slate-600 dark:text-slate-300 bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 px-2 py-0.5 rounded-md">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-500/80" />
-            <span>Unread</span>
+          <span title="Unread" aria-label="Unread" className="flex items-center px-1.5">
+            <span className="w-2 h-2 rounded-full bg-amber-500/80" />
           </span>
         );
     }
@@ -170,11 +163,11 @@ export const LinkCard: React.FC<LinkCardProps> = ({
         }
         onSelect(link);
       }}
-      className={`group relative flex flex-col justify-between p-4 sm:p-6 rounded-2xl border transition-all duration-200 cursor-pointer bg-white dark:bg-[#18181b] ${
+      className={`group relative flex flex-col justify-between p-4 sm:p-5 rounded-2xl border transition-all duration-200 cursor-pointer bg-white dark:bg-[#18181b] ${
         isSelected
           ? 'ring-2 ring-[#d97757] dark:ring-[#e08264] border-[#d97757] dark:border-[#e08264] bg-[#d97757]/[0.03] dark:bg-[#e08264]/[0.04] shadow-md'
           : 'border-slate-200/80 dark:border-white/[0.07] hover:border-[#d97757]/50 dark:hover:border-[#e08264]/40 hover:shadow-md hover:-translate-y-0.5'
-      } min-h-[230px] sm:min-h-[250px] animate-card-entrance card-interactive ${
+      } min-h-[170px] animate-card-entrance card-interactive ${
         link.isArchived ? 'opacity-60' : ''
       }`}
     >
@@ -210,16 +203,19 @@ export const LinkCard: React.FC<LinkCardProps> = ({
               </button>
             )}
 
-            <span className="inline-flex items-center gap-1 font-mono text-[0.72rem] uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate font-semibold">
-              {platformMeta.icon}
-              <span className="truncate">{link.category || platformMeta.name}</span>
+            <span className="inline-flex items-center gap-1.5 text-[0.8rem] text-slate-500 dark:text-slate-400 min-w-0">
+              {link.isRssFeedItem || link.feedTitle ? (
+                <Rss className="w-3 h-3 shrink-0 text-slate-400" />
+              ) : (
+                platformMeta.icon
+              )}
+              <span className="truncate">{link.feedTitle || platformMeta.name}</span>
+              {link.aiSummary?.estimatedReadTimeMinutes && (
+                <span className="shrink-0 text-slate-400 dark:text-slate-500">
+                  · {link.aiSummary.estimatedReadTimeMinutes} min read
+                </span>
+              )}
             </span>
-            {(link.isRssFeedItem || link.feedTitle) && (
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono bg-black/5 dark:bg-white/5 text-slate-600 dark:text-slate-300 border border-black/5 dark:border-white/5 shrink-0 max-w-[130px]">
-                <Rss className="w-2.5 h-2.5 text-[#d97757] dark:text-[#e08264] shrink-0" />
-                <span className="truncate">{link.feedTitle || 'RSS'}</span>
-              </span>
-            )}
           </div>
 
           {/* Top Right: Status Badge & Consistent Action Buttons */}
@@ -228,6 +224,18 @@ export const LinkCard: React.FC<LinkCardProps> = ({
 
             {/* Quick Actions Cluster (touch-friendly on mobile) */}
             <div className="flex items-center gap-0.5 ml-0.5">
+              <a
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="hidden sm:block p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all"
+                title="Open original URL in new tab"
+                aria-label="Open original URL in new tab"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+
               <button
                 type="button"
                 onClick={handleStar}
@@ -329,79 +337,6 @@ export const LinkCard: React.FC<LinkCardProps> = ({
         <p className="text-[0.88rem] leading-relaxed text-slate-600 dark:text-slate-300 line-clamp-3">
           {link.summary?.tldr || link.aiSummary?.tldr || link.description || 'No description available.'}
         </p>
-
-        {/* Extracted Code & Quote Badges with calm, unified tones */}
-        <div className="flex flex-wrap gap-1.5 pt-0.5">
-          {((link.summary?.codeSnippets && link.summary.codeSnippets.length > 0) ||
-            (link.aiSummary?.codeSnippets && link.aiSummary.codeSnippets.length > 0)) && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-black/5 dark:bg-white/5 text-slate-700 dark:text-slate-300 border border-black/5 dark:border-white/5">
-              <Code2 className="w-3 h-3 text-slate-500 dark:text-slate-400" />
-              <span>
-                {(link.summary?.codeSnippets || link.aiSummary?.codeSnippets || []).length} Snippet
-              </span>
-            </span>
-          )}
-
-          {(link.summary?.quotes?.[0] || link.summary?.quote || link.aiSummary?.quote) && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-black/5 dark:bg-white/5 text-slate-700 dark:text-slate-300 border border-black/5 dark:border-white/5">
-              <Quote className="w-3 h-3 text-slate-500 dark:text-slate-400" />
-              <span>Quote</span>
-            </span>
-          )}
-
-          {((link.summary?.keyTakeaways && link.summary.keyTakeaways.length > 0) ||
-            (link.aiSummary?.takeaways && link.aiSummary.takeaways.length > 0)) && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-[#d97757]/10 text-[#c25e3e] dark:text-[#e08264] border border-[#d97757]/20 font-semibold">
-              <Sparkles className="w-3 h-3" />
-              <span>
-                {(link.summary?.keyTakeaways || link.aiSummary?.takeaways || []).length} Insights
-              </span>
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Tag Row & Footer Link */}
-      <div className="mt-3.5 pt-2.5 sm:pt-3 border-t border-slate-100 dark:border-white/5 flex items-center justify-between gap-2">
-        <div className="tag-row flex flex-wrap gap-1 sm:gap-1.5 overflow-hidden">
-          {link.tags && link.tags.length > 0 ? (
-            link.tags.slice(0, 3).map((tag) => (
-              <span
-                key={tag}
-                className="font-mono text-[0.7rem] sm:text-[0.72rem] px-1.5 sm:px-2 py-0.5 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-white/5 rounded font-medium"
-              >
-                #{tag}
-              </span>
-            ))
-          ) : (
-            <span className="font-mono text-[0.7rem] sm:text-[0.72rem] text-slate-400 opacity-60">#curated</span>
-          )}
-          {link.tags && link.tags.length > 3 && (
-            <span className="font-mono text-[0.7rem] sm:text-[0.72rem] text-slate-500 dark:text-slate-400 self-center">
-              +{link.tags.length - 3}
-            </span>
-          )}
-        </div>
-
-        <div className="flex items-center gap-1.5 shrink-0">
-          {link.aiSummary?.estimatedReadTimeMinutes && (
-            <span className="flex items-center gap-1 font-mono text-[0.7rem] sm:text-[0.72rem] text-slate-500 dark:text-slate-400">
-              <Clock className="w-3 h-3 opacity-60" />
-              <span>{link.aiSummary.estimatedReadTimeMinutes}m</span>
-            </span>
-          )}
-          <a
-            href={link.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-[#d97757] dark:hover:text-[#e08264] hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-            title="Open original URL in new tab"
-            aria-label="Open original URL in new tab"
-          >
-            <ExternalLink className="w-3.5 h-3.5" />
-          </a>
-        </div>
       </div>
     </div>
   );
