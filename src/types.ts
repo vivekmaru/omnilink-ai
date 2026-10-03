@@ -318,3 +318,33 @@ export interface EmbeddingsStatusResponse {
 }
 
 
+
+export const SERVICE_TOKEN_SCOPES = [
+  'repository:read',
+  'repository:write',
+  'repository:delete',
+  'ai:execute',
+  'repository:admin',
+] as const;
+
+export type ServiceTokenScope = (typeof SERVICE_TOKEN_SCOPES)[number];
+
+/** A service token as listed by /api/auth/tokens. The secret itself is never included. */
+export interface ServiceToken {
+  id: string;
+  name: string;
+  tokenPrefix: string;
+  scopes: ServiceTokenScope[];
+  createdAt: string;
+  expiresAt?: string;
+  lastUsedAt?: string;
+  revokedAt?: string;
+}
+
+/** Identity of the signed-in caller, as returned by /auth/session. */
+export interface SessionContext {
+  actor: { id: string; kind: string };
+  workspace: { id: string; role: 'owner' | 'editor' | 'viewer' };
+  authMethod: 'local' | 'session' | 'service-token';
+  mode: string;
+}
