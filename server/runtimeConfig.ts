@@ -23,6 +23,8 @@ export interface RuntimeConfigEnv {
   OMNILINK_UNSAFE_ALLOW_REMOTE_NO_AUTH?: string;
   OMNILINK_APP_ORIGIN?: string;
   OMNILINK_AI_QUOTA_MONTHLY_UNITS?: string;
+  OMNILINK_AUTH_PROVIDER?: string;
+  OMNILINK_PASSWORD_SIGNUP?: string;
   OMNILINK_OIDC_ISSUER?: string;
   OMNILINK_OIDC_DISCOVERY_URL?: string;
   OMNILINK_OIDC_AUDIENCE?: string;
@@ -74,7 +76,7 @@ export function loadRuntimeConfig(env: RuntimeConfigEnv = process.env): RuntimeC
   if (!isLoopbackHost && mode !== 'multi-user' && !unsafeAllowRemoteNoAuth) {
     throw new Error(
       `Refusing remote bind "${host}" without authentication. ` +
-        'Set OMNILINK_MODE=multi-user with the complete OIDC configuration, or set ' +
+        'Set OMNILINK_MODE=multi-user with a complete OIDC or password authentication configuration, or set ' +
         'OMNILINK_UNSAFE_ALLOW_REMOTE_NO_AUTH=true for temporary development testing.',
     );
   }

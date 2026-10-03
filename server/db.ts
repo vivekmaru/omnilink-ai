@@ -3,6 +3,7 @@ import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import path from 'path';
 import fs from 'fs';
 import { LinkItem, PlatformType, ReadStatus, SystemStats } from '../src/types';
+import { PASSWORD_ISSUER } from './auth/password';
 
 const DATA_DIR = path.join(process.cwd(), 'data');
 const DB_FILE = path.join(DATA_DIR, 'omnilink.db');
@@ -20,6 +21,10 @@ export interface UserRecord {
   createdAt: string;
   updatedAt: string;
 }
+
+export type PasswordSignupResult =
+  | { ok: true; user: UserRecord; membership: WorkspaceMembershipRecord }
+  | { ok: false; reason: 'email-taken' | 'signup-closed' };
 
 export interface WorkspaceMembershipRecord {
   workspaceId: string;
@@ -156,6 +161,16 @@ export class OmniLinkDB {
       );
 
       CREATE INDEX IF NOT EXISTS idx_oidc_transactions_expiry ON oidc_transactions(expires_at);
+
+      -- Built-in password provider. The user row carries the normalized email
+      -- as its subject under PASSWORD_ISSUER; only the scrypt hash lives here.
+      CREATE TABLE IF NOT EXISTS password_credentials (
+        user_id TEXT PRIMARY KEY,
+        password_hash TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      );
 
       CREATE TABLE IF NOT EXISTS service_tokens (
         id TEXT PRIMARY KEY,
@@ -1020,6 +1035,46 @@ export class OmniLinkDB {
       FROM workspace_memberships WHERE user_id = ? AND workspace_id = ?
     `).get(userId, workspaceId) as any;
     return row ? { workspaceId: row.workspace_id, userId: row.user_id, role: row.role, createdAt: row.created_at } : null;
+  }
+
+  countPasswordUsers(): number {
+    const row = this.db.prepare(`
+      SELECT COUNT(*) AS count FROM password_credentials c JOIN users u ON u.id = c.user_id WHERE u.issuer = ?
+    `).get(PASSWORD_ISSUER) as { count: number };
+    return row.count;
+  }
+
+  /**
+   * Create a password user with a personal workspace. The first-user check and
+   * insert share one transaction so two concurrent sign-ups cannot both win.
+   */
+  createPasswordUser(input: { email: string; name?: string; passwordHash: string; firstUserOnly: boolean }): PasswordSignupResult {
+    const tx = this.db.transaction((): PasswordSignupResult => {
+      if (input.firstUserOnly && this.countPasswordUsers() > 0) return { ok: false, reason: 'signup-closed' };
+      const existing = this.db.prepare('SELECT id FROM users WHERE issuer = ? AND subject = ?').get(PASSWORD_ISSUER, input.email);
+      if (existing) return { ok: false, reason: 'email-taken' };
+      const identity = this.upsertOidcUser({ issuer: PASSWORD_ISSUER, subject: input.email, email: input.email, name: input.name });
+      const now = new Date().toISOString();
+      this.db.prepare(`
+        INSERT INTO password_credentials (user_id, password_hash, created_at, updated_at) VALUES (?, ?, ?, ?)
+      `).run(identity.user.id, input.passwordHash, now, now);
+      return { ok: true, ...identity };
+    });
+    return tx.immediate();
+  }
+
+  /** Look up the stored hash and owned workspace for a normalized email. */
+  getPasswordCredential(email: string): { userId: string; workspaceId: string; passwordHash: string } | null {
+    const row = this.db.prepare(`
+      SELECT u.id AS user_id, c.password_hash, m.workspace_id
+      FROM users u
+      JOIN password_credentials c ON c.user_id = u.id
+      JOIN workspace_memberships m ON m.user_id = u.id AND m.role = 'owner'
+      WHERE u.issuer = ? AND u.subject = ?
+      ORDER BY m.created_at ASC
+      LIMIT 1
+    `).get(PASSWORD_ISSUER, email) as any;
+    return row ? { userId: row.user_id, workspaceId: row.workspace_id, passwordHash: row.password_hash } : null;
   }
 
   createOidcTransaction(input: { state: string; nonce: string; codeVerifier: string; redirectAfter?: string; expiresAt: string }): void {
