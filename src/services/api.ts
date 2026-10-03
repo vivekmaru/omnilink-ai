@@ -12,6 +12,8 @@ import {
   HybridSearchMatch,
   EmbeddingsStatusResponse,
   ReaderSnapshot,
+  ServiceToken,
+  ServiceTokenScope,
 } from '../types';
 import { checkDuplicateInLinks, normalizeUrl } from '../utils/url';
 
@@ -970,5 +972,41 @@ export class ApiService {
     }
     const data = await res.json();
     return data.snapshot;
+  }
+  // Service tokens (multi-user mode, workspace owner sessions only)
+  static async listServiceTokens(): Promise<ServiceToken[]> {
+    const res = await this.request('/api/auth/tokens', { headers: { Accept: 'application/json' } });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new ApiHttpError(res.status, err.error || `Failed to load service tokens (HTTP ${res.status})`);
+    }
+    const data = await res.json();
+    return data.tokens || [];
+  }
+
+  /** Returns the plaintext token exactly once; callers must not persist it. */
+  static async createServiceToken(payload: {
+    name: string;
+    scopes: ServiceTokenScope[];
+    expiresAt?: string;
+  }): Promise<{ token: string; serviceToken: ServiceToken }> {
+    const res = await this.request('/api/auth/tokens', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new ApiHttpError(res.status, err.error || `Failed to create service token (HTTP ${res.status})`);
+    }
+    return res.json();
+  }
+
+  static async revokeServiceToken(id: string): Promise<void> {
+    const res = await this.request(`/api/auth/tokens/${encodeURIComponent(id)}`, { method: 'DELETE' });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new ApiHttpError(res.status, err.error || `Failed to revoke service token (HTTP ${res.status})`);
+    }
   }
 }

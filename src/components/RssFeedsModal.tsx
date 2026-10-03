@@ -399,7 +399,7 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
   return (
     <div
       id="rss-feeds-modal-overlay"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-xs animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-xs"
       onClick={onClose}
     >
       <div
@@ -421,10 +421,10 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
               <Rss className="w-5 h-5" />
             </div>
             <div>
-              <h2 id="rss-feeds-modal-title" className="font-newsreader text-xl font-medium text-slate-900 dark:text-[#f7f6f3]">
+              <h2 id="rss-feeds-modal-title" className="text-xl font-semibold text-slate-900 dark:text-[#f7f6f3]">
                 RSS & Engineering Feeds
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
                 Automatically ingest and summarize new blog posts into your Unread reading queue
               </p>
             </div>
@@ -436,7 +436,7 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
               type="button"
               onClick={handleSyncAll}
               disabled={syncingAll || feeds.length === 0}
-              className="flex items-center gap-2 px-3 py-1.5 font-mono text-xs font-semibold rounded-lg bg-[#d97757]/10 text-[#d97757] dark:text-[#e08264] border border-[#d97757]/30 hover:bg-[#d97757]/20 transition-all disabled:opacity-50"
+              className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#d97757]/10 text-[#d97757] dark:text-[#e08264] border border-[#d97757]/30 hover:bg-[#d97757]/20 transition-all disabled:opacity-50"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${syncingAll ? 'animate-spin' : ''}`} />
               {syncingAll ? 'Syncing...' : 'Sync All Feeds'}
@@ -454,7 +454,7 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex items-center justify-between px-6 border-b border-black/10 dark:border-white/10 bg-black/[0.01] dark:bg-white/[0.01] text-xs font-medium">
+        <div className="flex items-center justify-between px-6 border-b border-black/10 dark:border-white/10 bg-black/[0.01] dark:bg-white/[0.01] text-sm font-medium">
           <div className="flex gap-1">
             <button
               id="rss-tab-subscriptions"
@@ -469,7 +469,7 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
               <Layers className="w-4 h-4" />
               <span>Subscribed Feeds ({feeds.length})</span>
               {totalUnreadFeedsCount > 0 && (
-                <span className="px-1.5 py-0.2 rounded-full bg-black/5 dark:bg-white/10 text-slate-600 dark:text-slate-300 text-[10px] font-bold">
+                <span className="px-1.5 py-0.2 rounded-full bg-black/5 dark:bg-white/10 text-slate-600 dark:text-slate-300 text-xs font-bold">
                   {totalUnreadFeedsCount} unread
                 </span>
               )}
@@ -543,7 +543,7 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
                       placeholder="Search subscribed feeds by name, category, or tags..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-9 pr-4 py-2 text-xs bg-white dark:bg-[#18181b] border border-black/10 dark:border-white/10 rounded-xl text-slate-900 dark:text-[#f7f6f3] placeholder-slate-400 focus:outline-none focus:border-[#d97757]"
+                      className="w-full pl-9 pr-4 py-2 text-sm bg-white dark:bg-[#18181b] border border-black/10 dark:border-white/10 rounded-xl text-slate-900 dark:text-[#f7f6f3] placeholder-slate-400 focus:outline-none focus:border-[#d97757]"
                     />
                     {searchQuery && (
                       <button
@@ -571,7 +571,7 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
                     <button
                       type="button"
                       onClick={() => setFeedFilterStatus('all')}
-                      className={`px-3 py-1.5 rounded-md text-xs font-mono font-medium transition-all cursor-pointer ${
+                      className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer ${
                         feedFilterStatus === 'all'
                           ? 'bg-white dark:bg-[#1f1e1c] text-slate-900 dark:text-slate-100 shadow-xs font-semibold'
                           : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
@@ -582,7 +582,7 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
                     <button
                       type="button"
                       onClick={() => setFeedFilterStatus('active')}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-mono font-medium transition-all cursor-pointer ${
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer ${
                         feedFilterStatus === 'active'
                           ? 'bg-white dark:bg-[#1f1e1c] text-emerald-600 dark:text-emerald-400 shadow-xs font-semibold'
                           : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
@@ -594,7 +594,7 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
                     <button
                       type="button"
                       onClick={() => setFeedFilterStatus('paused')}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-mono font-medium transition-all cursor-pointer ${
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer ${
                         feedFilterStatus === 'paused'
                           ? 'bg-white dark:bg-[#1f1e1c] text-amber-600 dark:text-amber-400 shadow-xs font-semibold'
                           : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
@@ -611,7 +611,7 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
                       <button
                         type="button"
                         onClick={handlePauseAllFeeds}
-                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 text-xs font-mono transition-colors cursor-pointer"
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 text-xs transition-colors cursor-pointer"
                         title="Pause background polling for all feeds without deleting"
                       >
                         <Pause className="w-3 h-3 text-amber-500" />
@@ -622,7 +622,7 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
                       <button
                         type="button"
                         onClick={handleResumeAllFeeds}
-                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-emerald-500/20 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-mono transition-colors font-medium cursor-pointer"
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-emerald-500/20 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs transition-colors font-medium cursor-pointer"
                         title="Resume background polling for all paused feeds"
                       >
                         <Play className="w-3 h-3 text-emerald-500" />
@@ -712,7 +712,7 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
                               />
                               <div className="min-w-0">
                                 <div className="flex items-center gap-2">
-                                  <h4 className="text-sm font-semibold text-slate-900 dark:text-[#f7f6f3] truncate font-newsreader">{feed.title}</h4>
+                                  <h4 className="text-sm font-semibold text-slate-900 dark:text-[#f7f6f3] truncate">{feed.title}</h4>
                                   <a
                                     href={feed.siteUrl || feed.url}
                                     target="_blank"
@@ -723,7 +723,7 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
                                     <ExternalLink className="w-3 h-3" />
                                   </a>
                                 </div>
-                                <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">
+                                <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">
                                   {feed.description || feed.url}
                                 </p>
                               </div>
@@ -732,12 +732,12 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
                             {/* Status Indicator & Interactive Toggle Switch */}
                             <div className="flex items-center gap-2 shrink-0">
                               {feed.enabled ? (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                                   <span>Active</span>
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
                                   <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                                   <span>Paused</span>
                                 </span>
@@ -770,13 +770,13 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
                           </div>
 
                           {/* Metadata row: Category, Tags, AI badge, and Unread Count */}
-                          <div className="flex flex-wrap items-center justify-between gap-1.5 text-[11px] pt-1">
+                          <div className="flex flex-wrap items-center justify-between gap-1.5 text-xs pt-1">
                             <div className="flex flex-wrap items-center gap-1.5">
-                              <span className="px-2 py-0.5 rounded bg-black/5 dark:bg-white/5 text-slate-700 dark:text-slate-300 border border-black/5 dark:border-white/5 font-mono text-[10px] font-semibold">
+                              <span className="px-2 py-0.5 rounded bg-black/5 dark:bg-white/5 text-slate-700 dark:text-slate-300 border border-black/5 dark:border-white/5 text-xs font-semibold">
                                 {feed.category}
                               </span>
                               {feed.autoAiExtract && (
-                                <span className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/5 text-slate-600 dark:text-slate-300 border border-black/5 dark:border-white/5 text-[10px] font-medium">
+                                <span className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/5 text-slate-600 dark:text-slate-300 border border-black/5 dark:border-white/5 text-xs font-medium">
                                   <Sparkles className="w-2.5 h-2.5 text-[#d97757] dark:text-[#e08264]" />
                                   AI TL;DR
                                 </span>
@@ -784,7 +784,7 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
                               {feed.defaultTags.slice(0, 3).map((tag: string) => (
                                 <span
                                   key={tag}
-                                  className="px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/5 text-slate-500 dark:text-slate-400 text-[10px] font-mono"
+                                  className="px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/5 text-slate-500 dark:text-slate-400 text-xs"
                                 >
                                   #{tag}
                                 </span>
@@ -801,7 +801,7 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
                                   }
                                 }}
                                 title="View unread articles from this feed in repository"
-                                className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-black/5 dark:bg-white/10 text-slate-700 dark:text-slate-300 border border-black/10 dark:border-white/10 hover:bg-black/10 transition-colors font-mono cursor-pointer"
+                                className="px-2 py-0.5 text-xs font-bold rounded-full bg-black/5 dark:bg-white/10 text-slate-700 dark:text-slate-300 border border-black/10 dark:border-white/10 hover:bg-black/10 transition-colors cursor-pointer"
                               >
                                 {feed.unreadCount} unread
                               </button>
@@ -811,7 +811,7 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
 
                         {/* Bottom Actions Bar */}
                         <div className="flex items-center justify-between pt-3 mt-3 border-t border-black/5 dark:border-white/5 text-xs">
-                          <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-mono">
+                          <div className="flex items-center gap-1.5 text-xs text-slate-400">
                             <Clock className="w-3 h-3 text-slate-400" />
                             <span>
                               {feed.enabled
@@ -834,7 +834,7 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
                                   onFilterByFeed(feed.id, feed.title);
                                   onClose();
                                 }}
-                                className="px-2.5 py-1 text-[11px] text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 rounded transition-colors font-mono cursor-pointer"
+                                className="px-2.5 py-1 text-xs text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 rounded transition-colors cursor-pointer"
                               >
                                 View Articles
                               </button>
@@ -874,7 +874,7 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
           {activeTab === 'add' && (
             <div className="max-w-2xl mx-auto space-y-6">
               <div className="p-5 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-black/10 dark:border-white/10 space-y-4">
-                <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-[#f7f6f3] font-newsreader text-base">
+                <div className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-[#f7f6f3]">
                   <Globe className="w-4 h-4 text-[#d97757] dark:text-[#e08264]" />
                   <span>Subscribe to Any URL / RSS Feed</span>
                 </div>
@@ -885,7 +885,7 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
                 <form onSubmit={handleSubscribe} className="space-y-4">
                   {/* URL Input with Discover Action */}
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 font-mono">
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
                       Blog / Website / RSS URL <span className="text-red-500">*</span>
                     </label>
                     <div className="flex gap-2">
@@ -900,14 +900,14 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
                             setInputUrl(e.target.value);
                             setDiscoveryResult(null);
                           }}
-                          className="w-full px-3 py-2 text-xs bg-white dark:bg-[#1f1e1c] border border-black/10 dark:border-white/10 rounded-lg text-slate-900 dark:text-[#f7f6f3] placeholder-slate-400 focus:outline-none focus:border-[#d97757] font-mono"
+                          className="w-full px-3 py-2 text-sm bg-white dark:bg-[#1f1e1c] border border-black/10 dark:border-white/10 rounded-lg text-slate-900 dark:text-[#f7f6f3] placeholder-slate-400 focus:outline-none focus:border-[#d97757]"
                         />
                       </div>
                       <button
                         type="button"
                         onClick={handleDiscover}
                         disabled={discovering || !inputUrl.trim()}
-                        className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-[#d97757] dark:text-[#e08264] bg-[#d97757]/10 border border-[#d97757]/30 hover:bg-[#d97757]/20 rounded-lg transition-colors disabled:opacity-50 shrink-0 font-mono"
+                        className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-[#d97757] dark:text-[#e08264] bg-[#d97757]/10 border border-[#d97757]/30 hover:bg-[#d97757]/20 rounded-lg transition-colors disabled:opacity-50 shrink-0"
                       >
                         <Search className={`w-3.5 h-3.5 ${discovering ? 'animate-spin' : ''}`} />
                         {discovering ? 'Inspecting...' : 'Auto-Discover'}
@@ -917,18 +917,18 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
 
                   {/* Discovery Preview Card */}
                   {discoveryResult && (
-                    <div className="p-3.5 rounded-lg bg-black/[0.03] dark:bg-white/[0.03] border border-[#d97757]/30 space-y-2.5 animate-in fade-in">
+                    <div className="p-3.5 rounded-lg bg-black/[0.03] dark:bg-white/[0.03] border border-[#d97757]/30 space-y-2.5">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                           <span className="text-xs font-semibold text-slate-900 dark:text-[#f7f6f3]">
                             {discoveryResult.discovered ? 'Feed Detected & Ready' : 'Direct URL Prepared'}
                           </span>
-                          <span className="px-1.5 py-0.5 text-[10px] rounded bg-black/10 dark:bg-white/10 text-slate-600 dark:text-slate-300 font-mono">
+                          <span className="px-1.5 py-0.5 text-xs rounded bg-black/10 dark:bg-white/10 text-slate-600 dark:text-slate-300">
                             {discoveryResult.feedType.toUpperCase()}
                           </span>
                         </div>
-                        <span className="text-[11px] text-slate-400 font-mono">
+                        <span className="text-xs text-slate-400">
                           {discoveryResult.sampleItems.length} recent articles found
                         </span>
                       </div>
@@ -939,14 +939,14 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
 
                       {discoveryResult.sampleItems.length > 0 && (
                         <div className="space-y-1 pt-1 border-t border-black/5 dark:border-white/5">
-                          <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">Recent Post Preview:</span>
+                          <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Recent Post Preview:</span>
                           <div className="text-xs text-slate-700 dark:text-slate-300 space-y-1">
                             {discoveryResult.sampleItems.slice(0, 3).map((item, idx) => (
                               <div key={idx} className="flex items-center gap-2 truncate">
                                 <span className="text-slate-400">•</span>
                                 <span className="truncate">{item.title}</span>
                                 {item.pubDate && (
-                                  <span className="text-[10px] text-slate-400 shrink-0 font-mono">
+                                  <span className="text-xs text-slate-400 shrink-0">
                                     ({new Date(item.pubDate).toLocaleDateString()})
                                   </span>
                                 )}
@@ -961,24 +961,24 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
                   {/* Custom Title & Category */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">Feed Display Name</label>
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Feed Display Name</label>
                       <input
                         id="rss-input-title"
                         type="text"
                         placeholder="e.g., Cloudflare Engineering"
                         value={feedTitle}
                         onChange={(e) => setFeedTitle(e.target.value)}
-                        className="w-full px-3 py-2 text-xs bg-white dark:bg-[#1f1e1c] border border-black/10 dark:border-white/10 rounded-lg text-slate-900 dark:text-[#f7f6f3] placeholder-slate-400 focus:outline-none focus:border-[#d97757]"
+                        className="w-full px-3 py-2 text-sm bg-white dark:bg-[#1f1e1c] border border-black/10 dark:border-white/10 rounded-lg text-slate-900 dark:text-[#f7f6f3] placeholder-slate-400 focus:outline-none focus:border-[#d97757]"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">Target Category</label>
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Target Category</label>
                       <select
                         id="rss-select-category"
                         value={feedCategory}
                         onChange={(e) => setFeedCategory(e.target.value)}
-                        className="w-full px-3 py-2 text-xs bg-white dark:bg-[#1f1e1c] border border-black/10 dark:border-white/10 rounded-lg text-slate-900 dark:text-[#f7f6f3] focus:outline-none focus:border-[#d97757]"
+                        className="w-full px-3 py-2 text-sm bg-white dark:bg-[#1f1e1c] border border-black/10 dark:border-white/10 rounded-lg text-slate-900 dark:text-[#f7f6f3] focus:outline-none focus:border-[#d97757]"
                       >
                         <option value="Dev & Tech">Dev & Tech</option>
                         <option value="AI & Machine Learning">AI & Machine Learning</option>
@@ -994,7 +994,7 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
                   {/* Default Tags & Polling Frequency */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 font-mono">
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
                         Default Tags (comma-separated)
                       </label>
                       <input
@@ -1003,17 +1003,17 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
                         placeholder="rss, engineering, blog, systems"
                         value={feedTagsInput}
                         onChange={(e) => setFeedTagsInput(e.target.value)}
-                        className="w-full px-3 py-2 text-xs bg-white dark:bg-[#1f1e1c] border border-black/10 dark:border-white/10 rounded-lg text-slate-900 dark:text-[#f7f6f3] placeholder-slate-400 focus:outline-none focus:border-[#d97757] font-mono"
+                        className="w-full px-3 py-2 text-sm bg-white dark:bg-[#1f1e1c] border border-black/10 dark:border-white/10 rounded-lg text-slate-900 dark:text-[#f7f6f3] placeholder-slate-400 focus:outline-none focus:border-[#d97757]"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">Check Frequency</label>
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Check Frequency</label>
                       <select
                         id="rss-select-poll"
                         value={pollInterval}
                         onChange={(e) => setPollInterval(Number(e.target.value))}
-                        className="w-full px-3 py-2 text-xs bg-white dark:bg-[#1f1e1c] border border-black/10 dark:border-white/10 rounded-lg text-slate-900 dark:text-[#f7f6f3] focus:outline-none focus:border-[#d97757] font-mono"
+                        className="w-full px-3 py-2 text-sm bg-white dark:bg-[#1f1e1c] border border-black/10 dark:border-white/10 rounded-lg text-slate-900 dark:text-[#f7f6f3] focus:outline-none focus:border-[#d97757]"
                       >
                         <option value={15}>Every 15 minutes</option>
                         <option value={30}>Every 30 minutes (Recommended)</option>
@@ -1031,7 +1031,7 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
                         <Sparkles className="w-3.5 h-3.5 text-[#d97757] dark:text-[#e08264]" />
                         <span>AI Summaries & Bullet Takeaways (Gemini 3.7 Flash)</span>
                       </div>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
                         Automatically generates 1-sentence TL;DR and key takeaways for incoming articles
                       </p>
                     </div>
@@ -1066,7 +1066,7 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="font-newsreader text-base font-semibold text-slate-900 dark:text-[#f7f6f3]">Popular Engineering & AI Feeds</h3>
+                  <h3 className="text-base font-semibold text-slate-900 dark:text-[#f7f6f3]">Popular Engineering & AI Feeds</h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
                     One-click subscribe to top developer blogs. Incoming articles are saved straight to your unread queue.
                   </p>
@@ -1092,18 +1092,18 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
                               className="w-5 h-5 rounded-sm mt-0.5 shrink-0 bg-slate-200 dark:bg-slate-800"
                             />
                             <div className="min-w-0">
-                              <h4 className="font-newsreader text-sm font-semibold text-slate-900 dark:text-[#f7f6f3] truncate">{item.title}</h4>
+                              <h4 className="text-sm font-semibold text-slate-900 dark:text-[#f7f6f3] truncate">{item.title}</h4>
                               <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mt-0.5">{item.description}</p>
                             </div>
                           </div>
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-1.5 text-[11px] pt-1">
-                          <span className="px-2 py-0.5 rounded bg-[#d97757]/10 text-[#d97757] dark:text-[#e08264] border border-[#d97757]/20 font-mono text-[10px] font-semibold">
+                        <div className="flex flex-wrap items-center gap-1.5 text-xs pt-1">
+                          <span className="px-2 py-0.5 rounded bg-[#d97757]/10 text-[#d97757] dark:text-[#e08264] border border-[#d97757]/20 text-xs font-semibold">
                             {item.category}
                           </span>
                           {item.defaultTags.slice(0, 3).map((tag) => (
-                            <span key={tag} className="px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/5 text-slate-500 dark:text-slate-400 text-[10px] font-mono">
+                            <span key={tag} className="px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/5 text-slate-500 dark:text-slate-400 text-xs">
                               #{tag}
                             </span>
                           ))}
@@ -1115,7 +1115,7 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
                           href={item.siteUrl || item.url}
                           target="_blank"
                           rel="noreferrer"
-                          className="flex items-center gap-1 text-[11px] text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-mono"
+                          className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
                         >
                           <span>Visit Site</span>
                           <ExternalLink className="w-3 h-3" />
@@ -1172,12 +1172,12 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Download className="w-4 h-4 text-emerald-500" />
-                    <h3 className="font-newsreader text-base font-semibold text-slate-900 dark:text-[#f7f6f3]">Export Subscriptions to OPML</h3>
+                    <h3 className="text-base font-semibold text-slate-900 dark:text-[#f7f6f3]">Export Subscriptions to OPML</h3>
                   </div>
                   <a
                     href={ApiService.getOpmlExportUrl()}
                     download="omnilink-feeds.opml"
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-lg hover:bg-emerald-500/20 transition-colors font-mono"
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-lg hover:bg-emerald-500/20 transition-colors"
                   >
                     <Download className="w-3.5 h-3.5" />
                     Download .opml File
@@ -1192,7 +1192,7 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
               <div className="p-4 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-black/10 dark:border-white/10 space-y-4">
                 <div className="flex items-center gap-2">
                   <Upload className="w-4 h-4 text-[#d97757] dark:text-[#e08264]" />
-                  <h3 className="font-newsreader text-base font-semibold text-slate-900 dark:text-[#f7f6f3]">Import Feeds from OPML</h3>
+                  <h3 className="text-base font-semibold text-slate-900 dark:text-[#f7f6f3]">Import Feeds from OPML</h3>
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                   Upload an <code>.opml</code> or <code>.xml</code> file from your favorite RSS reader or paste the raw OPML XML below.
@@ -1200,7 +1200,7 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
 
                 {/* File picker */}
                 <div className="flex items-center gap-3">
-                  <label className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 border border-black/10 dark:border-white/10 rounded-lg cursor-pointer transition-colors font-mono">
+                  <label className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 border border-black/10 dark:border-white/10 rounded-lg cursor-pointer transition-colors">
                     <FileCode className="w-4 h-4 text-[#d97757] dark:text-[#e08264]" />
                     <span>Choose OPML File...</span>
                     <input
@@ -1211,7 +1211,7 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
                     />
                   </label>
                   {opmlText && (
-                    <span className="text-xs text-emerald-500 flex items-center gap-1 font-mono">
+                    <span className="text-xs text-emerald-500 flex items-center gap-1">
                       <Check className="w-3.5 h-3.5" /> Ready ({opmlText.length} bytes loaded)
                     </span>
                   )}
@@ -1219,13 +1219,13 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
 
                 {/* Text Area */}
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 font-mono">Or Paste OPML XML Content:</label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Or Paste OPML XML Content:</label>
                   <textarea
                     rows={6}
                     placeholder={`<?xml version="1.0" encoding="UTF-8"?>\n<opml version="2.0">\n  <body>\n    <outline type="rss" xmlUrl="https://blog.cloudflare.com/rss/" title="Cloudflare Blog"/>\n  </body>\n</opml>`}
                     value={opmlText}
                     onChange={(e) => setOpmlText(e.target.value)}
-                    className="w-full p-3 text-xs bg-white dark:bg-[#1f1e1c] border border-black/10 dark:border-white/10 rounded-lg text-slate-900 dark:text-[#f7f6f3] font-mono focus:outline-none focus:border-[#d97757]"
+                    className="w-full p-3 text-sm bg-white dark:bg-[#1f1e1c] border border-black/10 dark:border-white/10 rounded-lg text-slate-900 dark:text-[#f7f6f3] font-mono focus:outline-none focus:border-[#d97757]"
                   />
                 </div>
 
@@ -1252,7 +1252,7 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-1.5 rounded-lg bg-black/5 dark:bg-white/5 text-slate-700 dark:text-slate-300 hover:bg-black/10 dark:hover:bg-white/10 transition-colors font-mono text-xs"
+            className="px-4 py-1.5 rounded-lg bg-black/5 dark:bg-white/5 text-slate-700 dark:text-slate-300 hover:bg-black/10 dark:hover:bg-white/10 transition-colors text-xs"
           >
             Close
           </button>
@@ -1263,7 +1263,7 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
       {feedToUnsubscribe && (
         <div
           id="rss-unsubscribe-confirm-overlay"
-          className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150"
+          className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
           onClick={() => {
             if (!isUnsubscribing) setFeedToUnsubscribe(null);
           }}
@@ -1274,7 +1274,7 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
             aria-modal="true"
             aria-labelledby="rss-unsubscribe-title"
             aria-describedby="rss-unsubscribe-desc"
-            className="relative w-full max-w-md border rounded-2xl shadow-2xl overflow-hidden p-6 space-y-4 animate-in zoom-in-95 duration-150"
+            className="relative w-full max-w-md border rounded-2xl shadow-2xl overflow-hidden p-6 space-y-4"
             style={{
               backgroundColor: 'var(--card-bg)',
               borderColor: 'var(--card-border)',
@@ -1288,7 +1288,7 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
                   <Trash2 className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 id="rss-unsubscribe-title" className="font-newsreader text-lg font-semibold text-slate-900 dark:text-[#f7f6f3]">
+                  <h3 id="rss-unsubscribe-title" className="text-lg font-semibold text-slate-900 dark:text-[#f7f6f3]">
                     Unsubscribe from Feed
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -1318,16 +1318,16 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
                   }}
                 />
                 <div className="min-w-0 flex-1">
-                  <h4 className="font-newsreader text-sm font-semibold text-slate-900 dark:text-[#f7f6f3] truncate">
+                  <h4 className="text-sm font-semibold text-slate-900 dark:text-[#f7f6f3] truncate">
                     {feedToUnsubscribe.title}
                   </h4>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate font-mono mt-0.5">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">
                     {feedToUnsubscribe.siteUrl || feedToUnsubscribe.url}
                   </p>
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2 text-[10px] font-mono pt-1 text-slate-500 dark:text-slate-400">
+              <div className="flex flex-wrap items-center gap-2 text-xs pt-1 text-slate-500 dark:text-slate-400">
                 <span className="px-2 py-0.5 rounded bg-black/5 dark:bg-white/5 font-semibold text-slate-700 dark:text-slate-300">
                   {feedToUnsubscribe.category}
                 </span>
@@ -1366,7 +1366,7 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
                 <span className="block text-xs font-semibold text-slate-800 dark:text-slate-200">
                   Also delete existing articles imported from this feed
                 </span>
-                <span className="block text-[11px] text-slate-500 dark:text-slate-400">
+                <span className="block text-xs text-slate-500 dark:text-slate-400">
                   Removes previously fetched articles from your Unread queue and repository.
                 </span>
               </div>
@@ -1378,7 +1378,7 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
                 type="button"
                 onClick={() => setFeedToUnsubscribe(null)}
                 disabled={isUnsubscribing}
-                className="px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 rounded-xl transition-colors font-mono disabled:opacity-50"
+                className="px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 rounded-xl transition-colors disabled:opacity-50"
               >
                 Keep Feed
               </button>
@@ -1386,7 +1386,7 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
                 type="button"
                 onClick={handleConfirmUnsubscribe}
                 disabled={isUnsubscribing}
-                className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 dark:bg-rose-600 dark:hover:bg-rose-500 rounded-xl shadow-xs transition-colors disabled:opacity-50 font-mono"
+                className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 dark:bg-rose-600 dark:hover:bg-rose-500 rounded-xl shadow-xs transition-colors disabled:opacity-50"
               >
                 {isUnsubscribing ? (
                   <>
