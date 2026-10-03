@@ -234,7 +234,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
   return (
     <div
       id="analytics-modal-backdrop"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-xs"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -258,14 +258,14 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 id="analytics-modal-title" className="font-newsreader text-xl font-semibold tracking-tight">
+                <h2 id="analytics-modal-title" className="text-xl font-semibold tracking-tight">
                   Knowledge Analytics & Usage Insights
                 </h2>
-                <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-medium">
+                <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-medium">
                   Live Telemetry
                 </span>
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
                 Comprehensive distribution metrics across reading velocity, platforms, tags, and topics.
               </p>
             </div>
@@ -284,7 +284,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
         <div className="flex items-center gap-2 px-6 pt-3 border-b border-black/10 dark:border-white/10 shrink-0 bg-black/5 dark:bg-white/5 overflow-x-auto no-scrollbar">
           <button
             onClick={() => setActiveTab('overview')}
-            className={`px-3.5 py-2 text-xs font-medium border-b-2 transition-all flex items-center gap-2 whitespace-nowrap ${
+            className={`px-3.5 py-2 text-sm font-medium border-b-2 transition-all flex items-center gap-2 whitespace-nowrap ${
               activeTab === 'overview'
                 ? 'border-[#d97757] text-[#d97757] dark:text-[#e08264] font-semibold'
                 : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
@@ -296,7 +296,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
 
           <button
             onClick={() => setActiveTab('platforms')}
-            className={`px-3.5 py-2 text-xs font-medium border-b-2 transition-all flex items-center gap-2 whitespace-nowrap ${
+            className={`px-3.5 py-2 text-sm font-medium border-b-2 transition-all flex items-center gap-2 whitespace-nowrap ${
               activeTab === 'platforms'
                 ? 'border-[#d97757] text-[#d97757] dark:text-[#e08264] font-semibold'
                 : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
@@ -308,7 +308,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
 
           <button
             onClick={() => setActiveTab('tags')}
-            className={`px-3.5 py-2 text-xs font-medium border-b-2 transition-all flex items-center gap-2 whitespace-nowrap ${
+            className={`px-3.5 py-2 text-sm font-medium border-b-2 transition-all flex items-center gap-2 whitespace-nowrap ${
               activeTab === 'tags'
                 ? 'border-[#d97757] text-[#d97757] dark:text-[#e08264] font-semibold'
                 : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
@@ -320,7 +320,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
 
           <button
             onClick={() => setActiveTab('reading')}
-            className={`px-3.5 py-2 text-xs font-medium border-b-2 transition-all flex items-center gap-2 whitespace-nowrap ${
+            className={`px-3.5 py-2 text-sm font-medium border-b-2 transition-all flex items-center gap-2 whitespace-nowrap ${
               activeTab === 'reading'
                 ? 'border-[#d97757] text-[#d97757] dark:text-[#e08264] font-semibold'
                 : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
@@ -345,10 +345,10 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                     <span>Total Vault Links</span>
                     <Layers className="w-3.5 h-3.5 opacity-60" />
                   </div>
-                  <div className="font-mono text-2xl font-bold tracking-tight text-slate-900 dark:text-[#f7f6f3]">
+                  <div className="tabular-nums text-2xl font-bold tracking-tight text-slate-900 dark:text-[#f7f6f3]">
                     {analyticsData.total}
                   </div>
-                  <div className="text-[11px] text-slate-400 dark:text-slate-500 flex items-center gap-1">
+                  <div className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1">
                     <span>{analyticsData.favorites} starred</span>
                     <span>•</span>
                     <span>{analyticsData.archived} archived</span>
@@ -360,10 +360,10 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                     <span>Completion Rate</span>
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
                   </div>
-                  <div className="font-mono text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400">
+                  <div className="tabular-nums text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400">
                     {analyticsData.completionRate}%
                   </div>
-                  <div className="text-[11px] text-slate-400 dark:text-slate-500">
+                  <div className="text-xs text-slate-400 dark:text-slate-500">
                     {analyticsData.read} reviewed of {analyticsData.total}
                   </div>
                 </div>
@@ -373,10 +373,10 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                     <span>Est. Reading Time</span>
                     <Clock className="w-3.5 h-3.5 text-amber-500" />
                   </div>
-                  <div className="font-mono text-2xl font-bold tracking-tight text-slate-900 dark:text-[#f7f6f3]">
+                  <div className="tabular-nums text-2xl font-bold tracking-tight text-slate-900 dark:text-[#f7f6f3]">
                     {analyticsData.totalHours > 0 ? `${analyticsData.totalHours}h ` : ''}{analyticsData.remainingMins}m
                   </div>
-                  <div className="text-[11px] text-slate-400 dark:text-slate-500">
+                  <div className="text-xs text-slate-400 dark:text-slate-500">
                     Total consumption backlog
                   </div>
                 </div>
@@ -386,10 +386,10 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                     <span>AI Knowledge Density</span>
                     <Sparkles className="w-3.5 h-3.5 text-[#d97757] dark:text-[#e08264]" />
                   </div>
-                  <div className="font-mono text-2xl font-bold tracking-tight text-[#d97757] dark:text-[#e08264]">
+                  <div className="tabular-nums text-2xl font-bold tracking-tight text-[#d97757] dark:text-[#e08264]">
                     {analyticsData.avgAiScore}<span className="text-sm font-normal text-slate-400">/100</span>
                   </div>
-                  <div className="text-[11px] text-slate-400 dark:text-slate-500">
+                  <div className="text-xs text-slate-400 dark:text-slate-500">
                     Gemini synthesized quality
                   </div>
                 </div>
@@ -402,7 +402,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                     <BookOpen className="w-4 h-4 text-[#d97757] dark:text-[#e08264]" />
                     <h3 className="text-sm font-semibold tracking-tight">Read vs. Unread Ratio</h3>
                   </div>
-                  <span className="text-xs font-mono text-slate-400">
+                  <span className="text-xs text-slate-400">
                     {analyticsData.read} of {analyticsData.total} items completed
                   </span>
                 </div>
@@ -446,7 +446,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                         <div className="w-2 h-2 rounded-full bg-amber-500" />
                         <span>Unread Inbox</span>
                       </div>
-                      <div className="font-mono text-lg font-bold text-slate-900 dark:text-[#f7f6f3] mt-0.5">
+                      <div className="tabular-nums text-lg font-bold text-slate-900 dark:text-[#f7f6f3] mt-0.5">
                         {analyticsData.unread} <span className="text-xs font-normal text-slate-400">({analyticsData.unreadRate}%)</span>
                       </div>
                     </div>
@@ -462,7 +462,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                         <div className="w-2 h-2 rounded-full bg-cyan-500" />
                         <span>In Progress</span>
                       </div>
-                      <div className="font-mono text-lg font-bold text-slate-900 dark:text-[#f7f6f3] mt-0.5">
+                      <div className="tabular-nums text-lg font-bold text-slate-900 dark:text-[#f7f6f3] mt-0.5">
                         {analyticsData.reading} <span className="text-xs font-normal text-slate-400">({analyticsData.readingRate}%)</span>
                       </div>
                     </div>
@@ -478,7 +478,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                         <div className="w-2 h-2 rounded-full bg-emerald-500" />
                         <span>Reviewed & Done</span>
                       </div>
-                      <div className="font-mono text-lg font-bold text-slate-900 dark:text-[#f7f6f3] mt-0.5">
+                      <div className="tabular-nums text-lg font-bold text-slate-900 dark:text-[#f7f6f3] mt-0.5">
                         {analyticsData.read} <span className="text-xs font-normal text-slate-400">({analyticsData.completionRate}%)</span>
                       </div>
                     </div>
@@ -519,7 +519,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                               {meta.icon}
                               <span className="font-medium">{meta.label}</span>
                             </div>
-                            <span className="font-mono text-[11px] text-slate-500">
+                            <span className="text-xs text-slate-500">
                               {p.count} items ({p.percentage}%)
                             </span>
                           </div>
@@ -542,7 +542,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                       <Folder className="w-4 h-4 text-slate-500" />
                       <h3 className="text-sm font-semibold tracking-tight">Category Allocation</h3>
                     </div>
-                    <span className="text-xs text-slate-400 font-mono">
+                    <span className="text-xs text-slate-400">
                       {analyticsData.categoriesSorted.length} categories
                     </span>
                   </div>
@@ -556,7 +556,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                       >
                         <div className="flex items-center justify-between text-xs mb-1">
                           <span className="font-medium truncate">{c.category}</span>
-                          <span className="font-mono text-[11px] text-slate-500">
+                          <span className="text-xs text-slate-500">
                             {c.count} ({c.percentage}%)
                           </span>
                         </div>
@@ -582,11 +582,11 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
               <div className="p-4 rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 flex items-center justify-between">
                 <div>
                   <h3 className="text-sm font-semibold">Distribution by Ingestion Platform</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
                     Click any platform bar to filter the active repository.
                   </p>
                 </div>
-                <span className="font-mono text-xs text-slate-500">
+                <span className="text-xs text-slate-500">
                   Total {analyticsData.total} links
                 </span>
               </div>
@@ -608,15 +608,15 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                           </div>
                           <div>
                             <span className="text-xs font-semibold">{meta.label}</span>
-                            <span className="hidden sm:inline-block font-mono text-[10px] text-slate-400 ml-2">
+                            <span className="hidden sm:inline-block text-xs text-slate-400 ml-2">
                               {item.platform}
                             </span>
                           </div>
                         </div>
 
                         <div className="flex items-center gap-3">
-                          <span className="font-mono text-xs font-bold text-slate-900 dark:text-[#f7f6f3]">
-                            {item.count} <span className="text-[11px] font-normal text-slate-400">({item.percentage}%)</span>
+                          <span className="text-xs font-bold text-slate-900 dark:text-[#f7f6f3]">
+                            {item.count} <span className="text-xs font-normal text-slate-400">({item.percentage}%)</span>
                           </span>
                           <span className="text-xs text-[#d97757] dark:text-[#e08264] opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
                             Filter <ArrowRight className="w-3 h-3" />
@@ -644,11 +644,11 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
               <div className="p-4 rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 flex items-center justify-between">
                 <div>
                   <h3 className="text-sm font-semibold">Most Frequent Repository Tags</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
                     Ranked by density across your saved links and AI auto-generated taxonomies.
                   </p>
                 </div>
-                <span className="font-mono text-xs text-slate-500">
+                <span className="text-xs text-slate-500">
                   {analyticsData.tagsSorted.length} unique tags
                 </span>
               </div>
@@ -668,7 +668,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                       }`}
                     >
                       <span>#{t.tag}</span>
-                      <span className="font-mono text-[10px] opacity-70 px-1 py-0.2 rounded bg-black/5 dark:bg-white/10">
+                      <span className="text-xs opacity-70 px-1 py-0.2 rounded bg-black/5 dark:bg-white/10">
                         {t.count}
                       </span>
                     </button>
@@ -687,15 +687,15 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                   >
                     <div className="flex items-center justify-between text-xs mb-1.5">
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-[10px] text-slate-400 w-4">
+                        <span className="text-xs text-slate-400 w-4">
                           #{idx + 1}
                         </span>
-                        <span className="font-mono font-medium text-slate-800 dark:text-slate-200">
+                        <span className="font-medium text-slate-800 dark:text-slate-200">
                           {t.tag}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-[11px] text-slate-500">
+                        <span className="text-xs text-slate-500">
                           {t.count} bookmarks ({t.percentage}%)
                         </span>
                       </div>
@@ -723,42 +723,42 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                     <Clock className="w-4 h-4 text-amber-500" />
                     <h3 className="text-sm font-semibold">Content Depth & Reading Time Breakdown</h3>
                   </div>
-                  <span className="text-xs font-mono text-slate-400">
+                  <span className="text-xs text-slate-400">
                     Total: {analyticsData.totalHours}h {analyticsData.remainingMins}m
                   </span>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <div className="p-3.5 rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 space-y-1">
-                    <span className="text-[11px] text-slate-400 font-medium">Quick Snippets (&lt;3m)</span>
-                    <div className="font-mono text-xl font-bold text-slate-900 dark:text-[#f7f6f3]">
+                    <span className="text-xs text-slate-400 font-medium">Quick Snippets (&lt;3m)</span>
+                    <div className="tabular-nums text-xl font-bold text-slate-900 dark:text-[#f7f6f3]">
                       {analyticsData.quickReads}
                     </div>
-                    <span className="text-[10px] text-slate-400">Shorts, tweets, quick tips</span>
+                    <span className="text-xs text-slate-400">Shorts, tweets, quick tips</span>
                   </div>
 
                   <div className="p-3.5 rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 space-y-1">
-                    <span className="text-[11px] text-slate-400 font-medium">Standard Reads (3-10m)</span>
-                    <div className="font-mono text-xl font-bold text-slate-900 dark:text-[#f7f6f3]">
+                    <span className="text-xs text-slate-400 font-medium">Standard Reads (3-10m)</span>
+                    <div className="tabular-nums text-xl font-bold text-slate-900 dark:text-[#f7f6f3]">
                       {analyticsData.mediumReads}
                     </div>
-                    <span className="text-[10px] text-slate-400">Articles, tutorials, repos</span>
+                    <span className="text-xs text-slate-400">Articles, tutorials, repos</span>
                   </div>
 
                   <div className="p-3.5 rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 space-y-1">
-                    <span className="text-[11px] text-slate-400 font-medium">Deep Dives (10-30m)</span>
-                    <div className="font-mono text-xl font-bold text-slate-900 dark:text-[#f7f6f3]">
+                    <span className="text-xs text-slate-400 font-medium">Deep Dives (10-30m)</span>
+                    <div className="tabular-nums text-xl font-bold text-slate-900 dark:text-[#f7f6f3]">
                       {analyticsData.deepDives}
                     </div>
-                    <span className="text-[10px] text-slate-400">RFCs, architectural guides</span>
+                    <span className="text-xs text-slate-400">RFCs, architectural guides</span>
                   </div>
 
                   <div className="p-3.5 rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 space-y-1">
-                    <span className="text-[11px] text-slate-400 font-medium">Long Form (30m+)</span>
-                    <div className="font-mono text-xl font-bold text-slate-900 dark:text-[#f7f6f3]">
+                    <span className="text-xs text-slate-400 font-medium">Long Form (30m+)</span>
+                    <div className="tabular-nums text-xl font-bold text-slate-900 dark:text-[#f7f6f3]">
                       {analyticsData.longForm}
                     </div>
-                    <span className="text-[10px] text-slate-400">ArXiv papers, video courses</span>
+                    <span className="text-xs text-slate-400">ArXiv papers, video courses</span>
                   </div>
                 </div>
               </div>
@@ -776,10 +776,10 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                       <Sparkles className="w-4 h-4 text-sky-500" />
                       <div>
                         <div className="font-medium">AI Extraction Coverage</div>
-                        <div className="text-[11px] text-slate-400">Bookmarks enriched with Gemini TL;DR summaries</div>
+                        <div className="text-xs text-slate-400">Bookmarks enriched with Gemini TL;DR summaries</div>
                       </div>
                     </div>
-                    <span className="font-mono font-bold text-emerald-500">100% Active</span>
+                    <span className="font-bold text-emerald-500">100% Active</span>
                   </div>
 
                   <div className="flex items-center justify-between p-3 rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 text-xs">
@@ -787,10 +787,10 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                       <Star className="w-4 h-4 text-amber-500" />
                       <div>
                         <div className="font-medium">Starred Knowledge Ratio</div>
-                        <div className="text-[11px] text-slate-400">High-priority reference bookmarks</div>
+                        <div className="text-xs text-slate-400">High-priority reference bookmarks</div>
                       </div>
                     </div>
-                    <span className="font-mono font-bold text-amber-500">
+                    <span className="font-bold text-amber-500">
                       {analyticsData.total > 0 ? Math.round((analyticsData.favorites / analyticsData.total) * 100) : 0}% ({analyticsData.favorites} items)
                     </span>
                   </div>
@@ -800,10 +800,10 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                       <Archive className="w-4 h-4 text-slate-400" />
                       <div>
                         <div className="font-medium">Archived Reference Items</div>
-                        <div className="text-[11px] text-slate-400">Preserved in long-term archive storage</div>
+                        <div className="text-xs text-slate-400">Preserved in long-term archive storage</div>
                       </div>
                     </div>
-                    <span className="font-mono font-bold text-slate-400">
+                    <span className="font-bold text-slate-400">
                       {analyticsData.archived} items
                     </span>
                   </div>
@@ -818,7 +818,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
         {/* Modal Footer */}
         <div className="flex items-center justify-between px-6 py-3.5 border-t border-black/10 dark:border-white/10 shrink-0 bg-black/5 dark:bg-white/5 text-xs text-slate-500 dark:text-slate-400">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-emerald-500" />
             <span>Synced with live local cache and server repository</span>
           </div>
 

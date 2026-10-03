@@ -112,7 +112,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-xs animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-xs">
       <div
         id="model-orchestrator-modal"
         role="dialog"
@@ -132,15 +132,15 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 id="model-orchestrator-modal-title" className="font-newsreader text-lg font-medium text-slate-900 dark:text-[#f7f6f3]">
+                <h2 id="model-orchestrator-modal-title" className="text-lg font-semibold text-slate-900 dark:text-[#f7f6f3]">
                   Gemini Model Usage & Router
                 </h2>
-                <span className="px-2 py-0.5 text-[10px] font-mono font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-full flex items-center gap-1">
+                <span className="px-2 py-0.5 text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-full flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                   Active
                 </span>
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
                 Model utilization, estimated API cost, and dynamic task assignment
               </p>
             </div>
@@ -148,7 +148,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
 
           <div className="flex items-center gap-2">
             {devMode && (
-              <span className="px-2 py-1 rounded text-[10px] font-mono bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-semibold" title="Development-only simulator tools are enabled">
+              <span className="px-2 py-1 rounded text-xs bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-semibold" title="Development-only simulator tools are enabled">
                 Developer tools
               </span>
             )}
@@ -176,39 +176,39 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 px-6 py-4 border-b border-black/10 dark:border-white/10 bg-black/[0.01] dark:bg-white/[0.01]">
           {aiUsage && (
             <div className="col-span-2 sm:col-span-4 p-3 rounded-xl bg-[#d97757]/10 border border-[#d97757]/20">
-              <div className="flex items-center justify-between text-[11px] font-mono">
-                <span className="uppercase tracking-wider text-slate-500 dark:text-slate-400">AI quota</span>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-500 dark:text-slate-400">AI quota</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200">
                   {aiUsage.used.toLocaleString()} used {aiUsage.limit === null ? '· Unlimited' : `of ${aiUsage.limit.toLocaleString()}`}
                 </span>
               </div>
-              {aiUsage.limit !== null && <div className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">{Math.max(0, aiUsage.remaining ?? 0).toLocaleString()} units remaining{aiUsage.resetAt ? ` · resets ${new Date(aiUsage.resetAt).toLocaleDateString()}` : ''}</div>}
+              {aiUsage.limit !== null && <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">{Math.max(0, aiUsage.remaining ?? 0).toLocaleString()} units remaining{aiUsage.resetAt ? ` · resets ${new Date(aiUsage.resetAt).toLocaleDateString()}` : ''}</div>}
             </div>
           )}
           <div className="p-3 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-black/5 dark:border-white/5">
-            <span className="text-[10px] uppercase font-mono tracking-wider text-slate-400 block mb-0.5">Total AI Calls</span>
-            <span className="text-base font-bold font-mono text-slate-900 dark:text-[#f7f6f3]">
+            <span className="text-xs text-slate-400 block mb-0.5">Total AI Calls</span>
+            <span className="text-base font-bold tabular-nums text-slate-900 dark:text-[#f7f6f3]">
               {stats?.totalRequests || 0}
             </span>
           </div>
 
           <div className="p-3 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-black/5 dark:border-white/5">
-            <span className="text-[10px] uppercase font-mono tracking-wider text-slate-400 block mb-0.5">Est. API Cost</span>
-            <span className="text-base font-bold font-mono text-[#d97757] dark:text-[#e08264]">
+            <span className="text-xs text-slate-400 block mb-0.5">Est. API Cost</span>
+            <span className="text-base font-bold tabular-nums text-[#d97757] dark:text-[#e08264]">
               {formatCost(stats?.totalEstimatedCostUsd || 0)}
             </span>
           </div>
 
           <div className="p-3 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-black/5 dark:border-white/5">
-            <span className="text-[10px] uppercase font-mono tracking-wider text-slate-400 block mb-0.5">Avg Latency</span>
-            <span className="text-base font-bold font-mono text-emerald-600 dark:text-emerald-400">
+            <span className="text-xs text-slate-400 block mb-0.5">Avg Latency</span>
+            <span className="text-base font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
               {stats?.avgLatencyMs || 480} ms
             </span>
           </div>
 
           <div className="p-3 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-black/5 dark:border-white/5">
-            <span className="text-[10px] uppercase font-mono tracking-wider text-slate-400 block mb-0.5">Success Rate</span>
-            <span className="text-base font-bold font-mono text-slate-900 dark:text-[#f7f6f3]">
+            <span className="text-xs text-slate-400 block mb-0.5">Success Rate</span>
+            <span className="text-base font-bold tabular-nums text-slate-900 dark:text-[#f7f6f3]">
               {stats && stats.totalRequests > 0
                 ? Math.round((stats.successCount / stats.totalRequests) * 100)
                 : 100}
@@ -218,7 +218,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex items-center gap-2 px-6 pt-2 border-b border-black/10 dark:border-white/10 bg-black/[0.01] dark:bg-white/[0.01] text-xs">
+        <div className="flex items-center gap-2 px-6 pt-2 border-b border-black/10 dark:border-white/10 bg-black/[0.01] dark:bg-white/[0.01] text-sm">
           <button
             id="orchestrator-tab-models"
             onClick={() => setActiveTab('models')}
@@ -244,7 +244,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
             <Activity className="w-3.5 h-3.5" />
             Live Execution Logs
             {stats && stats.totalRequests > 0 && (
-              <span className="ml-1 px-1.5 py-0.2 bg-black/5 dark:bg-white/10 text-slate-600 dark:text-slate-300 rounded font-mono text-[10px]">
+              <span className="ml-1 px-1.5 py-0.2 bg-black/5 dark:bg-white/10 text-slate-600 dark:text-slate-300 rounded text-xs">
                 {stats.totalRequests}
               </span>
             )}
@@ -275,10 +275,10 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
               {/* Active Model Cards */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-newsreader text-base font-semibold text-slate-900 dark:text-[#f7f6f3]">
+                  <h3 className="text-base font-semibold text-slate-900 dark:text-[#f7f6f3]">
                     Assigned Model Tiers & Spend Breakdown
                   </h3>
-                  <span className="text-[11px] font-mono text-slate-400">
+                  <span className="text-xs text-slate-400">
                     Pricing based on Google GenAI rates
                   </span>
                 </div>
@@ -302,14 +302,14 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
                                 {model.id}
                               </span>
                             </div>
-                            <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-black/5 dark:bg-white/5 text-slate-600 dark:text-slate-400 font-semibold shrink-0">
+                            <span className="text-xs px-2 py-0.5 rounded bg-black/5 dark:bg-white/5 text-slate-600 dark:text-slate-400 font-semibold shrink-0">
                               {model.tier}
                             </span>
                           </div>
 
                           {/* When this model is used */}
                           <div className="p-2.5 rounded-lg bg-white dark:bg-[#18181b] border border-black/5 dark:border-white/5 text-xs text-slate-700 dark:text-slate-300 leading-relaxed mb-2.5">
-                            <div className="text-[10px] font-mono font-semibold uppercase tracking-wider text-[#d97757] dark:text-[#e08264] mb-0.5 flex items-center gap-1">
+                            <div className="text-xs font-semibold text-[#d97757] dark:text-[#e08264] mb-0.5 flex items-center gap-1">
                               <Sparkles className="w-2.5 h-2.5" />
                               <span>When OmniLink Uses This</span>
                             </div>
@@ -318,23 +318,23 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
                         </div>
 
                         {/* Bottom Stats: Calls, Est Cost, Pricing, Latency */}
-                        <div className="grid grid-cols-3 gap-2 pt-2 border-t border-black/5 dark:border-white/5 text-[11px] font-mono">
+                        <div className="grid grid-cols-3 gap-2 pt-2 border-t border-black/5 dark:border-white/5 text-xs">
                           <div>
-                            <span className="text-slate-400 text-[10px] block">Calls</span>
+                            <span className="text-slate-400 text-xs block">Calls</span>
                             <span className="font-semibold text-slate-800 dark:text-slate-200">
-                              {callCount} <span className="text-[10px] text-slate-400 font-normal">({stats.totalRequests > 0 ? pct : 0}%)</span>
+                              {callCount} <span className="text-xs text-slate-400 font-normal">({stats.totalRequests > 0 ? pct : 0}%)</span>
                             </span>
                           </div>
 
                           <div>
-                            <span className="text-slate-400 text-[10px] block">Est. Cost</span>
+                            <span className="text-slate-400 text-xs block">Est. Cost</span>
                             <span className="font-semibold text-[#d97757] dark:text-[#e08264]">
                               {formatCost(model.estimatedCostUsd || 0)}
                             </span>
                           </div>
 
                           <div className="text-right">
-                            <span className="text-slate-400 text-[10px] block">Avg Latency</span>
+                            <span className="text-slate-400 text-xs block">Avg Latency</span>
                             <span className="font-semibold text-slate-700 dark:text-slate-300">
                               ~{model.avgLatencyMs}ms
                             </span>
@@ -352,7 +352,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
                   <span className="text-xs font-semibold text-slate-900 dark:text-[#f7f6f3]">
                     Task Routing Rules & Failover Matrix
                   </span>
-                  <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+                  <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
                     <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
                     Auto Fallback Protection
                   </div>
@@ -364,10 +364,10 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
                       <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                       Quick Metadata & Tags
                     </div>
-                    <div className="col-span-4 font-mono text-emerald-600 dark:text-emerald-400 text-[11px]">
+                    <div className="col-span-4 font-mono text-emerald-600 dark:text-emerald-400 text-xs">
                       gemini-3.1-flash-lite
                     </div>
-                    <div className="col-span-4 font-mono text-[11px] text-slate-400 text-right">
+                    <div className="col-span-4 text-xs text-slate-400 text-right">
                       → flash → latest
                     </div>
                   </div>
@@ -377,10 +377,10 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
                       <span className="w-2 h-2 rounded-full bg-[#d97757]"></span>
                       Single Link Summaries
                     </div>
-                    <div className="col-span-4 font-mono text-[#d97757] dark:text-[#e08264] text-[11px]">
+                    <div className="col-span-4 font-mono text-[#d97757] dark:text-[#e08264] text-xs">
                       gemini-3.7-flash
                     </div>
-                    <div className="col-span-4 font-mono text-[11px] text-slate-400 text-right">
+                    <div className="col-span-4 text-xs text-slate-400 text-right">
                       → latest → lite
                     </div>
                   </div>
@@ -390,10 +390,10 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
                       <span className="w-2 h-2 rounded-full bg-amber-500"></span>
                       Ask Repo AI & Clustering
                     </div>
-                    <div className="col-span-4 font-mono text-amber-600 dark:text-amber-400 text-[11px]">
+                    <div className="col-span-4 font-mono text-amber-600 dark:text-amber-400 text-xs">
                       gemini-3.7-flash (Thinking)
                     </div>
-                    <div className="col-span-4 font-mono text-[11px] text-slate-400 text-right">
+                    <div className="col-span-4 text-xs text-slate-400 text-right">
                       → latest → lite
                     </div>
                   </div>
@@ -403,10 +403,10 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
                       <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                       RSS Batch Feed Ingestion
                     </div>
-                    <div className="col-span-4 font-mono text-emerald-600 dark:text-emerald-400 text-[11px]">
+                    <div className="col-span-4 font-mono text-emerald-600 dark:text-emerald-400 text-xs">
                       gemini-3.1-flash-lite
                     </div>
-                    <div className="col-span-4 font-mono text-[11px] text-slate-400 text-right">
+                    <div className="col-span-4 text-xs text-slate-400 text-right">
                       → flash → latest
                     </div>
                   </div>
@@ -423,7 +423,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
                   <span className="text-xs font-semibold text-slate-900 dark:text-[#f7f6f3]">
                     Live AI Operation Trace
                   </span>
-                  <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+                  <span className="text-xs text-slate-500 dark:text-slate-400">
                     Last {stats?.recentLogs?.length || 0} operations
                   </span>
                 </div>
@@ -441,22 +441,22 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
                           ) : (
                             <AlertTriangle className="w-3.5 h-3.5 text-rose-500 shrink-0" />
                           )}
-                          <span className="font-mono text-[11px] text-slate-800 dark:text-slate-200 truncate">
+                          <span className="font-mono text-xs text-slate-800 dark:text-slate-200 truncate">
                             {log.taskType}
                           </span>
                         </div>
-                        <div className="col-span-4 font-mono text-slate-500 dark:text-slate-400 text-[11px] truncate">
+                        <div className="col-span-4 font-mono text-slate-500 dark:text-slate-400 text-xs truncate">
                           {log.executedModel}
                           {log.thinkingLevel && (
-                            <span className="ml-1 text-[10px] text-amber-500 font-mono">
+                            <span className="ml-1 text-xs text-amber-500">
                               ({log.thinkingLevel})
                             </span>
                           )}
                         </div>
-                        <div className="col-span-2 text-right font-mono text-slate-500 dark:text-slate-400 text-[11px]">
+                        <div className="col-span-2 text-right text-slate-500 dark:text-slate-400 text-xs">
                           {log.latencyMs} ms
                         </div>
-                        <div className="col-span-2 text-right font-mono text-[11px] text-[#d97757] dark:text-[#e08264]">
+                        <div className="col-span-2 text-right text-xs text-[#d97757] dark:text-[#e08264]">
                           {formatCost(log.estimatedCostUsd || 0)}
                         </div>
                       </div>
@@ -465,7 +465,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
                     <div className="py-12 text-center text-xs text-slate-400 space-y-1">
                       <Cpu className="w-6 h-6 mx-auto opacity-40 mb-2" />
                       <p className="font-medium text-slate-600 dark:text-slate-400">No external AI calls logged in this session yet.</p>
-                      <p className="text-slate-400 text-[11px]">Calls made when adding links, asking Ask Repo AI, or syncing RSS feeds will appear here.</p>
+                      <p className="text-slate-400 text-xs">Calls made when adding links, asking Ask Repo AI, or syncing RSS feeds will appear here.</p>
                     </div>
                   )}
                 </div>
@@ -483,13 +483,13 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
               <div className="bg-black/[0.02] dark:bg-white/[0.02] border border-black/10 dark:border-white/10 rounded-xl p-5 space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1 font-mono">
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                       Task Type
                     </label>
                     <select
                       value={testTask}
                       onChange={(e) => setTestTask(e.target.value as ModelTaskType)}
-                      className="w-full bg-white dark:bg-[#18181b] border border-black/10 dark:border-white/10 text-slate-900 dark:text-[#f7f6f3] rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#d97757]"
+                      className="w-full bg-white dark:bg-[#18181b] border border-black/10 dark:border-white/10 text-slate-900 dark:text-[#f7f6f3] rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#d97757]"
                     >
                       <option value="quick_metadata">Quick Metadata / Title Preview</option>
                       <option value="auto_tagging">Smart Auto-Tagging & Suggestions</option>
@@ -500,7 +500,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1 font-mono">
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                       Sample URL
                     </label>
                     <input
@@ -508,13 +508,13 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
                       value={testUrl}
                       onChange={(e) => setTestUrl(e.target.value)}
                       placeholder="https://..."
-                      className="w-full bg-white dark:bg-[#18181b] border border-black/10 dark:border-white/10 text-slate-900 dark:text-[#f7f6f3] rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#d97757] font-mono"
+                      className="w-full bg-white dark:bg-[#18181b] border border-black/10 dark:border-white/10 text-slate-900 dark:text-[#f7f6f3] rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#d97757]"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1 font-mono">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                     Content Excerpt / Prompt Context
                   </label>
                   <textarea
@@ -522,7 +522,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
                     value={testSnippet}
                     onChange={(e) => setTestSnippet(e.target.value)}
                     placeholder="Enter context, code snippets, or user prompt..."
-                    className="w-full bg-white dark:bg-[#18181b] border border-black/10 dark:border-white/10 text-slate-900 dark:text-[#f7f6f3] rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#d97757] font-mono"
+                    className="w-full bg-white dark:bg-[#18181b] border border-black/10 dark:border-white/10 text-slate-900 dark:text-[#f7f6f3] rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#d97757]"
                   />
                 </div>
 
@@ -530,7 +530,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
                   id="orchestrator-eval-btn"
                   onClick={runSimulator}
                   disabled={simulating}
-                  className="w-full py-2 bg-[#d97757] hover:bg-[#c46243] text-white rounded-xl text-xs font-semibold shadow-xs transition-colors flex items-center justify-center gap-2 font-mono"
+                  className="w-full py-2 bg-[#d97757] hover:bg-[#c46243] text-white rounded-xl text-xs font-semibold shadow-xs transition-colors flex items-center justify-center gap-2"
                 >
                   {simulating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
                   Evaluate Model Selection
@@ -538,29 +538,29 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
               </div>
 
               {simulatedDecision && (
-                <div className="bg-black/[0.03] dark:bg-white/[0.03] border border-[#d97757]/30 rounded-xl p-5 space-y-4 animate-in fade-in duration-200">
+                <div className="bg-black/[0.03] dark:bg-white/[0.03] border border-[#d97757]/30 rounded-xl p-5 space-y-4">
                   <div className="flex items-center justify-between border-b border-black/10 dark:border-white/10 pb-3">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">Selected Model:</span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400">Selected Model:</span>
                       <span className="px-2.5 py-0.5 bg-[#d97757]/10 border border-[#d97757]/20 text-[#d97757] dark:text-[#e08264] rounded-md font-mono text-xs font-semibold">
                         {simulatedDecision.selectedModel}
                       </span>
                       {simulatedDecision.thinkingLevel && (
-                        <span className="px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 rounded text-[10px] font-mono font-semibold">
+                        <span className="px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 rounded text-xs font-semibold">
                           Thinking: {simulatedDecision.thinkingLevel}
                         </span>
                       )}
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">Complexity Score:</span>
-                      <span className="px-2 py-0.5 bg-black/10 dark:bg-white/10 text-slate-800 dark:text-slate-200 font-mono text-xs font-medium rounded">
+                      <span className="text-xs text-slate-500 dark:text-slate-400">Complexity Score:</span>
+                      <span className="px-2 py-0.5 bg-black/10 dark:bg-white/10 text-slate-800 dark:text-slate-200 text-xs font-medium rounded">
                         {simulatedDecision.complexityScore} / 100 ({simulatedDecision.complexityTier})
                       </span>
                     </div>
                   </div>
 
                   <div>
-                    <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 block mb-1 font-mono">
+                    <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 block mb-1">
                       Routing Rationale:
                     </span>
                     <p className="text-xs text-slate-600 dark:text-slate-400 bg-white dark:bg-[#18181b] p-3 rounded-lg border border-black/10 dark:border-white/10 leading-relaxed">
@@ -582,7 +582,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
           <button
             id="orchestrator-done-btn"
             onClick={onClose}
-            className="px-4 py-1.5 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-slate-800 dark:text-slate-200 rounded-xl font-mono font-medium transition-colors"
+            className="px-4 py-1.5 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-slate-800 dark:text-slate-200 rounded-xl font-medium transition-colors"
           >
             Done
           </button>
