@@ -7,8 +7,6 @@ import {
   X,
   LayoutGrid,
   List,
-  Columns3,
-  Network,
   Keyboard,
   FileDown,
   Rss,
@@ -187,30 +185,6 @@ export const Navbar: React.FC<HeaderProps> = ({
         >
           <List className="w-3.5 h-3.5" />
           <span>List</span>
-        </button>
-        <button
-          onClick={() => onViewChange('kanban')}
-          title="Kanban Triage Lanes (3)"
-          className={`px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-all ${
-            currentView === 'kanban'
-              ? 'bg-white dark:bg-[#1f1e1c] text-slate-900 dark:text-[#f7f6f3] shadow-xs font-semibold'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-          }`}
-        >
-          <Columns3 className="w-3.5 h-3.5" />
-          <span>Kanban</span>
-        </button>
-        <button
-          onClick={() => onViewChange('cluster')}
-          title="AI Vector Clusters (4)"
-          className={`px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-all ${
-            currentView === 'cluster'
-              ? 'bg-white dark:bg-[#1f1e1c] text-slate-900 dark:text-[#f7f6f3] shadow-xs font-semibold'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-          }`}
-        >
-          <Network className="w-3.5 h-3.5" />
-          <span>Clusters</span>
         </button>
       </div>
 

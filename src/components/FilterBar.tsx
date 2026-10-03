@@ -1,12 +1,9 @@
 import React from 'react';
 import {
-  Star,
-  Archive,
   ArrowUpDown,
   Tag,
   Folder,
   X,
-  CheckCircle2,
   Check,
 } from 'lucide-react';
 import { FilterState } from '../types';
@@ -102,53 +99,6 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             </button>
           </div>
         )}
-        {/* Status Segmented Pills */}
-        <div className="flex items-center p-0.5 rounded-lg bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5">
-          <button
-            onClick={() => onFilterChange({ readStatus: 'all' })}
-            className={`px-2.5 py-1.5 rounded-md text-xs font-medium transition-all ${
-              filters.readStatus === 'all'
-                ? 'bg-white dark:bg-[#1b1b1f] shadow-xs text-slate-900 dark:text-slate-100 font-semibold'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-            }`}
-          >
-            All
-          </button>
-          <button
-            onClick={() => onFilterChange({ readStatus: 'unread' })}
-            className={`px-2.5 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ${
-              filters.readStatus === 'unread'
-                ? 'bg-white dark:bg-[#1b1b1f] shadow-xs text-amber-700 dark:text-amber-400 font-semibold'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-            }`}
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-            <span>Unread</span>
-          </button>
-          <button
-            onClick={() => onFilterChange({ readStatus: 'reading' })}
-            className={`px-2.5 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ${
-              filters.readStatus === 'reading'
-                ? 'bg-white dark:bg-[#1b1b1f] shadow-xs text-cyan-700 dark:text-cyan-400 font-semibold'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-            }`}
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-cyan-500" />
-            <span>Reading</span>
-          </button>
-          <button
-            onClick={() => onFilterChange({ readStatus: 'read' })}
-            className={`px-2.5 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ${
-              filters.readStatus === 'read'
-                ? 'bg-white dark:bg-[#1b1b1f] shadow-xs text-emerald-700 dark:text-emerald-400 font-semibold'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-            }`}
-          >
-            <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-            <span>Reviewed</span>
-          </button>
-        </div>
-
         {/* Category Dropdown */}
         <div className="relative">
           <select
@@ -186,40 +136,6 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             <Tag className="w-3 h-3 absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
           </div>
         )}
-
-        {/* Starred Toggle */}
-        <button
-          onClick={() => onFilterChange({ onlyFavorites: !filters.onlyFavorites })}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all shadow-xs ${
-            filters.onlyFavorites
-              ? 'bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-400 font-semibold'
-              : 'bg-white dark:bg-[#18181c] border-black/10 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white'
-          }`}
-          title="Filter by starred links"
-          aria-label="Filter by starred links"
-        >
-          <Star
-            className={`w-3.5 h-3.5 ${
-              filters.onlyFavorites ? 'fill-amber-400 text-amber-400' : 'text-slate-400'
-            }`}
-          />
-          <span>Starred</span>
-        </button>
-
-        {/* Archived Toggle */}
-        <button
-          onClick={() => onFilterChange({ includeArchived: !filters.includeArchived })}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all shadow-xs ${
-            filters.includeArchived
-              ? 'bg-black/10 dark:bg-white/10 border-black/20 dark:border-white/20 text-slate-900 dark:text-slate-100 font-semibold'
-              : 'bg-white dark:bg-[#18181c] border-black/10 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white'
-          }`}
-          title="View archived links"
-          aria-label="View archived links"
-        >
-          <Archive className="w-3.5 h-3.5 text-slate-400" />
-          <span>Archived</span>
-        </button>
 
         {/* Active Filters Clear Button */}
         {isFiltered && (
