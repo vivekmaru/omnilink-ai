@@ -49,7 +49,9 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
   const [copiedSnippetIdx, setCopiedSnippetIdx] = useState<number | null>(null);
 
   // Reader Mode state
-  const [activeTab, setActiveTab] = useState<'insights' | 'reader'>('insights');
+  const [activeTab, setActiveTab] = useState<'insights' | 'reader'>(
+    link.readerSnapshot ? 'reader' : 'insights'
+  );
   const [readerLoading, setReaderLoading] = useState(false);
   const [copiedReaderMd, setCopiedReaderMd] = useState(false);
 
@@ -59,6 +61,13 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
   const [aiLoading, setAiLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
+
+  let linkHost = link.url;
+  try {
+    linkHost = new URL(link.url).hostname.replace(/^www\./, '');
+  } catch {
+    /* keep the raw url */
+  }
 
   const handleCopyUrl = () => {
     navigator.clipboard.writeText(link.url);
@@ -155,17 +164,12 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
       >
         {/* Modal Top Header: Platform & Actions */}
         <div className="flex items-center justify-between gap-3 px-5 sm:px-6 py-3 border-b border-black/10 dark:border-white/10 shrink-0 bg-black/[0.01] dark:bg-white/[0.01]">
-          {/* Left: Platform Badge & Feed Info */}
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-[#d97757]/10 text-[#d97757] dark:text-[#e08264] border border-[#d97757]/20 shrink-0">
-              {link.platform.replace('_', ' ')}
+          {/* Left: where this came from */}
+          <div className="flex items-center gap-2 min-w-0 text-xs text-slate-500 dark:text-slate-400">
+            {link.feedTitle || link.isRssFeedItem ? <Rss className="w-3.5 h-3.5 shrink-0" /> : null}
+            <span className="truncate capitalize">
+              {link.feedTitle || link.platform.replace('_', ' ')}
             </span>
-            {link.feedTitle && (
-              <span className="hidden sm:inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 truncate max-w-[180px]">
-                <Rss className="w-2.5 h-2.5 shrink-0" />
-                <span className="truncate">{link.feedTitle}</span>
-              </span>
-            )}
           </div>
 
           {/* Right: Actions & Fixed Top-Right Close Button */}
@@ -174,10 +178,10 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
               type="button"
               onClick={handleCopyUrl}
               title="Copy URL"
-              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full text-xs bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+              aria-label="Copy URL"
+              className="p-2 rounded-full text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer"
             >
-              {copiedUrl ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-              <span className="hidden sm:inline">{copiedUrl ? 'Copied' : 'Copy URL'}</span>
+              {copiedUrl ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
             </button>
 
             {onOpenExportModal && (
@@ -185,10 +189,10 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
                 type="button"
                 onClick={() => onOpenExportModal(link)}
                 title="Export as Markdown for Obsidian or Notion"
-                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full text-xs bg-[#d97757]/10 text-[#d97757] dark:text-[#e08264] hover:bg-[#d97757]/20 transition-colors border border-[#d97757]/30 cursor-pointer"
+                aria-label="Export as Markdown"
+                className="p-2 rounded-full text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer"
               >
-                <FileDown className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Export .md</span>
+                <FileDown className="w-4 h-4" />
               </button>
             )}
 
@@ -220,18 +224,6 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
           <div className="flex items-center p-0.5 rounded-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5">
             <button
               type="button"
-              onClick={() => setActiveTab('insights')}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer ${
-                activeTab === 'insights'
-                  ? 'bg-white dark:bg-[#1f1e1c] text-[#d97757] dark:text-[#e08264] shadow-xs font-semibold'
-                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>AI Insights & Meta</span>
-            </button>
-            <button
-              type="button"
               onClick={() => setActiveTab('reader')}
               className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer ${
                 activeTab === 'reader'
@@ -240,19 +232,25 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
               }`}
             >
               <BookOpen className="w-3.5 h-3.5" />
-              <span>Reader Mode</span>
+              <span>Article</span>
               {link.readerSnapshot && (
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" title="Offline snapshot available" />
               )}
             </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('insights')}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer ${
+                activeTab === 'insights'
+                  ? 'bg-white dark:bg-[#1f1e1c] text-[#d97757] dark:text-[#e08264] shadow-xs font-semibold'
+                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Summary &amp; details</span>
+            </button>
           </div>
 
-          {link.readerSnapshot && (
-            <div className="hidden sm:flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              <span>{link.readerSnapshot.wordCount} words • {link.readerSnapshot.readingTimeMinutes} min read</span>
-            </div>
-          )}
         </div>
 
         {/* Scrollable Content */}
@@ -262,19 +260,13 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
             <h2 id="link-detail-modal-title" className="font-newsreader font-medium text-2xl sm:text-3xl text-slate-900 dark:text-[#f7f6f3] leading-tight">
               {link.title}
             </h2>
-            <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-slate-500 dark:text-slate-400">
-              {(link.isRssFeedItem || link.feedTitle) && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-500 border border-amber-500/30 font-medium">
-                  <Rss className="w-3 h-3" />
-                  <span>RSS Feed: {link.feedTitle || 'Subscribed Feed'}</span>
-                </span>
-              )}
-              {link.author && <span>Curated by: <strong className="text-slate-900 dark:text-[#f7f6f3]">{link.author}</strong></span>}
-              <span>•</span>
-              <span className="truncate max-w-sm">{link.url}</span>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2 text-sm text-slate-500 dark:text-slate-400">
+              {link.author && <span>By {link.author}</span>}
+              {link.author && <span aria-hidden="true">·</span>}
+              <span className="truncate max-w-sm">{linkHost}</span>
               {link.readingTimeMinutes && (
                 <>
-                  <span>•</span>
+                  <span aria-hidden="true">·</span>
                   <span>{link.readingTimeMinutes} min read</span>
                 </>
               )}
