@@ -3,7 +3,7 @@
 OmniLink has two deliberately separate runtime modes.
 
 - `local` is the default: loopback-only, login-free, one synthetic `local-default` workspace, and unlimited local AI usage.
-- `multi-user` enables managed OIDC login, server-side sessions, workspace-scoped service tokens, tenant-filtered persistence, and quota admission. Startup fails before binding if its release configuration or provider discovery is incomplete.
+- `multi-user` enables login (managed OIDC or the built-in password provider), server-side sessions, workspace-scoped service tokens, tenant-filtered persistence, and quota admission. Startup fails before binding if its release configuration or provider discovery is incomplete.
 
 ## Multi-user environment contract
 
@@ -25,6 +25,27 @@ OMNILINK_AI_QUOTA_MONTHLY_UNITS=1000000
 `OMNILINK_OIDC_CLIENT_SECRET` is optional for providers that register OmniLink as a confidential client. Set `OMNILINK_OIDC_TOKEN_ENDPOINT_AUTH_METHOD` to `client_secret_post` or `client_secret_basic` to match that registration; public clients use `none`. `OMNILINK_OIDC_DISCOVERY_URL` can replace `OMNILINK_OIDC_ISSUER` when a provider uses a nonstandard discovery URL; the discovered issuer is still used for exact ID-token validation.
 
 The provider application must allow exactly the configured callback URI and use Authorization Code flow. OmniLink generates PKCE S256, state, and nonce values for every login. The application origin must be HTTPS in staging/production so the `Secure`, `HttpOnly`, `SameSite=Lax` session cookie can be stored.
+
+## Built-in password login
+
+Self-hosters without an identity provider can use OmniLink's own email + password login instead of OIDC. It uses the same server-side sessions, personal workspaces, service tokens, and quota admission as OIDC mode; none of the `OMNILINK_OIDC_*` values are needed.
+
+```dotenv
+OMNILINK_MODE=multi-user
+OMNILINK_AUTH_PROVIDER=password
+OMNILINK_HOST=0.0.0.0
+OMNILINK_APP_ORIGIN=https://links.example.com
+OMNILINK_SESSION_SECRET=<at-least-32-random-characters>
+OMNILINK_AI_QUOTA_MONTHLY_UNITS=1000000
+# first-user (default): only the first account can sign up, then sign-up closes.
+# open: anyone who can reach the server can create an account.
+# disabled: no new accounts.
+OMNILINK_PASSWORD_SIGNUP=first-user
+```
+
+On a fresh install the sign-in page offers "Create the owner account"; after that it shows a normal sign-in form. Passwords need at least 10 characters and are stored as salted scrypt hashes in `password_credentials`. Sign-in and sign-up require a same-origin `Origin` header, return the same error for unknown emails and wrong passwords, and are rate limited per client address and per account (in memory, per process). Attempts are counted before the password hash is checked, so a burst of concurrent requests cannot exceed the limits.
+
+Behind a reverse proxy, set `OMNILINK_TRUST_PROXY` so the client address comes from `X-Forwarded-For` instead of the proxy's own address. Without it, every visitor shares one rate-limit bucket. Use the number of proxy hops (`1` for a single Caddy or nginx in front of OmniLink) or the proxy's address or subnet (`loopback`, `10.0.0.0/8`). `true` is rejected because it would trust addresses any client can forge.
 
 ## Staging release gate
 

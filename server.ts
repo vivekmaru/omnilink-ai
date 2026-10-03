@@ -39,6 +39,10 @@ const app = express();
 const runtimeConfig = loadRuntimeConfig();
 const authStackPromise = createAuthStack(runtimeConfig, omniDb);
 
+// Behind a reverse proxy, req.ip must come from X-Forwarded-For so sign-in rate
+// limits apply per client instead of to the proxy's own address.
+app.set('trust proxy', runtimeConfig.trustProxy);
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(attachEndpointPolicy);

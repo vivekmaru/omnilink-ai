@@ -19,12 +19,31 @@ import {
 } from './oidc';
 import { generateOidcNonce, generateOAuthState, generatePkcePair, verifyOAuthState } from './pkce';
 import { SERVICE_TOKEN_SCOPES, type ServiceTokenScope } from './credentials';
+import type { OidcAuthEnvironment, PasswordAuthEnvironment } from './config';
+import {
+  AttemptLimiter,
+  PASSWORD_MAX_LENGTH,
+  PasswordPolicyError,
+  assertAcceptablePassword,
+  hashPassword,
+  normalizeDisplayName,
+  normalizeEmail,
+  verifyPassword,
+} from './password';
 
 const SESSION_COOKIE = '__Host-omnilink_session';
 const OIDC_STATE_COOKIE = '__Host-omnilink_oidc_state';
 const SESSION_TTL_MS = 14 * 24 * 60 * 60 * 1000;
 const OIDC_TRANSACTION_TTL_MS = 10 * 60 * 1000;
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+const PASSWORD_ATTEMPT_WINDOW_MS = 15 * 60 * 1000;
+const PUBLIC_AUTH_PATHS = new Set(['/auth/login', '/auth/callback', '/auth/providers', '/auth/password/login', '/auth/password/signup']);
+
+/** What the sign-in page needs to know before a session exists. */
+export type AuthProviderInfo =
+  | { provider: 'local' }
+  | { provider: 'oidc' }
+  | { provider: 'password'; signupOpen: boolean; needsSetup: boolean };
 
 export interface AuthStack {
   middleware: RequestHandler[];
@@ -35,6 +54,7 @@ export interface AuthStack {
 export async function createAuthStack(runtime: RuntimeConfig, db: OmniLinkDB): Promise<AuthStack> {
   const router = express.Router();
   if (runtime.mode === 'local') {
+    router.get('/auth/providers', (_req, res) => res.json({ provider: 'local' } satisfies AuthProviderInfo));
     router.get(['/auth/session', '/api/auth/session'], (_req, res) => {
       res.json({ authenticated: true, context: LOCAL_REQUEST_CONTEXT });
     });
@@ -49,20 +69,12 @@ export async function createAuthStack(runtime: RuntimeConfig, db: OmniLinkDB): P
   }
 
   if (!runtime.auth || !runtime.appOrigin) throw new Error('Multi-user authentication configuration is unavailable.');
-  const metadata = runtime.auth.issuer
-    ? await discoverOidcProvider(runtime.auth.issuer)
-    : await discoverOidcProviderFromUrl(runtime.auth.discoveryUrl!);
-  const verifier = createOidcVerifier({
-    issuer: metadata.issuer,
-    audience: runtime.auth.audience,
-    clientId: runtime.auth.clientId,
-    jwksUri: runtime.auth.jwksUri || metadata.jwksUri,
-    authorizationEndpoint: metadata.authorizationEndpoint,
-    tokenEndpoint: metadata.tokenEndpoint,
-    redirectUri: runtime.auth.redirectUri,
-  });
-
-  registerBrowserRoutes(router, runtime, db, metadata, verifier);
+  if (runtime.auth.provider === 'password') {
+    registerPasswordRoutes(router, runtime.auth, runtime.appOrigin, db);
+  } else {
+    await registerOidcRoutes(router, runtime.auth, runtime.appOrigin, db);
+  }
+  registerSessionRoutes(router, db);
   registerTokenRoutes(router, db);
 
   return {
@@ -162,11 +174,23 @@ function createCorsMiddleware(appOrigin: string): RequestHandler {
   };
 }
 
-function registerBrowserRoutes(router: Router, runtime: RuntimeConfig, db: OmniLinkDB, metadata: OidcProviderMetadata, verifier: OidcVerifier): void {
-  const config = runtime.auth!;
+async function registerOidcRoutes(router: Router, config: OidcAuthEnvironment, appOrigin: string, db: OmniLinkDB): Promise<void> {
+  const metadata: OidcProviderMetadata = config.issuer
+    ? await discoverOidcProvider(config.issuer)
+    : await discoverOidcProviderFromUrl(config.discoveryUrl!);
+  const verifier: OidcVerifier = createOidcVerifier({
+    issuer: metadata.issuer,
+    audience: config.audience,
+    clientId: config.clientId,
+    jwksUri: config.jwksUri || metadata.jwksUri,
+    authorizationEndpoint: metadata.authorizationEndpoint,
+    tokenEndpoint: metadata.tokenEndpoint,
+    redirectUri: config.redirectUri,
+  });
   const redirectUri = config.redirectUri;
   if (!redirectUri) throw new Error('Multi-user mode requires OMNILINK_OIDC_REDIRECT_URI.');
 
+  router.get('/auth/providers', (_req, res) => res.json({ provider: 'oidc' } satisfies AuthProviderInfo));
   router.get('/auth/login', (req, res) => {
     const state = generateOAuthState();
     const nonce = generateOidcNonce();
@@ -242,12 +266,135 @@ function registerBrowserRoutes(router: Router, runtime: RuntimeConfig, db: OmniL
         sessionCookie(created.sessionId, SESSION_TTL_MS),
         opaqueCookie(OIDC_STATE_COOKIE, '', 0),
       ]);
-      res.redirect(302, runtime.appOrigin!);
+      res.redirect(302, appOrigin);
     } catch (error) {
       next(error);
     }
   });
 
+}
+
+/**
+ * Built-in email + password provider. Successful sign-up or sign-in issues the
+ * same opaque server-side session cookie as the OIDC callback.
+ */
+export function registerPasswordRoutes(router: Router, config: PasswordAuthEnvironment, appOrigin: string, db: OmniLinkDB): void {
+  // Failures are counted per client address and per account so neither a
+  // single client nor a distributed guesser can retry one email indefinitely.
+  const clientFailures = new AttemptLimiter(30, PASSWORD_ATTEMPT_WINDOW_MS);
+  const accountFailures = new AttemptLimiter(10, PASSWORD_ATTEMPT_WINDOW_MS);
+  const signupAttempts = new AttemptLimiter(10, PASSWORD_ATTEMPT_WINDOW_MS);
+  // Verified against when the email is unknown so response time does not
+  // reveal which accounts exist.
+  const decoyHash = hashPassword(`decoy-${Date.now()}-${Math.random()}`);
+
+  const signupOpen = () => config.signup === 'open' || (config.signup === 'first-user' && db.countPasswordUsers() === 0);
+
+  router.get('/auth/providers', (_req, res) => {
+    const needsSetup = db.countPasswordUsers() === 0;
+    res.json({ provider: 'password', signupOpen: signupOpen(), needsSetup } satisfies AuthProviderInfo);
+  });
+
+  router.post('/auth/password/login', async (req, res, next) => {
+    try {
+      // Public endpoints skip the session CSRF check, so enforce origin here
+      // to stop a foreign page from logging the browser into another account.
+      if (!isSameOrigin(req, appOrigin)) return forbiddenOrigin(res);
+      const email = normalizeEmail(req.body?.email);
+      const password = req.body?.password;
+      const clientKey = clientAddress(req);
+      if (clientFailures.isBlocked(clientKey) || (email && accountFailures.isBlocked(email))) return tooManyAttempts(res);
+      // Reserve the attempt before the expensive scrypt check so concurrent
+      // requests cannot all pass isBlocked() and queue unbounded hashing work.
+      clientFailures.record(clientKey);
+      if (!email || typeof password !== 'string' || password.length === 0 || password.length > PASSWORD_MAX_LENGTH) {
+        return invalidCredentials(res);
+      }
+      accountFailures.record(email);
+      const credential = db.getPasswordCredential(email);
+      const valid = await verifyPassword(password, credential?.passwordHash ?? await decoyHash);
+      if (!credential || !valid) return invalidCredentials(res);
+      clientFailures.release(clientKey);
+      accountFailures.reset(email);
+      startSession(res, db, credential.userId, credential.workspaceId);
+      res.json({ authenticated: true });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.post('/auth/password/signup', async (req, res, next) => {
+    try {
+      if (!isSameOrigin(req, appOrigin)) return forbiddenOrigin(res);
+      const clientKey = clientAddress(req);
+      if (signupAttempts.isBlocked(clientKey)) return tooManyAttempts(res);
+      signupAttempts.record(clientKey);
+      if (!signupOpen()) {
+        res.status(403).json({ error: 'Sign-up is closed on this server.' });
+        return;
+      }
+      const email = normalizeEmail(req.body?.email);
+      if (!email) {
+        res.status(400).json({ error: 'Enter a valid email address.' });
+        return;
+      }
+      const password = req.body?.password;
+      try {
+        assertAcceptablePassword(password, email);
+      } catch (error) {
+        if (error instanceof PasswordPolicyError) {
+          res.status(400).json({ error: error.message });
+          return;
+        }
+        throw error;
+      }
+      const passwordHash = await hashPassword(password);
+      const result = db.createPasswordUser({
+        email,
+        name: normalizeDisplayName(req.body?.name),
+        passwordHash,
+        firstUserOnly: config.signup === 'first-user',
+      });
+      if ('reason' in result) {
+        // The first-user race is reported like any closed sign-up.
+        if (result.reason === 'signup-closed') res.status(403).json({ error: 'Sign-up is closed on this server.' });
+        else res.status(409).json({ error: 'An account with this email already exists.' });
+        return;
+      }
+      startSession(res, db, result.user.id, result.membership.workspaceId);
+      res.status(201).json({ authenticated: true });
+    } catch (error) {
+      next(error);
+    }
+  });
+}
+
+function startSession(res: Response, db: OmniLinkDB, userId: string, workspaceId: string): void {
+  const created = db.createSession({ userId, workspaceId, expiresAt: new Date(Date.now() + SESSION_TTL_MS).toISOString() });
+  res.setHeader('Set-Cookie', sessionCookie(created.sessionId, SESSION_TTL_MS));
+}
+
+function isSameOrigin(req: Request, appOrigin: string): boolean {
+  return (req.get('origin') || refererOrigin(req.get('referer'))) === appOrigin;
+}
+
+function clientAddress(req: Request): string {
+  return req.ip || req.socket?.remoteAddress || 'unknown';
+}
+
+function forbiddenOrigin(res: Response): void {
+  res.status(403).json({ error: 'Cross-site request rejected.' });
+}
+
+function invalidCredentials(res: Response): void {
+  res.status(401).json({ error: 'Incorrect email or password.' });
+}
+
+function tooManyAttempts(res: Response): void {
+  res.status(429).json({ error: 'Too many attempts. Wait a few minutes and try again.' });
+}
+
+function registerSessionRoutes(router: Router, db: OmniLinkDB): void {
   const sessionResponse = (req: Request, res: Response) => res.json({ authenticated: true, context: req.securityContext });
   router.get('/auth/session', sessionResponse);
   router.get('/api/auth/session', sessionResponse);
@@ -336,7 +483,7 @@ export function parseCookies(header: string | undefined): Record<string, string>
 }
 
 function isPublicAuthPath(path: string): boolean {
-  return path === '/auth/login' || path === '/auth/callback';
+  return PUBLIC_AUTH_PATHS.has(path);
 }
 
 function refererOrigin(value: string | undefined): string | null {

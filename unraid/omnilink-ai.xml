@@ -40,6 +40,8 @@
   <Config Name="Application Origin" Target="OMNILINK_APP_ORIGIN" Default="" Mode="" Description="Exact HTTPS browser origin, for example https://omnilink.example.com" Type="Variable" Display="advanced" Required="false" Mask="false"/>
 
   <!-- Managed OIDC configuration -->
+  <Config Name="Auth Provider" Target="OMNILINK_AUTH_PROVIDER" Default="oidc" Mode="" Description="Multi-user login: oidc for an external identity provider, or password for built-in email and password accounts" Type="Variable" Display="advanced" Required="false" Mask="false">oidc</Config>
+  <Config Name="Password Sign-up" Target="OMNILINK_PASSWORD_SIGNUP" Default="first-user" Mode="" Description="Password provider only: first-user (only the owner can sign up), open, or disabled" Type="Variable" Display="advanced" Required="false" Mask="false">first-user</Config>
   <Config Name="OIDC Issuer" Target="OMNILINK_OIDC_ISSUER" Default="" Mode="" Description="OIDC issuer URL, for example https://accounts.google.com" Type="Variable" Display="advanced" Required="false" Mask="false"/>
   <Config Name="OIDC Discovery URL" Target="OMNILINK_OIDC_DISCOVERY_URL" Default="" Mode="" Description="Optional OIDC discovery URL when it differs from the issuer" Type="Variable" Display="advanced" Required="false" Mask="false"/>
   <Config Name="OIDC Client ID" Target="OMNILINK_OIDC_CLIENT_ID" Default="" Mode="" Description="OIDC application client ID" Type="Variable" Display="advanced" Required="false" Mask="false"/>

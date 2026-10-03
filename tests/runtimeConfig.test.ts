@@ -37,7 +37,7 @@ describe('runtime configuration', () => {
       OMNILINK_AI_QUOTA_MONTHLY_UNITS: '100000',
     });
     expect(config).toMatchObject({ mode: 'multi-user', host: '0.0.0.0', appOrigin: 'https://app.example.test' });
-    expect(config.auth?.clientId).toBe('omnilink');
+    expect(config.auth).toMatchObject({ provider: 'oidc', clientId: 'omnilink' });
   });
 
   it('requires HTTPS for non-loopback multi-user application origins', () => {

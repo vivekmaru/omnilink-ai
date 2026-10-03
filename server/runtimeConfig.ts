@@ -11,6 +11,8 @@ export interface RuntimeConfig {
   auth: MultiUserAuthEnvironment | null;
   appOrigin: string | null;
   quotaMonthlyUnits: number | null;
+  /** Express `trust proxy` value; false unless OMNILINK_TRUST_PROXY names the proxy hops to trust. */
+  trustProxy: boolean | number | string;
 }
 
 export interface RuntimeConfigEnv {
@@ -23,6 +25,9 @@ export interface RuntimeConfigEnv {
   OMNILINK_UNSAFE_ALLOW_REMOTE_NO_AUTH?: string;
   OMNILINK_APP_ORIGIN?: string;
   OMNILINK_AI_QUOTA_MONTHLY_UNITS?: string;
+  OMNILINK_AUTH_PROVIDER?: string;
+  OMNILINK_PASSWORD_SIGNUP?: string;
+  OMNILINK_TRUST_PROXY?: string;
   OMNILINK_OIDC_ISSUER?: string;
   OMNILINK_OIDC_DISCOVERY_URL?: string;
   OMNILINK_OIDC_AUDIENCE?: string;
@@ -74,12 +79,14 @@ export function loadRuntimeConfig(env: RuntimeConfigEnv = process.env): RuntimeC
   if (!isLoopbackHost && mode !== 'multi-user' && !unsafeAllowRemoteNoAuth) {
     throw new Error(
       `Refusing remote bind "${host}" without authentication. ` +
-        'Set OMNILINK_MODE=multi-user with the complete OIDC configuration, or set ' +
+        'Set OMNILINK_MODE=multi-user with a complete OIDC or password authentication configuration, or set ' +
         'OMNILINK_UNSAFE_ALLOW_REMOTE_NO_AUTH=true for temporary development testing.',
     );
   }
 
-  return { mode, host, port, unsafeAllowRemoteNoAuth, isLoopbackHost, auth, appOrigin, quotaMonthlyUnits };
+  const trustProxy = parseTrustProxy(env.OMNILINK_TRUST_PROXY);
+
+  return { mode, host, port, unsafeAllowRemoteNoAuth, isLoopbackHost, auth, appOrigin, quotaMonthlyUnits, trustProxy };
 }
 
 export function describeUnsafeRemoteWarning(config: RuntimeConfig): string | null {
@@ -106,4 +113,19 @@ function parsePositiveNumber(value: string | undefined, name: string): number {
   const parsed = Number(value);
   if (!Number.isFinite(parsed) || parsed <= 0) throw new Error(`Multi-user mode requires a positive ${name}.`);
   return parsed;
+}
+
+/**
+ * Accept the Express `trust proxy` forms that cannot trust arbitrary clients by
+ * accident: a hop count, or addresses/subnets/presets such as `loopback`.
+ * `true` is rejected because it trusts any X-Forwarded-For value.
+ */
+function parseTrustProxy(value: string | undefined): boolean | number | string {
+  const trimmed = value?.trim();
+  if (!trimmed || trimmed.toLowerCase() === 'false') return false;
+  if (trimmed.toLowerCase() === 'true') {
+    throw new Error('OMNILINK_TRUST_PROXY=true would trust spoofed client addresses. Use a hop count (for example 1) or the proxy address, such as loopback.');
+  }
+  if (/^\d+$/.test(trimmed)) return Number(trimmed);
+  return trimmed;
 }
