@@ -80,7 +80,7 @@ export const LinkListView: React.FC<LinkListViewProps> = ({
     >
       <div className="overflow-x-auto">
         <table className="w-full text-left text-xs">
-          <thead className="bg-black/[0.02] dark:bg-white/[0.02] border-b border-slate-200 dark:border-white/10 font-mono font-semibold uppercase tracking-wider text-[10px] text-slate-500 dark:text-slate-400">
+          <thead className="bg-black/[0.02] dark:bg-white/[0.02] border-b border-slate-200 dark:border-white/10 font-semibold text-xs text-slate-500 dark:text-slate-400">
             <tr>
               <th className="p-3.5 w-10 text-center">
                 <input
@@ -138,31 +138,31 @@ export const LinkListView: React.FC<LinkListViewProps> = ({
                         <div className="font-newsreader text-base font-medium text-slate-900 dark:text-slate-100 group-hover:text-[#d97757] dark:group-hover:text-[#e08264] transition-colors truncate">
                           {link.title || link.url}
                         </div>
-                        <div className="text-[11px] text-slate-600 dark:text-slate-300 line-clamp-1">
+                        <div className="text-xs text-slate-600 dark:text-slate-300 line-clamp-1">
                           {link.summary?.tldr || link.aiSummary?.tldr || link.description || 'Saved link'}
                         </div>
 
                         {/* Mini Insight Pills */}
                         <div className="flex items-center gap-1.5 pt-0.5">
                           {(link.isRssFeedItem || link.feedTitle) && (
-                            <span className="inline-flex items-center gap-1 text-[10px] text-slate-600 dark:text-slate-400 bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 px-1.5 py-0.2 rounded font-medium">
+                            <span className="inline-flex items-center gap-1 text-xs text-slate-600 dark:text-slate-400 bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 px-1.5 py-0.2 rounded font-medium">
                               <Rss className="w-2.5 h-2.5 text-slate-400" /> {link.feedTitle || 'RSS'}
                             </span>
                           )}
                           {((link.summary?.codeSnippets && link.summary.codeSnippets.length > 0) ||
                             (link.aiSummary?.codeSnippets && link.aiSummary.codeSnippets.length > 0)) && (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-mono text-slate-600 dark:text-slate-400 bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 px-1.5 py-0.2 rounded font-medium">
+                            <span className="inline-flex items-center gap-1 text-xs text-slate-600 dark:text-slate-400 bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 px-1.5 py-0.2 rounded font-medium">
                               <Code2 className="w-2.5 h-2.5 text-slate-400" /> code
                             </span>
                           )}
                           {(link.summary?.quotes?.[0] || link.summary?.quote || link.aiSummary?.quote) && (
-                            <span className="inline-flex items-center gap-1 text-[10px] text-slate-600 dark:text-slate-400 bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 px-1.5 py-0.2 rounded font-medium">
+                            <span className="inline-flex items-center gap-1 text-xs text-slate-600 dark:text-slate-400 bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 px-1.5 py-0.2 rounded font-medium">
                               <Quote className="w-2.5 h-2.5 text-slate-400" /> quote
                             </span>
                           )}
                           {((link.summary?.keyTakeaways && link.summary.keyTakeaways.length > 0) ||
                             (link.aiSummary?.takeaways && link.aiSummary.takeaways.length > 0)) && (
-                            <span className="inline-flex items-center gap-1 text-[10px] text-[#c25e3e] dark:text-[#e08264] bg-[#d97757]/10 border border-[#d97757]/20 px-1.5 py-0.2 rounded font-semibold">
+                            <span className="inline-flex items-center gap-1 text-xs text-[#c25e3e] dark:text-[#e08264] bg-[#d97757]/10 border border-[#d97757]/20 px-1.5 py-0.2 rounded font-semibold">
                               <Sparkles className="w-2.5 h-2.5" /> insights
                             </span>
                           )}
@@ -173,11 +173,11 @@ export const LinkListView: React.FC<LinkListViewProps> = ({
 
                   <td className="p-3.5">
                     {link.category ? (
-                      <span className="font-mono text-[11px] px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300 font-medium">
+                      <span className="text-xs px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300 font-medium">
                         {link.category}
                       </span>
                     ) : (
-                      <span className="text-slate-400 text-[11px]">—</span>
+                      <span className="text-slate-400 text-xs">—</span>
                     )}
                   </td>
 
@@ -186,13 +186,13 @@ export const LinkListView: React.FC<LinkListViewProps> = ({
                       {link.tags?.slice(0, 2).map((t) => (
                         <span
                           key={t}
-                          className="font-mono text-[10px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-white/[0.04] text-slate-600 dark:text-slate-300 font-medium"
+                          className="text-xs px-1.5 py-0.2 rounded bg-slate-100 dark:bg-white/[0.04] text-slate-600 dark:text-slate-300 font-medium"
                         >
                           #{t}
                         </span>
                       ))}
                       {link.tags && link.tags.length > 2 && (
-                        <span className="font-mono text-[10px] text-slate-400">
+                        <span className="text-xs text-slate-400">
                           +{link.tags.length - 2}
                         </span>
                       )}
@@ -201,15 +201,15 @@ export const LinkListView: React.FC<LinkListViewProps> = ({
 
                   <td className="p-3.5">
                     {link.readStatus === 'read' ? (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md">
+                      <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md">
                         <CheckCircle2 className="w-2.5 h-2.5" /> Reviewed
                       </span>
                     ) : link.readStatus === 'reading' ? (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-medium text-[#c25e3e] dark:text-[#e08264] bg-[#d97757]/10 border border-[#d97757]/20 px-2 py-0.5 rounded-md">
+                      <span className="inline-flex items-center gap-1 text-xs font-medium text-[#c25e3e] dark:text-[#e08264] bg-[#d97757]/10 border border-[#d97757]/20 px-2 py-0.5 rounded-md">
                         <span className="w-1.5 h-1.5 rounded-full bg-[#d97757] dark:bg-[#e08264]" /> Reading
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1.5 text-[10px] font-medium text-slate-600 dark:text-slate-300 bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 px-2 py-0.5 rounded-md">
+                      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 px-2 py-0.5 rounded-md">
                         <span className="w-1.5 h-1.5 rounded-full bg-amber-500/80" /> Unread
                       </span>
                     )}

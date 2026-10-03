@@ -171,7 +171,7 @@ export const ServiceTokensModal: React.FC<ServiceTokensModalProps> = ({ isOpen, 
             aria-label="Close"
             className="flex items-center gap-1.5 p-1.5 rounded-md text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
           >
-            <span className="font-mono text-[10px] text-slate-400">ESC</span>
+            <span className="font-mono text-xs text-slate-400">ESC</span>
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -202,7 +202,7 @@ export const ServiceTokensModal: React.FC<ServiceTokensModalProps> = ({ isOpen, 
             </section>
           ) : (
             <form onSubmit={handleCreate} className="space-y-4">
-              <h4 className="font-mono text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">
+              <h4 className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                 New token
               </h4>
               <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
@@ -243,7 +243,7 @@ export const ServiceTokensModal: React.FC<ServiceTokensModalProps> = ({ isOpen, 
                       className="accent-[#d97757]"
                     />
                     <span className="text-slate-800 dark:text-slate-200">{SCOPE_DESCRIPTIONS[scope]}</span>
-                    <span className="font-mono text-[11px] text-slate-500 dark:text-slate-400">{scope}</span>
+                    <span className="font-mono text-xs text-slate-500 dark:text-slate-400">{scope}</span>
                   </label>
                 ))}
               </fieldset>
@@ -261,7 +261,7 @@ export const ServiceTokensModal: React.FC<ServiceTokensModalProps> = ({ isOpen, 
           )}
 
           <section className="space-y-3">
-            <h4 className="font-mono text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">
+            <h4 className="text-xs font-semibold text-slate-500 dark:text-slate-400">
               Your tokens
             </h4>
 
@@ -289,7 +289,7 @@ export const ServiceTokensModal: React.FC<ServiceTokensModalProps> = ({ isOpen, 
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-semibold truncate">{token.name}</span>
                           {inactive && (
-                            <span className="rounded-sm border border-black/10 dark:border-white/10 px-1.5 py-0.5 font-mono text-[10px] uppercase text-slate-500">
+                            <span className="rounded-sm border border-black/10 dark:border-white/10 px-1.5 py-0.5 text-xs text-slate-500">
                               {status}
                             </span>
                           )}
@@ -321,7 +321,7 @@ export const ServiceTokensModal: React.FC<ServiceTokensModalProps> = ({ isOpen, 
                       {token.scopes.map((scope) => (
                         <span
                           key={scope}
-                          className="rounded-sm bg-black/5 dark:bg-white/5 px-1.5 py-0.5 font-mono text-[10px] text-slate-600 dark:text-slate-300"
+                          className="rounded-sm bg-black/5 dark:bg-white/5 px-1.5 py-0.5 text-xs text-slate-600 dark:text-slate-300"
                         >
                           {scope}
                         </span>

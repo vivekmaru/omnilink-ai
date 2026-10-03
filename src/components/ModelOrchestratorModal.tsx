@@ -298,7 +298,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
                           {/* Top row: Model Name & Tier */}
                           <div className="flex items-center justify-between gap-2 mb-1.5">
                             <div className="flex items-center gap-2 min-w-0">
-                              <span className="font-mono text-xs font-bold text-slate-900 dark:text-[#f7f6f3] truncate">
+                              <span className="text-xs font-bold text-slate-900 dark:text-[#f7f6f3] truncate">
                                 {model.id}
                               </span>
                             </div>
@@ -364,7 +364,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
                       <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                       Quick Metadata & Tags
                     </div>
-                    <div className="col-span-4 font-mono text-emerald-600 dark:text-emerald-400 text-xs">
+                    <div className="col-span-4 text-emerald-600 dark:text-emerald-400 text-xs">
                       gemini-3.1-flash-lite
                     </div>
                     <div className="col-span-4 text-xs text-slate-400 text-right">
@@ -377,7 +377,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
                       <span className="w-2 h-2 rounded-full bg-[#d97757]"></span>
                       Single Link Summaries
                     </div>
-                    <div className="col-span-4 font-mono text-[#d97757] dark:text-[#e08264] text-xs">
+                    <div className="col-span-4 text-[#d97757] dark:text-[#e08264] text-xs">
                       gemini-3.7-flash
                     </div>
                     <div className="col-span-4 text-xs text-slate-400 text-right">
@@ -390,7 +390,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
                       <span className="w-2 h-2 rounded-full bg-amber-500"></span>
                       Ask Repo AI & Clustering
                     </div>
-                    <div className="col-span-4 font-mono text-amber-600 dark:text-amber-400 text-xs">
+                    <div className="col-span-4 text-amber-600 dark:text-amber-400 text-xs">
                       gemini-3.7-flash (Thinking)
                     </div>
                     <div className="col-span-4 text-xs text-slate-400 text-right">
@@ -403,7 +403,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
                       <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                       RSS Batch Feed Ingestion
                     </div>
-                    <div className="col-span-4 font-mono text-emerald-600 dark:text-emerald-400 text-xs">
+                    <div className="col-span-4 text-emerald-600 dark:text-emerald-400 text-xs">
                       gemini-3.1-flash-lite
                     </div>
                     <div className="col-span-4 text-xs text-slate-400 text-right">
@@ -441,11 +441,11 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
                           ) : (
                             <AlertTriangle className="w-3.5 h-3.5 text-rose-500 shrink-0" />
                           )}
-                          <span className="font-mono text-xs text-slate-800 dark:text-slate-200 truncate">
+                          <span className="text-xs text-slate-800 dark:text-slate-200 truncate">
                             {log.taskType}
                           </span>
                         </div>
-                        <div className="col-span-4 font-mono text-slate-500 dark:text-slate-400 text-xs truncate">
+                        <div className="col-span-4 text-slate-500 dark:text-slate-400 text-xs truncate">
                           {log.executedModel}
                           {log.thinkingLevel && (
                             <span className="ml-1 text-xs text-amber-500">
@@ -542,7 +542,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
                   <div className="flex items-center justify-between border-b border-black/10 dark:border-white/10 pb-3">
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-slate-500 dark:text-slate-400">Selected Model:</span>
-                      <span className="px-2.5 py-0.5 bg-[#d97757]/10 border border-[#d97757]/20 text-[#d97757] dark:text-[#e08264] rounded-md font-mono text-xs font-semibold">
+                      <span className="px-2.5 py-0.5 bg-[#d97757]/10 border border-[#d97757]/20 text-[#d97757] dark:text-[#e08264] rounded-md text-xs font-semibold">
                         {simulatedDecision.selectedModel}
                       </span>
                       {simulatedDecision.thinkingLevel && (

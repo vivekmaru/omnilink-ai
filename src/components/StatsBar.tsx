@@ -77,7 +77,7 @@ export const StatsBar: React.FC<StatsBarProps> = ({
                 >
                   {p.icon}
                   <span>{p.label}</span>
-                  <span className={`text-[10px] px-1 rounded ${isActive ? 'bg-black/20 text-white dark:bg-black/20 dark:text-slate-950 font-semibold' : 'bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-slate-400 font-medium'}`}>
+                  <span className={`text-xs px-1 rounded ${isActive ? 'bg-black/20 text-white dark:bg-black/20 dark:text-slate-950 font-semibold' : 'bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-slate-400 font-medium'}`}>
                     {count}
                   </span>
                 </button>
@@ -103,7 +103,7 @@ export const StatsBar: React.FC<StatsBarProps> = ({
             <span className="opacity-40">•</span>
             <div className="flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-[#d97757] dark:text-[#e08264]" />
-              <span className="font-mono text-[11px]">Insights &rarr;</span>
+              <span className="text-xs">Insights &rarr;</span>
             </div>
           </div>
 

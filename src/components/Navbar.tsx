@@ -154,7 +154,7 @@ export const Navbar: React.FC<HeaderProps> = ({
                 <X className="w-3.5 h-3.5" />
               </button>
             ) : (
-              <span className="hidden sm:inline-flex items-center font-mono text-[10px] text-slate-400 dark:text-slate-500 bg-black/5 dark:bg-white/10 px-1.5 py-0.5 rounded border border-black/5 dark:border-white/5">
+              <span className="hidden sm:inline-flex items-center text-xs text-slate-400 dark:text-slate-500 bg-black/5 dark:bg-white/10 px-1.5 py-0.5 rounded border border-black/5 dark:border-white/5">
                 ⌘K
               </span>
             )}
@@ -246,7 +246,7 @@ export const Navbar: React.FC<HeaderProps> = ({
                 borderColor: 'var(--card-border)',
               }}
             >
-              <div className="px-2.5 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 border-b border-black/5 dark:border-white/5 mb-1">
+              <div className="px-2.5 py-1.5 text-xs font-semibold text-slate-400 dark:text-slate-500 border-b border-black/5 dark:border-white/5 mb-1">
                 Tools & Integrations
               </div>
 
@@ -262,7 +262,7 @@ export const Navbar: React.FC<HeaderProps> = ({
                     <Cpu className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 group-hover:scale-110 transition-transform" />
                     <span>Gemini Model Router</span>
                   </div>
-                  <span className="font-mono text-[10px] opacity-50">⌘O</span>
+                  <span className="font-mono text-xs opacity-50">⌘O</span>
                 </button>
               )}
 
@@ -279,11 +279,11 @@ export const Navbar: React.FC<HeaderProps> = ({
                     <span>RSS Feeds</span>
                   </div>
                   {rssFeedsCount > 0 ? (
-                    <span className="font-mono text-[10px] px-1.5 py-0.2 rounded bg-black/5 dark:bg-white/10 text-slate-600 dark:text-slate-300 font-semibold">
+                    <span className="text-xs px-1.5 py-0.2 rounded bg-black/5 dark:bg-white/10 text-slate-600 dark:text-slate-300 font-semibold">
                       {rssFeedsCount}
                     </span>
                   ) : (
-                    <span className="font-mono text-[10px] opacity-50">⌘R</span>
+                    <span className="font-mono text-xs opacity-50">⌘R</span>
                   )}
                 </button>
               )}
@@ -300,7 +300,7 @@ export const Navbar: React.FC<HeaderProps> = ({
                     <FileDown className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 group-hover:scale-110 transition-transform" />
                     <span>Export Markdown (.md)</span>
                   </div>
-                  <span className="font-mono text-[10px] opacity-50">⌘⇧E</span>
+                  <span className="font-mono text-xs opacity-50">⌘⇧E</span>
                 </button>
               )}
 
@@ -316,7 +316,7 @@ export const Navbar: React.FC<HeaderProps> = ({
                     <Chrome className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 group-hover:scale-110 transition-transform" />
                     <span>Chrome Extension Hub</span>
                   </div>
-                  <span className="font-mono text-[10px] opacity-50">⌘E</span>
+                  <span className="font-mono text-xs opacity-50">⌘E</span>
                 </button>
               )}
 
@@ -332,7 +332,7 @@ export const Navbar: React.FC<HeaderProps> = ({
                     <Share2 className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 group-hover:scale-110 transition-transform" />
                     <span>Mobile Share & QR</span>
                   </div>
-                  <span className="font-mono text-[10px] opacity-50">⌘M</span>
+                  <span className="font-mono text-xs opacity-50">⌘M</span>
                 </button>
               )}
             </div>
@@ -348,7 +348,7 @@ export const Navbar: React.FC<HeaderProps> = ({
         >
           <Sparkles className="w-3.5 h-3.5 text-[#d97757] dark:text-[#e08264] group-hover:scale-110 transition-transform" />
           <span className="font-medium whitespace-nowrap">Ask AI</span>
-          <span className="hidden sm:inline-flex font-mono text-[10px] opacity-60">
+          <span className="hidden sm:inline-flex text-xs opacity-60">
             ⌘J
           </span>
         </button>

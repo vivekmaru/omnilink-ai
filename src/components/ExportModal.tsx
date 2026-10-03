@@ -156,7 +156,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
             <div className="min-w-0">
               <h3 id="export-modal-title" className="font-newsreader text-xl font-medium tracking-tight flex items-center gap-2.5">
                 Export to Markdown
-                <span className="font-mono text-[10px] uppercase font-normal px-2 py-0.5 rounded bg-[#d97757]/10 text-[#d97757] dark:text-[#e08264] border border-[#d97757]/20">
+                <span className="text-xs font-normal px-2 py-0.5 rounded bg-[#d97757]/10 text-[#d97757] dark:text-[#e08264] border border-[#d97757]/20">
                   {options.preset.toUpperCase()}
                 </span>
               </h3>
@@ -181,7 +181,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         <div className="px-5 py-3 border-b border-black/10 dark:border-white/10 bg-black/[0.02] dark:bg-white/[0.02] flex flex-wrap items-center justify-between gap-3 shrink-0">
           {/* Target Scope Selection */}
           <div className="flex items-center gap-1.5 text-xs">
-            <span className="font-mono text-[11px] text-slate-400 mr-1 font-medium">Export:</span>
+            <span className="text-xs text-slate-400 mr-1 font-medium">Export:</span>
             {initialSelectedLink && (
               <button
                 onClick={() => setScope('single')}
@@ -284,7 +284,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           >
             <Eye className="w-3.5 h-3.5" />
             <span>Markdown Live Preview</span>
-            <span className="font-mono text-[10px] px-1.5 py-0.2 rounded bg-black/5 dark:bg-white/5 text-slate-500">
+            <span className="text-xs px-1.5 py-0.2 rounded bg-black/5 dark:bg-white/5 text-slate-500">
               {metrics.lines} lines
             </span>
           </button>
@@ -308,7 +308,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
             <div className="p-5 flex flex-col h-full space-y-3">
               {/* Output Preview Window */}
               <div className="relative flex-1 rounded-xl border border-black/10 dark:border-white/10 bg-[#f5f3ee] dark:bg-[#141413] overflow-hidden flex flex-col">
-                <div className="flex items-center justify-between px-3.5 py-2 border-b border-black/5 dark:border-white/5 bg-black/[0.03] dark:bg-white/[0.03] text-[11px] font-mono text-slate-500">
+                <div className="flex items-center justify-between px-3.5 py-2 border-b border-black/5 dark:border-white/5 bg-black/[0.03] dark:bg-white/[0.03] text-xs text-slate-500">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
                     <span>
@@ -343,7 +343,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
             <div className="p-6 space-y-6">
               {/* Section 1: Content Inclusions */}
               <div className="space-y-3">
-                <h4 className="font-mono text-xs uppercase tracking-wider text-[#d97757] dark:text-[#e08264] font-semibold flex items-center gap-2">
+                <h4 className="text-xs text-[#d97757] dark:text-[#e08264] font-semibold flex items-center gap-2">
                   <Sparkles className="w-3.5 h-3.5" /> Included Information
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -356,7 +356,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                     />
                     <div className="text-xs">
                       <div className="font-medium">Title & Clickable URL</div>
-                      <div className="text-[11px] text-slate-400">Link anchor header with target URI</div>
+                      <div className="text-xs text-slate-400">Link anchor header with target URI</div>
                     </div>
                   </label>
 
@@ -369,7 +369,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                     />
                     <div className="text-xs">
                       <div className="font-medium">AI TL;DR Summary</div>
-                      <div className="text-[11px] text-slate-400">Concise 1-sentence synthesis</div>
+                      <div className="text-xs text-slate-400">Concise 1-sentence synthesis</div>
                     </div>
                   </label>
 
@@ -382,7 +382,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                     />
                     <div className="text-xs">
                       <div className="font-medium">Key Insights & Takeaways</div>
-                      <div className="text-[11px] text-slate-400">Bulleted actionable points</div>
+                      <div className="text-xs text-slate-400">Bulleted actionable points</div>
                     </div>
                   </label>
 
@@ -395,7 +395,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                     />
                     <div className="text-xs">
                       <div className="font-medium">Fenced Code Snippets</div>
-                      <div className="text-[11px] text-slate-400">With language detection tag</div>
+                      <div className="text-xs text-slate-400">With language detection tag</div>
                     </div>
                   </label>
 
@@ -408,7 +408,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                     />
                     <div className="text-xs">
                       <div className="font-medium">Discussion & Quotes</div>
-                      <div className="text-[11px] text-slate-400">Community highlights</div>
+                      <div className="text-xs text-slate-400">Community highlights</div>
                     </div>
                   </label>
 
@@ -421,7 +421,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                     />
                     <div className="text-xs">
                       <div className="font-medium">Personal Notes</div>
-                      <div className="text-[11px] text-slate-400">User-authored annotations</div>
+                      <div className="text-xs text-slate-400">User-authored annotations</div>
                     </div>
                   </label>
                 </div>
@@ -429,7 +429,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
 
               {/* Section 2: Organization & Metadata */}
               <div className="space-y-3">
-                <h4 className="font-mono text-xs uppercase tracking-wider text-[#d97757] dark:text-[#e08264] font-semibold flex items-center gap-2">
+                <h4 className="text-xs text-[#d97757] dark:text-[#e08264] font-semibold flex items-center gap-2">
                   <Layers className="w-3.5 h-3.5" /> Grouping & Layout
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
@@ -451,7 +451,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                       }`}
                     >
                       <div className="text-xs">{grp.label}</div>
-                      <div className="text-[10px] text-slate-400 font-normal">{grp.desc}</div>
+                      <div className="text-xs text-slate-400 font-normal">{grp.desc}</div>
                     </button>
                   ))}
                 </div>
@@ -460,7 +460,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
               {/* Section 3: Obsidian Specific */}
               {options.preset === 'obsidian' && (
                 <div className="space-y-3 p-4 rounded-xl border border-[#d97757]/20 bg-[#d97757]/5">
-                  <h4 className="font-mono text-xs uppercase tracking-wider text-[#d97757] dark:text-[#e08264] font-semibold flex items-center gap-2">
+                  <h4 className="text-xs text-[#d97757] dark:text-[#e08264] font-semibold flex items-center gap-2">
                     <Sparkles className="w-3.5 h-3.5" /> Obsidian Vault Enhancements
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -473,7 +473,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                       />
                       <div>
                         <div className="font-medium">YAML Frontmatter (---)</div>
-                        <div className="text-[11px] text-slate-400">Dataview-compatible document tags and dates</div>
+                        <div className="text-xs text-slate-400">Dataview-compatible document tags and dates</div>
                       </div>
                     </label>
 
@@ -486,7 +486,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                       />
                       <div>
                         <div className="font-medium">Use [[Wikilinks]] for Tags</div>
-                        <div className="text-[11px] text-slate-400">Convert #tags into bi-directional [[links]]</div>
+                        <div className="text-xs text-slate-400">Convert #tags into bi-directional [[links]]</div>
                       </div>
                     </label>
                   </div>
@@ -498,7 +498,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
 
         {/* Footer Action Bar */}
         <div className="p-4 px-6 border-t border-black/10 dark:border-white/10 bg-black/[0.03] dark:bg-white/[0.03] flex flex-wrap items-center justify-between gap-3 shrink-0">
-          <div className="flex items-center gap-2 text-xs text-slate-500 font-mono">
+          <div className="flex items-center gap-2 text-xs text-slate-500 ">
             <span>Exporting</span>
             <span className="font-semibold text-slate-900 dark:text-[#f7f6f3]">
               {targetLinks.length} {targetLinks.length === 1 ? 'item' : 'items'}

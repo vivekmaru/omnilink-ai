@@ -106,7 +106,7 @@ const ToastItem: React.FC<{ toast: ToastMessage; onDismiss: (id: string) => void
               toast.action?.onClick();
               onDismiss(toast.id);
             }}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#d97757]/20 hover:bg-[#d97757]/35 text-[#e08264] hover:text-white font-semibold font-mono text-[11px] transition-all active:scale-95 border border-[#e08264]/30"
+            className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#d97757]/20 hover:bg-[#d97757]/35 text-[#e08264] hover:text-white font-semibold text-xs transition-all active:scale-95 border border-[#e08264]/30"
           >
             <RotateCcw className="w-3 h-3" />
             <span>{toast.action.label}</span>

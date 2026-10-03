@@ -197,7 +197,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
               <h3 id="backup-modal-title" className="font-newsreader text-xl font-medium tracking-tight">
                 AES-256 Vault Encryption & Backup
               </h3>
-              <p className="font-mono text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 Zero-knowledge encrypted exports, offline portability, and Markdown digests
               </p>
             </div>
@@ -213,13 +213,13 @@ export const BackupModal: React.FC<BackupModalProps> = ({
 
         {/* Status Alerts */}
         {error && (
-          <div className="mx-6 mt-4 p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-600 dark:text-rose-400 font-mono text-xs flex items-center gap-2">
+          <div className="mx-6 mt-4 p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-600 dark:text-rose-400 text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{error}</span>
           </div>
         )}
         {success && (
-          <div className="mx-6 mt-4 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-600 dark:text-emerald-400 font-mono text-xs flex items-center gap-2">
+          <div className="mx-6 mt-4 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-600 dark:text-emerald-400 text-xs flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 shrink-0" />
             <span>{success}</span>
           </div>
@@ -235,7 +235,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
                 Create Encrypted AES-256 Backup (.enc)
               </h4>
             </div>
-            <p className="font-mono text-xs text-slate-600 dark:text-slate-400">
+            <p className="text-xs text-slate-600 dark:text-slate-400">
               Derives keys using PBKDF2 with 100,000 SHA-256 iterations and encrypts repository data using AES-GCM.
             </p>
 
@@ -288,7 +288,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
                 className="w-full px-4 py-2 text-xs bg-white dark:bg-[#1f1e1c] border border-black/10 dark:border-white/10 rounded-lg text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-[#d97757] dark:focus:border-[#e08264]"
               />
 
-              <label className="flex items-center justify-center gap-2 w-full py-2.5 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-slate-800 dark:text-slate-200 rounded-xl font-mono text-xs font-semibold cursor-pointer transition-colors border border-black/10 dark:border-white/10">
+              <label className="flex items-center justify-center gap-2 w-full py-2.5 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-semibold cursor-pointer transition-colors border border-black/10 dark:border-white/10">
                 <Upload className="w-3.5 h-3.5" />
                 <span>Select .enc or .json Backup File</span>
                 <input
@@ -303,20 +303,20 @@ export const BackupModal: React.FC<BackupModalProps> = ({
 
           {/* Unencrypted & Portable Digests */}
           <div className="space-y-3">
-            <div className="font-mono text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+            <div className="text-xs font-semibold text-slate-400 dark:text-slate-500">
               Portable Plain Text Digests
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <button
                 onClick={handleExportPlainJson}
-                className="flex items-center justify-center gap-2 p-3.5 rounded-xl bg-white dark:bg-[#1f1e1c] border border-black/10 dark:border-white/10 hover:border-[#d97757] dark:hover:border-[#e08264] text-xs font-mono font-semibold text-slate-800 dark:text-slate-200 transition-all shadow-2xs"
+                className="flex items-center justify-center gap-2 p-3.5 rounded-xl bg-white dark:bg-[#1f1e1c] border border-black/10 dark:border-white/10 hover:border-[#d97757] dark:hover:border-[#e08264] text-xs font-semibold text-slate-800 dark:text-slate-200 transition-all shadow-2xs"
               >
                 <FileJson className="w-4 h-4 text-[#d97757] dark:text-[#e08264]" />
                 <span>Export Standard JSON</span>
               </button>
               <button
                 onClick={handleExportMarkdown}
-                className="flex items-center justify-center gap-2 p-3.5 rounded-xl bg-white dark:bg-[#1f1e1c] border border-black/10 dark:border-white/10 hover:border-[#d97757] dark:hover:border-[#e08264] text-xs font-mono font-semibold text-slate-800 dark:text-slate-200 transition-all shadow-2xs"
+                className="flex items-center justify-center gap-2 p-3.5 rounded-xl bg-white dark:bg-[#1f1e1c] border border-black/10 dark:border-white/10 hover:border-[#d97757] dark:hover:border-[#e08264] text-xs font-semibold text-slate-800 dark:text-slate-200 transition-all shadow-2xs"
               >
                 <FileText className="w-4 h-4 text-amber-500" />
                 <span>Export Markdown Notes</span>

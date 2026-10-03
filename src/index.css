@@ -74,12 +74,8 @@
 }
 
 .nav-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.68rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
+  font-size: 0.8rem;
   color: var(--ink-muted);
-  opacity: 0.85;
   font-weight: 600;
 }
 

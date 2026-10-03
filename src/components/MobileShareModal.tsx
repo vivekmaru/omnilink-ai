@@ -113,7 +113,7 @@ export const MobileShareModal: React.FC<MobileShareModalProps> = ({
               <h3 id="mobile-share-modal-title" className="font-newsreader font-medium text-lg text-slate-900 dark:text-[#f7f6f3]">
                 Mobile Quick Share & Ingress Hub
               </h3>
-              <p className="font-mono text-[11px] text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 Capture links seamlessly from iOS, Android, Apple Shortcuts, and webhooks
               </p>
             </div>
@@ -130,7 +130,7 @@ export const MobileShareModal: React.FC<MobileShareModalProps> = ({
         <div className="flex border-b border-black/10 dark:border-white/10 px-6 bg-black/[0.02] dark:bg-white/[0.01]">
           <button
             onClick={() => setActiveTab('pwa')}
-            className={`flex items-center gap-1.5 py-3 px-3 font-mono text-xs font-medium border-b-2 transition-all ${
+            className={`flex items-center gap-1.5 py-3 px-3 text-xs font-medium border-b-2 transition-all ${
               activeTab === 'pwa'
                 ? 'border-[#d97757] text-[#d97757] dark:text-[#e08264]'
                 : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
@@ -142,7 +142,7 @@ export const MobileShareModal: React.FC<MobileShareModalProps> = ({
 
           <button
             onClick={() => setActiveTab('shortcuts')}
-            className={`flex items-center gap-1.5 py-3 px-3 font-mono text-xs font-medium border-b-2 transition-all ${
+            className={`flex items-center gap-1.5 py-3 px-3 text-xs font-medium border-b-2 transition-all ${
               activeTab === 'shortcuts'
                 ? 'border-[#d97757] text-[#d97757] dark:text-[#e08264]'
                 : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
@@ -154,7 +154,7 @@ export const MobileShareModal: React.FC<MobileShareModalProps> = ({
 
           <button
             onClick={() => setActiveTab('webhook')}
-            className={`flex items-center gap-1.5 py-3 px-3 font-mono text-xs font-medium border-b-2 transition-all ${
+            className={`flex items-center gap-1.5 py-3 px-3 text-xs font-medium border-b-2 transition-all ${
               activeTab === 'webhook'
                 ? 'border-[#d97757] text-[#d97757] dark:text-[#e08264]'
                 : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
@@ -172,7 +172,7 @@ export const MobileShareModal: React.FC<MobileShareModalProps> = ({
               {/* QR Code Card */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-center p-5 bg-black/[0.02] dark:bg-white/[0.02] border border-black/10 dark:border-white/10 rounded-xl">
                 <div className="space-y-2.5 text-center sm:text-left">
-                  <span className="font-mono text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-[#d97757]/15 text-[#d97757] dark:text-[#e08264] border border-[#d97757]/30">
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded bg-[#d97757]/15 text-[#d97757] dark:text-[#e08264] border border-[#d97757]/30">
                     Live Mobile Connection
                   </span>
                   <h4 className="font-newsreader font-medium text-lg text-slate-900 dark:text-[#f7f6f3]">
@@ -183,7 +183,7 @@ export const MobileShareModal: React.FC<MobileShareModalProps> = ({
                   </p>
                   <button
                     onClick={handleCopyLink}
-                    className="flex items-center justify-center sm:justify-start gap-1.5 font-mono text-xs text-[#d97757] dark:text-[#e08264] hover:underline font-medium pt-1"
+                    className="flex items-center justify-center sm:justify-start gap-1.5 text-xs text-[#d97757] dark:text-[#e08264] hover:underline font-medium pt-1"
                   >
                     {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
                     <span>{copiedLink ? 'App URL Copied' : 'Copy App URL'}</span>
@@ -203,25 +203,25 @@ export const MobileShareModal: React.FC<MobileShareModalProps> = ({
 
               {/* Step-by-Step Native Share Instructions */}
               <div className="space-y-2.5">
-                <h4 className="font-mono text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <h4 className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                   How to Enable "Share To OmniLink" in Native Share Sheet
                 </h4>
 
                 <div className="space-y-2 text-xs text-slate-700 dark:text-slate-300">
                   <div className="p-3.5 rounded-lg bg-black/[0.02] dark:bg-white/[0.02] border border-black/10 dark:border-white/10 flex items-start gap-3">
-                    <span className="w-5 h-5 rounded-full bg-[#d97757]/15 text-[#d97757] font-mono font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">1</span>
+                    <span className="w-5 h-5 rounded-full bg-[#d97757]/15 text-[#d97757] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">1</span>
                     <div>
                       <strong>Add to Home Screen (PWA):</strong> On Safari (iOS) tap <em>Share &rarr; Add to Home Screen</em>. On Chrome (Android) tap <em>Menu &rarr; Install App</em>.
                     </div>
                   </div>
                   <div className="p-3.5 rounded-lg bg-black/[0.02] dark:bg-white/[0.02] border border-black/10 dark:border-white/10 flex items-start gap-3">
-                    <span className="w-5 h-5 rounded-full bg-[#d97757]/15 text-[#d97757] font-mono font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">2</span>
+                    <span className="w-5 h-5 rounded-full bg-[#d97757]/15 text-[#d97757] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">2</span>
                     <div>
                       <strong>Native Share Sheet Integration:</strong> When browsing Reddit, Instagram, X/Twitter, or YouTube on your phone, tap your OS <em>Share</em> button and choose <strong>OmniLink AI</strong>.
                     </div>
                   </div>
                   <div className="p-3.5 rounded-lg bg-black/[0.02] dark:bg-white/[0.02] border border-black/10 dark:border-white/10 flex items-start gap-3">
-                    <span className="w-5 h-5 rounded-full bg-[#d97757]/15 text-[#d97757] font-mono font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">3</span>
+                    <span className="w-5 h-5 rounded-full bg-[#d97757]/15 text-[#d97757] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">3</span>
                     <div>
                       <strong>Background Extraction:</strong> The Web Share Target extracts the URL, runs Gemini Flash categorization, and syncs to your repository instantly.
                     </div>
@@ -231,7 +231,7 @@ export const MobileShareModal: React.FC<MobileShareModalProps> = ({
 
               {/* Live Share Target Simulation */}
               <div className="border-t border-black/10 dark:border-white/10 pt-4 space-y-2">
-                <div className="font-mono text-xs font-semibold text-slate-700 dark:text-slate-300">
+                <div className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                   Simulate Native Share Target Ingestion:
                 </div>
                 <div className="flex gap-2">
@@ -258,24 +258,24 @@ export const MobileShareModal: React.FC<MobileShareModalProps> = ({
             <div className="space-y-5">
               <div className="p-4 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-black/10 dark:border-white/10 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="font-mono text-xs font-bold text-[#d97757] dark:text-[#e08264] uppercase tracking-wider">
+                  <span className="text-xs font-bold text-[#d97757] dark:text-[#e08264] ">
                     Apple Shortcuts Webhook URL
                   </span>
                   <button
                     onClick={handleCopyWebhook}
-                    className="flex items-center gap-1 text-[11px] font-mono text-slate-600 dark:text-slate-300 hover:text-[#d97757] transition-colors"
+                    className="flex items-center gap-1 text-xs text-slate-600 dark:text-slate-300 hover:text-[#d97757] transition-colors"
                   >
                     {copiedWebhook ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
                     <span>{copiedWebhook ? 'Copied URL' : 'Copy Endpoint'}</span>
                   </button>
                 </div>
-                <div className="p-2.5 bg-black/5 dark:bg-black/40 rounded-lg font-mono text-xs text-slate-800 dark:text-slate-200 break-all select-all">
+                <div className="p-2.5 bg-black/5 dark:bg-black/40 rounded-lg text-xs text-slate-800 dark:text-slate-200 break-all select-all">
                   {quickShareUrl}
                 </div>
               </div>
 
               <div className="space-y-2.5">
-                <h4 className="font-mono text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <h4 className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                   Create a 3-Step Shortcut on iPhone, iPad, or Mac
                 </h4>
 
@@ -294,7 +294,7 @@ export const MobileShareModal: React.FC<MobileShareModalProps> = ({
 
               {/* Shortcut Test Runner */}
               <div className="p-4 rounded-xl border border-black/10 dark:border-white/10 bg-black/[0.01] space-y-3">
-                <div className="font-mono text-xs font-semibold text-slate-700 dark:text-slate-300">
+                <div className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                   Test Apple Shortcut API Payload:
                 </div>
                 <div className="space-y-2">
@@ -321,7 +321,7 @@ export const MobileShareModal: React.FC<MobileShareModalProps> = ({
                     <span>Test Ingress Ingestion</span>
                   </button>
                   {testStatus && (
-                    <div className="p-2.5 rounded-lg bg-black/5 dark:bg-black/30 font-mono text-xs text-slate-800 dark:text-slate-200">
+                    <div className="p-2.5 rounded-lg bg-black/5 dark:bg-black/30 text-xs text-slate-800 dark:text-slate-200">
                       {testStatus}
                     </div>
                   )}
@@ -335,12 +335,12 @@ export const MobileShareModal: React.FC<MobileShareModalProps> = ({
             <div className="space-y-5">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-mono text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  <h4 className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                     cURL & Terminal Command Ingress
                   </h4>
                   <button
                     onClick={handleCopyCurl}
-                    className="flex items-center gap-1 text-[11px] font-mono text-slate-600 dark:text-slate-300 hover:text-[#d97757] transition-colors"
+                    className="flex items-center gap-1 text-xs text-slate-600 dark:text-slate-300 hover:text-[#d97757] transition-colors"
                   >
                     {copiedCurl ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
                     <span>{copiedCurl ? 'Copied cURL' : 'Copy cURL'}</span>
@@ -352,19 +352,19 @@ export const MobileShareModal: React.FC<MobileShareModalProps> = ({
               </div>
 
               <div className="space-y-3">
-                <h4 className="font-mono text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <h4 className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                   Automation & Bot Integrations
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                   <div className="p-3.5 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-black/10 dark:border-white/10 space-y-1">
                     <strong className="text-slate-900 dark:text-[#f7f6f3]">Raycast / Alfred:</strong>
-                    <p className="text-slate-500 dark:text-slate-400 leading-relaxed text-[11px]">
+                    <p className="text-slate-500 dark:text-slate-400 leading-relaxed text-xs">
                       Create a quick script command passing the frontmost browser URL to <code className="text-[#d97757]">POST /api/share/quick</code>.
                     </p>
                   </div>
                   <div className="p-3.5 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-black/10 dark:border-white/10 space-y-1">
                     <strong className="text-slate-900 dark:text-[#f7f6f3]">Telegram / Discord:</strong>
-                    <p className="text-slate-500 dark:text-slate-400 leading-relaxed text-[11px]">
+                    <p className="text-slate-500 dark:text-slate-400 leading-relaxed text-xs">
                       Point your personal bot webhook handler to forward link messages into OmniLink.
                     </p>
                   </div>
