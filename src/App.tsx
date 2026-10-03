@@ -872,7 +872,7 @@ export default function App() {
         {selectedIds.length > 0 && (
           <div className="bg-[#d97757]/10 dark:bg-[#e08264]/10 border-b border-[#d97757]/20 dark:border-[#e08264]/20 px-4 sm:px-8 py-2.5 flex flex-wrap items-center justify-between gap-2.5 text-xs shrink-0 animate-in fade-in slide-in-from-top-1 duration-150">
             <div className="flex items-center gap-3">
-              <span className="font-mono text-xs font-bold text-[#d97757] dark:text-[#e08264] flex items-center gap-1.5">
+              <span className="text-xs font-bold text-[#d97757] dark:text-[#e08264] flex items-center gap-1.5">
                 <Check className="w-3.5 h-3.5 stroke-[3]" />
                 <span>{selectedIds.length} {selectedIds.length === 1 ? 'ITEM' : 'ITEMS'} SELECTED</span>
               </span>
@@ -880,7 +880,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setSelectedIds(filteredLinks.map((l) => l.id))}
-                  className="font-mono text-[11px] text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 underline underline-offset-2 cursor-pointer"
+                  className="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 underline underline-offset-2 cursor-pointer"
                 >
                   Select all {filteredLinks.length} filtered
                 </button>
@@ -957,7 +957,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setSelectedIds([])}
-                className="px-2.5 py-1 font-mono text-[11px] font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 rounded-md border border-black/5 dark:border-white/5 hover:bg-black/5 dark:hover:bg-white/5 transition-all cursor-pointer"
+                className="px-2.5 py-1 text-xs font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 rounded-md border border-black/5 dark:border-white/5 hover:bg-black/5 dark:hover:bg-white/5 transition-all cursor-pointer"
               >
                 Clear
               </button>
@@ -970,7 +970,7 @@ export default function App() {
           {loading ? (
             <div className="p-16 text-center space-y-3">
               <div className="w-8 h-8 border-2 border-[#d97757] border-t-transparent rounded-full animate-spin mx-auto" />
-              <div className="font-mono text-xs text-slate-500 dark:text-slate-400">
+              <div className="text-xs text-slate-500 dark:text-slate-400">
                 Loading OmniLink Repository...
               </div>
             </div>
@@ -1009,7 +1009,7 @@ export default function App() {
                         includeArchived: false,
                       })
                     }
-                    className="px-4 py-2 bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 rounded-xl font-mono text-xs font-semibold text-slate-800 dark:text-slate-200 transition-colors"
+                    className="px-4 py-2 bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-200 transition-colors"
                   >
                     Reset All Filters
                   </button>
@@ -1034,7 +1034,7 @@ export default function App() {
                         });
                         setAddModalOpen(true);
                       }}
-                      className="px-3 py-2 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 border border-black/5 dark:border-white/5 rounded-xl font-mono text-[11px] text-slate-700 dark:text-slate-300 transition-colors"
+                      className="px-3 py-2 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 border border-black/5 dark:border-white/5 rounded-xl text-xs text-slate-700 dark:text-slate-300 transition-colors"
                     >
                       + Sample GitHub Repo
                     </button>
@@ -1095,7 +1095,7 @@ export default function App() {
               {currentView === 'kanban' && (
                 <React.Suspense
                   fallback={
-                    <div className="p-12 text-center font-mono text-xs text-slate-400">
+                    <div className="p-12 text-center text-xs text-slate-400">
                       Loading Kanban Lanes...
                     </div>
                   }
@@ -1119,7 +1119,7 @@ export default function App() {
               {currentView === 'cluster' && (
                 <React.Suspense
                   fallback={
-                    <div className="p-12 text-center font-mono text-xs text-slate-400">
+                    <div className="p-12 text-center text-xs text-slate-400">
                       Loading Vector Knowledge Space...
                     </div>
                   }
@@ -1138,13 +1138,13 @@ export default function App() {
 
         {/* Footer Meta Bar */}
         <footer
-          className="px-4 sm:px-8 py-2 sm:py-2.5 border-t flex flex-wrap items-center justify-between font-mono text-[11px] shrink-0 text-slate-500 dark:text-slate-400 gap-2"
+          className="px-4 sm:px-8 py-2 sm:py-2.5 border-t flex flex-wrap items-center justify-between text-xs shrink-0 text-slate-500 dark:text-slate-400 gap-2"
           style={{
             backgroundColor: 'var(--sidebar-bg)',
             borderColor: 'var(--card-border)',
           }}
         >
-          <div className="font-medium tracking-wider">OMNILINK AI • KNOWLEDGE REPO</div>
+          <div className="font-medium ">OMNILINK AI • KNOWLEDGE REPO</div>
           <div className="hidden md:block opacity-60">GEMINI FLASH POWERED EXTRACTION</div>
           <div className="font-medium">{links.length} {links.length === 1 ? 'LINK' : 'LINKS'} CURATED</div>
         </footer>

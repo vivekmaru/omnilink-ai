@@ -925,7 +925,7 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
                   value={bulkUrls}
                   onChange={(e) => setBulkUrls(e.target.value)}
                   placeholder="https://github.com/shadcn-ui/ui&#10;https://www.reddit.com/r/LocalLLaMA/...&#10;https://www.instagram.com/reel/..."
-                  className="w-full px-3.5 py-3 text-sm font-mono bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#d97757] text-slate-900 dark:text-[#f7f6f3]"
+                  className="w-full px-3.5 py-3 text-sm bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#d97757] text-slate-900 dark:text-[#f7f6f3]"
                 />
               </div>
 

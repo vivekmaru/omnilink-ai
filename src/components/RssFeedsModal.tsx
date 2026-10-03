@@ -1225,7 +1225,7 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
                     placeholder={`<?xml version="1.0" encoding="UTF-8"?>\n<opml version="2.0">\n  <body>\n    <outline type="rss" xmlUrl="https://blog.cloudflare.com/rss/" title="Cloudflare Blog"/>\n  </body>\n</opml>`}
                     value={opmlText}
                     onChange={(e) => setOpmlText(e.target.value)}
-                    className="w-full p-3 text-sm bg-white dark:bg-[#1f1e1c] border border-black/10 dark:border-white/10 rounded-lg text-slate-900 dark:text-[#f7f6f3] font-mono focus:outline-none focus:border-[#d97757]"
+                    className="w-full p-3 text-sm bg-white dark:bg-[#1f1e1c] border border-black/10 dark:border-white/10 rounded-lg text-slate-900 dark:text-[#f7f6f3] focus:outline-none focus:border-[#d97757]"
                   />
                 </div>
 

@@ -94,7 +94,7 @@ export const ClusterView: React.FC<ClusterViewProps> = ({
           <div className="font-newsreader text-lg font-medium text-slate-900 dark:text-[#f7f6f3]">
             Synthesizing Knowledge Domains with Gemini 3.7 Flash...
           </div>
-          <div className="font-mono text-xs text-slate-500 dark:text-slate-400 mt-1">
+          <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             Correlating Reddit discussions, GitHub repos, reels, and research papers
           </div>
         </div>
@@ -132,7 +132,7 @@ export const ClusterView: React.FC<ClusterViewProps> = ({
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Cluster List / Selector */}
           <div className="space-y-3">
-            <div className="font-mono text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+            <div className="text-xs font-semibold text-slate-400 dark:text-slate-500">
               Knowledge Clusters ({clusters.length})
             </div>
             <div className="space-y-2">
@@ -153,7 +153,7 @@ export const ClusterView: React.FC<ClusterViewProps> = ({
                       <h4 className="font-newsreader text-base font-medium text-slate-900 dark:text-slate-100">
                         {c.title}
                       </h4>
-                      <span className="font-mono text-[10px] font-semibold px-2 py-0.5 rounded bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300">
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300">
                         {count} links
                       </span>
                     </div>
@@ -164,7 +164,7 @@ export const ClusterView: React.FC<ClusterViewProps> = ({
                       {c.keywords.map((k) => (
                         <span
                           key={k}
-                          className="font-mono text-[10px] px-1.5 py-0.2 rounded bg-[#d97757]/10 text-[#c25e3e] dark:text-[#e08264] font-medium"
+                          className="text-xs px-1.5 py-0.2 rounded bg-[#d97757]/10 text-[#c25e3e] dark:text-[#e08264] font-medium"
                         >
                           #{k}
                         </span>
@@ -187,7 +187,7 @@ export const ClusterView: React.FC<ClusterViewProps> = ({
                 }}
               >
                 <div>
-                  <div className="font-mono text-[11px] text-[#c25e3e] dark:text-[#e08264] font-semibold uppercase tracking-wider mb-1">
+                  <div className="text-xs text-[#c25e3e] dark:text-[#e08264] font-semibold mb-1">
                     Active Cluster Focus
                   </div>
                   <h3 className="font-newsreader text-2xl font-medium text-slate-900 dark:text-slate-100">
@@ -199,7 +199,7 @@ export const ClusterView: React.FC<ClusterViewProps> = ({
                 </div>
 
                 <div className="space-y-3 pt-2">
-                  <div className="font-mono text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                     Links in this Domain ({activeClusterLinks.length})
                   </div>
 
@@ -211,10 +211,10 @@ export const ClusterView: React.FC<ClusterViewProps> = ({
                         className="p-3.5 rounded-xl bg-white dark:bg-[#1b1b1f] border border-slate-200 dark:border-white/10 hover:border-[#d97757] dark:hover:border-[#e08264] cursor-pointer transition-all space-y-2 shadow-xs"
                       >
                         <div className="flex items-center justify-between">
-                          <span className="font-mono text-[10px] uppercase font-semibold text-slate-500 dark:text-slate-400">
+                          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                             {link.platform.replace('_', ' ')}
                           </span>
-                          <span className="font-mono text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300">
+                          <span className="text-xs font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300">
                             {link.readStatus}
                           </span>
                         </div>
@@ -222,7 +222,7 @@ export const ClusterView: React.FC<ClusterViewProps> = ({
                           {link.title || link.url}
                         </h5>
                         {(link.aiSummary?.tldr || link.description) && (
-                          <p className="text-[11px] text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed">
+                          <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed">
                             {link.aiSummary?.tldr || link.description}
                           </p>
                         )}

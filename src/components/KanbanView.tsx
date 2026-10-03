@@ -112,10 +112,10 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
   return (
     <div className="space-y-4">
       {/* Top Switcher Info */}
-      <div className="flex items-center justify-between font-mono text-xs">
-        <div className="text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider text-[11px] flex items-center gap-2">
+      <div className="flex items-center justify-between text-xs">
+        <div className="text-slate-500 dark:text-slate-400 font-semibold text-xs flex items-center gap-2">
           <span>Pipeline Board ({links.length} total)</span>
-          <span className="opacity-60 text-[10px] hidden sm:inline font-normal">
+          <span className="opacity-60 text-xs hidden sm:inline font-normal">
             • Drag and drop cards between lanes to triage
           </span>
         </div>
@@ -151,7 +151,7 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
                   </span>
                 </div>
                 <span
-                  className={`font-mono text-[11px] font-semibold px-2 py-0.5 rounded-md border ${col.badgeClass}`}
+                  className={`text-xs font-semibold px-2 py-0.5 rounded-md border ${col.badgeClass}`}
                 >
                   {colLinks.length}
                 </span>
@@ -162,8 +162,8 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
                 {colLinks.length === 0 ? (
                   <div className="h-44 flex flex-col items-center justify-center text-center p-4 border border-dashed border-black/10 dark:border-white/10 rounded-xl text-slate-400 dark:text-slate-500 space-y-1.5">
                     <Inbox className="w-5 h-5 opacity-40" />
-                    <p className="text-[11px] font-medium">{col.emptyHint}</p>
-                    <p className="text-[10px] font-mono opacity-60">Drop cards here</p>
+                    <p className="text-xs font-medium">{col.emptyHint}</p>
+                    <p className="text-xs opacity-60">Drop cards here</p>
                   </div>
                 ) : (
                   colLinks.map((link) => {
@@ -225,7 +225,7 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
                               </button>
                             )}
                             <GripVertical className="w-3 h-3 text-slate-300 dark:text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
-                            <span className="font-mono text-[10px] uppercase font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-white/5 px-2 py-0.5 rounded truncate">
+                            <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-white/5 px-2 py-0.5 rounded truncate">
                               {link.platform.replace('_', ' ')}
                             </span>
                           </div>
@@ -252,7 +252,7 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
                         </h4>
 
                         {tldr && (
-                          <p className="text-[11px] text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed">
+                          <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed">
                             {tldr}
                           </p>
                         )}
@@ -260,7 +260,7 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
                         {/* Quick Move to Next Column */}
                         {col.nextStatus && (
                           <div className="pt-2 border-t border-black/5 dark:border-white/[0.04] flex items-center justify-between">
-                            <span className="font-mono text-[10px] text-slate-400 truncate max-w-[120px]">
+                            <span className="text-xs text-slate-400 truncate max-w-[120px]">
                               {link.category || 'General'}
                             </span>
                             <button
@@ -268,7 +268,7 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
                                 e.stopPropagation();
                                 if (col.nextStatus) onUpdateStatus(link.id, col.nextStatus);
                               }}
-                              className="flex items-center gap-1 text-[10px] font-medium text-[#d97757] dark:text-[#e08264] hover:text-[#c46243] bg-[#d97757]/10 dark:bg-[#e08264]/10 hover:bg-[#d97757]/20 px-2 py-0.5 rounded transition-all active:scale-95"
+                              className="flex items-center gap-1 text-xs font-medium text-[#d97757] dark:text-[#e08264] hover:text-[#c46243] bg-[#d97757]/10 dark:bg-[#e08264]/10 hover:bg-[#d97757]/20 px-2 py-0.5 rounded transition-all active:scale-95"
                             >
                               <span>{col.nextLabel}</span>
                               <ArrowRight className="w-2.5 h-2.5" />

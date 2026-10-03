@@ -157,11 +157,11 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
         <div className="flex items-center justify-between gap-3 px-5 sm:px-6 py-3 border-b border-black/10 dark:border-white/10 shrink-0 bg-black/[0.01] dark:bg-white/[0.01]">
           {/* Left: Platform Badge & Feed Info */}
           <div className="flex items-center gap-2 min-w-0">
-            <span className="font-mono text-[10px] uppercase font-bold px-2.5 py-1 rounded-full bg-[#d97757]/10 text-[#d97757] dark:text-[#e08264] border border-[#d97757]/20 shrink-0">
+            <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-[#d97757]/10 text-[#d97757] dark:text-[#e08264] border border-[#d97757]/20 shrink-0">
               {link.platform.replace('_', ' ')}
             </span>
             {link.feedTitle && (
-              <span className="hidden sm:inline-flex items-center gap-1 font-mono text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 truncate max-w-[180px]">
+              <span className="hidden sm:inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 truncate max-w-[180px]">
                 <Rss className="w-2.5 h-2.5 shrink-0" />
                 <span className="truncate">{link.feedTitle}</span>
               </span>
@@ -174,7 +174,7 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
               type="button"
               onClick={handleCopyUrl}
               title="Copy URL"
-              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full font-mono text-xs bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full text-xs bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
             >
               {copiedUrl ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
               <span className="hidden sm:inline">{copiedUrl ? 'Copied' : 'Copy URL'}</span>
@@ -185,7 +185,7 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
                 type="button"
                 onClick={() => onOpenExportModal(link)}
                 title="Export as Markdown for Obsidian or Notion"
-                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full font-mono text-xs bg-[#d97757]/10 text-[#d97757] dark:text-[#e08264] hover:bg-[#d97757]/20 transition-colors border border-[#d97757]/30 cursor-pointer"
+                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full text-xs bg-[#d97757]/10 text-[#d97757] dark:text-[#e08264] hover:bg-[#d97757]/20 transition-colors border border-[#d97757]/30 cursor-pointer"
               >
                 <FileDown className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Export .md</span>
@@ -196,7 +196,7 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
               href={link.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full font-mono text-xs bg-[#d97757] hover:bg-[#c46243] text-white font-semibold shadow-xs transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs bg-[#d97757] hover:bg-[#c46243] text-white font-semibold shadow-xs transition-colors"
             >
               <span>Visit Source</span>
               <ExternalLink className="w-3.5 h-3.5" />
@@ -221,7 +221,7 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
             <button
               type="button"
               onClick={() => setActiveTab('insights')}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-mono text-xs font-medium transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer ${
                 activeTab === 'insights'
                   ? 'bg-white dark:bg-[#1f1e1c] text-[#d97757] dark:text-[#e08264] shadow-xs font-semibold'
                   : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
@@ -233,7 +233,7 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
             <button
               type="button"
               onClick={() => setActiveTab('reader')}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-mono text-xs font-medium transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer ${
                 activeTab === 'reader'
                   ? 'bg-white dark:bg-[#1f1e1c] text-[#d97757] dark:text-[#e08264] shadow-xs font-semibold'
                   : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
@@ -248,7 +248,7 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
           </div>
 
           {link.readerSnapshot && (
-            <div className="hidden sm:flex items-center gap-2 font-mono text-[11px] text-slate-500 dark:text-slate-400">
+            <div className="hidden sm:flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
               <span>{link.readerSnapshot.wordCount} words • {link.readerSnapshot.readingTimeMinutes} min read</span>
             </div>
@@ -262,7 +262,7 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
             <h2 id="link-detail-modal-title" className="font-newsreader font-medium text-2xl sm:text-3xl text-slate-900 dark:text-[#f7f6f3] leading-tight">
               {link.title}
             </h2>
-            <div className="flex flex-wrap items-center gap-3 mt-2 font-mono text-xs text-slate-500 dark:text-slate-400">
+            <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-slate-500 dark:text-slate-400">
               {(link.isRssFeedItem || link.feedTitle) && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-500 border border-amber-500/30 font-medium">
                   <Rss className="w-3 h-3" />
@@ -287,7 +287,7 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
               {/* AI Executive TL;DR Summary */}
               {(link.summary?.tldr || link.aiSummary?.tldr) && (
                 <div className="p-5 rounded-[20px] bg-black/[0.02] dark:bg-white/[0.02] border border-[#d97757]/30 space-y-2">
-                  <div className="flex items-center gap-2 font-mono text-xs font-bold text-[#d97757] dark:text-[#e08264] uppercase tracking-wider">
+                  <div className="flex items-center gap-2 text-xs font-bold text-[#d97757] dark:text-[#e08264] ">
                     <Sparkles className="w-4 h-4" />
                     <span>Executive AI TL;DR</span>
                   </div>
@@ -336,7 +336,7 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
                   >
                     <button
                       onClick={() => handleCopySnippet(snippet, idx)}
-                      className="absolute top-2.5 right-2.5 px-2 py-1 rounded-md bg-white/10 hover:bg-white/20 text-[10px] text-zinc-300 font-mono flex items-center gap-1 transition-colors"
+                      className="absolute top-2.5 right-2.5 px-2 py-1 rounded-md bg-white/10 hover:bg-white/20 text-xs text-zinc-300 flex items-center gap-1 transition-colors"
                     >
                       {copiedSnippetIdx === idx ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
                       <span>{copiedSnippetIdx === idx ? 'Copied' : 'Copy'}</span>
@@ -379,13 +379,13 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block font-mono text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5 font-semibold">
+                <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1.5 font-semibold">
                   Reading Status
                 </label>
                 <select
                   value={readStatus}
                   onChange={(e) => setReadStatus(e.target.value as ReadStatus)}
-                  className="w-full px-3.5 py-2 text-xs bg-white dark:bg-[#18181b] border border-black/10 dark:border-white/10 rounded-xl font-mono focus:outline-none focus:border-[#d97757] text-slate-900 dark:text-[#f7f6f3] transition-colors"
+                  className="w-full px-3.5 py-2 text-xs bg-white dark:bg-[#18181b] border border-black/10 dark:border-white/10 rounded-xl focus:outline-none focus:border-[#d97757] text-slate-900 dark:text-[#f7f6f3] transition-colors"
                 >
                   <option value="unread">Unread</option>
                   <option value="reading">Currently Reading</option>
@@ -394,7 +394,7 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
               </div>
 
               <div>
-                <label className="block font-mono text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5 font-semibold">
+                <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1.5 font-semibold">
                   Category
                 </label>
                 <input
@@ -409,7 +409,7 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
             {/* Tags */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="block font-mono text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">
+                <label className="block text-xs text-slate-500 dark:text-slate-400 font-semibold">
                   Tags
                 </label>
                 <button
@@ -428,7 +428,7 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
                       setTags([...tags, ...newTags]);
                     }
                   }}
-                  className="font-mono text-[10px] text-[#d97757] dark:text-[#e08264] hover:underline font-bold flex items-center gap-1"
+                  className="text-xs text-[#d97757] dark:text-[#e08264] hover:underline font-bold flex items-center gap-1"
                 >
                   <Sparkles className="w-3 h-3" />
                   <span>Auto-Suggest Missing Tags</span>
@@ -438,7 +438,7 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
                 {tags.map((t) => (
                   <span
                     key={t}
-                    className="font-mono text-xs px-2.5 py-1 rounded-lg bg-white dark:bg-[#18181b] border border-black/10 dark:border-white/10 flex items-center gap-1.5 text-slate-700 dark:text-slate-300"
+                    className="text-xs px-2.5 py-1 rounded-lg bg-white dark:bg-[#18181b] border border-black/10 dark:border-white/10 flex items-center gap-1.5 text-slate-700 dark:text-slate-300"
                   >
                     <span>#{t}</span>
                     <button
@@ -462,12 +462,12 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
                     }
                   }}
                   placeholder="Add a new tag and press Enter"
-                  className="flex-1 px-3.5 py-2 text-xs bg-white dark:bg-[#18181b] border border-black/10 dark:border-white/10 rounded-xl focus:outline-none focus:border-[#d97757] font-mono text-slate-900 dark:text-[#f7f6f3] transition-colors"
+                  className="flex-1 px-3.5 py-2 text-xs bg-white dark:bg-[#18181b] border border-black/10 dark:border-white/10 rounded-xl focus:outline-none focus:border-[#d97757] text-slate-900 dark:text-[#f7f6f3] transition-colors"
                 />
                 <button
                   type="button"
                   onClick={handleAddTag}
-                  className="px-4 py-2 bg-black/5 dark:bg-white/10 rounded-xl font-mono text-xs font-semibold hover:bg-black/10 dark:hover:bg-white/15 transition-colors"
+                  className="px-4 py-2 bg-black/5 dark:bg-white/10 rounded-xl text-xs font-semibold hover:bg-black/10 dark:hover:bg-white/15 transition-colors"
                 >
                   Add
                 </button>
@@ -476,7 +476,7 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
 
             {/* Personal Notes */}
             <div>
-              <label className="block font-mono text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5 font-semibold">
+              <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1.5 font-semibold">
                 Personal Reflection & Notes
               </label>
               <textarea
@@ -506,7 +506,7 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
 
           {/* Deep AI Q&A for this Link */}
           <div className="p-5 rounded-2xl bg-black/[0.02] dark:bg-white/[0.02] border border-[#d97757]/20 space-y-3">
-            <div className="flex items-center gap-2 font-mono text-xs font-bold text-[#d97757] dark:text-[#e08264] uppercase tracking-wider">
+            <div className="flex items-center gap-2 text-xs font-bold text-[#d97757] dark:text-[#e08264] ">
               <MessageSquare className="w-4 h-4" />
               <span>Ask AI About This Specific Source</span>
             </div>
@@ -549,7 +549,7 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
           {link.readerSnapshot ? (
             <div className="space-y-6">
               {/* Reader Meta Toolbar */}
-              <div className="p-4 rounded-2xl bg-black/[0.02] dark:bg-white/[0.02] border border-black/10 dark:border-white/10 flex flex-wrap items-center justify-between gap-3 font-mono text-xs text-slate-500 dark:text-slate-400">
+              <div className="p-4 rounded-2xl bg-black/[0.02] dark:bg-white/[0.02] border border-black/10 dark:border-white/10 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400">
                 <div className="flex items-center gap-3">
                   <span className="flex items-center gap-1 text-[#d97757] dark:text-[#e08264] font-semibold">
                     <BookOpen className="w-3.5 h-3.5" />
@@ -563,7 +563,7 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
                 <div className="flex items-center gap-2">
                   <button
                     onClick={handleCopyReaderMarkdown}
-                    className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-black/5 dark:bg-white/5 hover:bg-black/10 text-slate-700 dark:text-slate-300 font-mono text-[11px] transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-black/5 dark:bg-white/5 hover:bg-black/10 text-slate-700 dark:text-slate-300 text-xs transition-colors"
                   >
                     {copiedReaderMd ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
                     <span>{copiedReaderMd ? 'Copied Markdown' : 'Copy Article .md'}</span>
@@ -571,7 +571,7 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
                   <button
                     onClick={handleCaptureReaderSnapshot}
                     disabled={readerLoading}
-                    className="flex items-center gap-1 px-3 py-1 rounded-lg bg-black/5 dark:bg-white/5 hover:bg-black/10 text-slate-700 dark:text-slate-300 font-mono text-[11px] transition-colors disabled:opacity-50"
+                    className="flex items-center gap-1 px-3 py-1 rounded-lg bg-black/5 dark:bg-white/5 hover:bg-black/10 text-slate-700 dark:text-slate-300 text-xs transition-colors disabled:opacity-50"
                   >
                     {readerLoading ? (
                       <div className="w-3 h-3 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
@@ -602,14 +602,14 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
                 <h4 className="font-newsreader font-medium text-lg text-slate-900 dark:text-[#f7f6f3]">
                   No Offline Article Snapshot Yet
                 </h4>
-                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-mono">
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed ">
                   Capture a sanitized, distraction-free Markdown copy of this article to read offline even if the original website goes down or moves behind a paywall.
                 </p>
               </div>
               <button
                 onClick={handleCaptureReaderSnapshot}
                 disabled={readerLoading}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#d97757] hover:bg-[#c46243] text-white text-xs font-semibold rounded-full shadow-xs disabled:opacity-50 transition-all font-mono cursor-pointer"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#d97757] hover:bg-[#c46243] text-white text-xs font-semibold rounded-full shadow-xs disabled:opacity-50 transition-all cursor-pointer"
               >
                 {readerLoading ? (
                   <>

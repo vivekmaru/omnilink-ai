@@ -73,7 +73,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             <button
               type="button"
               onClick={() => (isAllSelected ? onClearSelection() : onSelectAllFiltered())}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-mono transition-all cursor-pointer shadow-xs ${
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs transition-all cursor-pointer shadow-xs ${
                 isAllSelected
                   ? 'bg-[#d97757]/10 dark:bg-[#e08264]/10 border-[#d97757]/30 dark:border-[#e08264]/30 text-[#d97757] dark:text-[#e08264] font-semibold'
                   : selectedCount > 0
@@ -106,7 +106,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         <div className="flex items-center p-0.5 rounded-lg bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5">
           <button
             onClick={() => onFilterChange({ readStatus: 'all' })}
-            className={`px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all ${
+            className={`px-2.5 py-1.5 rounded-md text-xs font-medium transition-all ${
               filters.readStatus === 'all'
                 ? 'bg-white dark:bg-[#1b1b1f] shadow-xs text-slate-900 dark:text-slate-100 font-semibold'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
@@ -116,7 +116,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           </button>
           <button
             onClick={() => onFilterChange({ readStatus: 'unread' })}
-            className={`px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all flex items-center gap-1.5 ${
+            className={`px-2.5 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ${
               filters.readStatus === 'unread'
                 ? 'bg-white dark:bg-[#1b1b1f] shadow-xs text-amber-700 dark:text-amber-400 font-semibold'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
@@ -127,7 +127,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           </button>
           <button
             onClick={() => onFilterChange({ readStatus: 'reading' })}
-            className={`px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all flex items-center gap-1.5 ${
+            className={`px-2.5 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ${
               filters.readStatus === 'reading'
                 ? 'bg-white dark:bg-[#1b1b1f] shadow-xs text-cyan-700 dark:text-cyan-400 font-semibold'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
@@ -138,7 +138,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           </button>
           <button
             onClick={() => onFilterChange({ readStatus: 'read' })}
-            className={`px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all flex items-center gap-1.5 ${
+            className={`px-2.5 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ${
               filters.readStatus === 'read'
                 ? 'bg-white dark:bg-[#1b1b1f] shadow-xs text-emerald-700 dark:text-emerald-400 font-semibold'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
@@ -173,7 +173,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             <select
               value={filters.tag}
               onChange={(e) => onFilterChange({ tag: e.target.value })}
-              className="pl-3 pr-7 py-1.5 rounded-lg text-xs font-mono font-medium border transition-all cursor-pointer text-slate-800 dark:text-slate-200 bg-white dark:bg-[#18181c] border-black/10 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20 focus:outline-none focus:ring-1 focus:ring-[#d97757] appearance-none shadow-xs"
+              className="pl-3 pr-7 py-1.5 rounded-lg text-xs font-medium border transition-all cursor-pointer text-slate-800 dark:text-slate-200 bg-white dark:bg-[#18181c] border-black/10 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20 focus:outline-none focus:ring-1 focus:ring-[#d97757] appearance-none shadow-xs"
               aria-label="Filter by tag"
             >
               <option value="all">All Tags</option>
@@ -225,7 +225,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         {isFiltered && (
           <button
             onClick={handleClearFilters}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-mono font-semibold text-rose-500 dark:text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 transition-colors"
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-rose-500 dark:text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 transition-colors"
             aria-label="Clear active filters"
           >
             <X className="w-3 h-3" />
@@ -237,12 +237,12 @@ export const FilterBar: React.FC<FilterBarProps> = ({
       {/* Right: Sorters & Result Count */}
       <div className="flex items-center gap-3 shrink-0">
         {activeCount !== undefined && totalCount !== undefined && (
-          <span className="font-mono text-[11px] text-slate-400 dark:text-slate-500">
+          <span className="text-xs text-slate-400 dark:text-slate-500">
             {activeCount} of {totalCount}
           </span>
         )}
 
-        <div className="flex items-center gap-1.5 font-mono text-[11px] text-slate-500 dark:text-slate-400">
+        <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
           <ArrowUpDown className="w-3 h-3 opacity-60" />
           <span className="opacity-70">Sort:</span>
           <select
@@ -252,7 +252,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                 sortBy: e.target.value as FilterState['sortBy'],
               })
             }
-            className="bg-transparent border-none text-xs font-mono font-semibold text-slate-800 dark:text-slate-200 outline-none cursor-pointer hover:text-[#d97757] dark:hover:text-[#e08264] transition-colors"
+            className="bg-transparent border-none text-xs font-semibold text-slate-800 dark:text-slate-200 outline-none cursor-pointer hover:text-[#d97757] dark:hover:text-[#e08264] transition-colors"
             aria-label="Sort bookmarks by"
           >
             <option value="newest" className="bg-white dark:bg-[#1f1e1c]">Newest</option>

@@ -201,7 +201,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <Inbox className="w-3.5 h-3.5 opacity-75" />
                     <span>All Links</span>
                   </div>
-                  <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-medium">
+                  <span className="text-xs px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-medium">
                     {totalLinksCount}
                   </span>
                 </button>
@@ -218,7 +218,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <Circle className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
                     <span>Reading Queue</span>
                   </div>
-                  <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-medium">
+                  <span className="text-xs px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-medium">
                     {unreadCount}
                   </span>
                 </button>
@@ -235,7 +235,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <Circle className="w-2.5 h-2.5 fill-cyan-500 text-cyan-500" />
                     <span>In Progress</span>
                   </div>
-                  <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-medium">
+                  <span className="text-xs px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-medium">
                     {readingCount}
                   </span>
                 </button>
@@ -252,7 +252,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
                     <span>Reviewed</span>
                   </div>
-                  <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-medium">
+                  <span className="text-xs px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-medium">
                     {readCount}
                   </span>
                 </button>
@@ -269,7 +269,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                     <span>Starred</span>
                   </div>
-                  <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-medium">
+                  <span className="text-xs px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-medium">
                     {favoritesCount}
                   </span>
                 </button>
@@ -286,7 +286,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <Archive className="w-3.5 h-3.5 opacity-75" />
                     <span>Archived</span>
                   </div>
-                  <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-medium">
+                  <span className="text-xs px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-medium">
                     {archivedCount}
                   </span>
                 </button>
@@ -336,7 +336,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         <span className="truncate">{item.label}</span>
                       </div>
                       {count > 0 && (
-                        <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-medium">
+                        <span className="text-xs px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-medium">
                           {count}
                         </span>
                       )}
@@ -383,7 +383,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           <span className="truncate">{cat}</span>
                         </div>
                         {count > 0 && (
-                          <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-medium">
+                          <span className="text-xs px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-medium">
                             {count}
                           </span>
                         )}
@@ -418,7 +418,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       <BarChart3 className="w-3.5 h-3.5 text-[#d97757] dark:text-[#e08264]" />
                       <span>Analytics</span>
                     </div>
-                    <span className="font-mono text-[10px] text-slate-400">⌘⇧A</span>
+                    <span className="font-mono text-xs text-slate-400">⌘⇧A</span>
                   </button>
                 )}
 
@@ -434,7 +434,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       <ShieldCheck className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                       <span>Encrypted Vault</span>
                     </div>
-                    <span className="font-mono text-[10px] text-slate-400">⌘B</span>
+                    <span className="font-mono text-xs text-slate-400">⌘B</span>
                   </button>
                 )}
 
@@ -465,7 +465,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       <Keyboard className="w-3.5 h-3.5 text-slate-400" />
                       <span>Keyboard Shortcuts</span>
                     </div>
-                    <span className="font-mono text-[10px] text-slate-400">?</span>
+                    <span className="font-mono text-xs text-slate-400">?</span>
                   </button>
                 )}
               </div>
@@ -474,7 +474,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </nav>
 
         {/* Sidebar Footer */}
-        <div className="pt-3 border-t border-black/10 dark:border-white/10 flex items-center justify-between px-1 text-[11px] font-mono text-slate-500 dark:text-slate-400">
+        <div className="pt-3 border-t border-black/10 dark:border-white/10 flex items-center justify-between px-1 text-xs text-slate-500 dark:text-slate-400">
           {/* Sync status */}
           <div className="flex items-center gap-1.5">
             <div
