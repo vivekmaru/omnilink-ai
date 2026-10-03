@@ -1135,19 +1135,6 @@ export default function App() {
             </>
           )}
         </div>
-
-        {/* Footer Meta Bar */}
-        <footer
-          className="px-4 sm:px-8 py-2 sm:py-2.5 border-t flex flex-wrap items-center justify-between text-xs shrink-0 text-slate-500 dark:text-slate-400 gap-2"
-          style={{
-            backgroundColor: 'var(--sidebar-bg)',
-            borderColor: 'var(--card-border)',
-          }}
-        >
-          <div className="font-medium ">OMNILINK AI • KNOWLEDGE REPO</div>
-          <div className="hidden md:block opacity-60">GEMINI FLASH POWERED EXTRACTION</div>
-          <div className="font-medium">{links.length} {links.length === 1 ? 'LINK' : 'LINKS'} CURATED</div>
-        </footer>
       </div>
 
       {/* Lazy Loaded Modals */}

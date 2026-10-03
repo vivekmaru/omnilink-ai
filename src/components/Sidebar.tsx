@@ -23,6 +23,8 @@ import {
   Share2,
   ShieldCheck,
   KeyRound,
+  Columns3,
+  Network,
   Sun,
   Moon,
 } from 'lucide-react';
@@ -61,6 +63,8 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
+  currentView,
+  onViewChange,
   filters,
   onFilterChange,
   stats,
@@ -406,6 +410,38 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </button>
             {utilitiesOpen && (
               <div className="mt-1.5 space-y-0.5">
+                <button
+                  onClick={() => {
+                    onViewChange('kanban');
+                    if (onCloseMobile) onCloseMobile();
+                  }}
+                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] transition-colors ${
+                    currentView === 'kanban'
+                      ? 'bg-black/5 dark:bg-white/10 text-slate-900 dark:text-white font-medium'
+                      : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Columns3 className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
+                    <span>Kanban board</span>
+                  </div>
+                </button>
+                <button
+                  onClick={() => {
+                    onViewChange('cluster');
+                    if (onCloseMobile) onCloseMobile();
+                  }}
+                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] transition-colors ${
+                    currentView === 'cluster'
+                      ? 'bg-black/5 dark:bg-white/10 text-slate-900 dark:text-white font-medium'
+                      : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Network className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
+                    <span>Topic clusters</span>
+                  </div>
+                </button>
                 {onOpenAnalytics && (
                   <button
                     onClick={() => {
