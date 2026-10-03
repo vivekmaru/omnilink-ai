@@ -22,6 +22,7 @@ import {
   Chrome,
   Share2,
   ShieldCheck,
+  KeyRound,
   Sun,
   Moon,
 } from 'lucide-react';
@@ -52,6 +53,8 @@ interface SidebarProps {
   onOpenRssFeeds?: () => void;
   onOpenModelOrchestrator?: () => void;
   onOpenAnalytics?: () => void;
+  /** Only provided when the signed-in user may manage service tokens. */
+  onOpenServiceTokens?: () => void;
   syncStatus: 'synced' | 'syncing' | 'offline' | 'error';
   isMobileOpen?: boolean;
   onCloseMobile?: () => void;
@@ -80,6 +83,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenRssFeeds,
   onOpenModelOrchestrator,
   onOpenAnalytics,
+  onOpenServiceTokens,
   syncStatus,
   isMobileOpen = false,
   onCloseMobile,
@@ -431,6 +435,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       <span>Encrypted Vault</span>
                     </div>
                     <span className="font-mono text-[10px] text-slate-400">⌘B</span>
+                  </button>
+                )}
+
+                {onOpenServiceTokens && (
+                  <button
+                    onClick={() => {
+                      onOpenServiceTokens();
+                      if (onCloseMobile) onCloseMobile();
+                    }}
+                    className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors group"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <KeyRound className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
+                      <span>Service Tokens</span>
+                    </div>
                   </button>
                 )}
 

@@ -20,6 +20,7 @@ import { LinkListView } from './components/LinkListView';
 import { AddLinkModal } from './components/AddLinkModal';
 import { ToastContainer, ToastMessage } from './components/Toast';
 import { ApiService } from './services/api';
+import { canManageServiceTokens, useSession } from './components/AuthGate';
 
 // Code-splitting heavy secondary views and modal bundles via React.lazy
 const KanbanView = React.lazy(() => import('./components/KanbanView').then((m) => ({ default: m.KanbanView })));
@@ -33,6 +34,7 @@ const KeyboardShortcutsModal = React.lazy(() => import('./components/KeyboardSho
 const ExportModal = React.lazy(() => import('./components/ExportModal').then((m) => ({ default: m.ExportModal })));
 const RssFeedsModal = React.lazy(() => import('./components/RssFeedsModal').then((m) => ({ default: m.RssFeedsModal })));
 const ModelOrchestratorModal = React.lazy(() => import('./components/ModelOrchestratorModal').then((m) => ({ default: m.ModelOrchestratorModal })));
+const ServiceTokensModal = React.lazy(() => import('./components/ServiceTokensModal').then((m) => ({ default: m.ServiceTokensModal })));
 const AnalyticsModal = React.lazy(() => import('./components/AnalyticsModal').then((m) => ({ default: m.AnalyticsModal })));
 import {
   ClusterGroup,
@@ -122,6 +124,8 @@ export default function App() {
   const [rssModalOpen, setRssModalOpen] = useState(false);
   const [modelOrchestratorModalOpen, setModelOrchestratorModalOpen] = useState(false);
   const [analyticsModalOpen, setAnalyticsModalOpen] = useState(false);
+  const [serviceTokensModalOpen, setServiceTokensModalOpen] = useState(false);
+  const canManageTokens = canManageServiceTokens(useSession());
   const [exportSingleLink, setExportSingleLink] = useState<LinkItem | null>(null);
   const [selectedLink, setSelectedLink] = useState<LinkItem | null>(null);
   const [rssFeeds, setRssFeeds] = useState<RssFeed[]>([]);
@@ -142,6 +146,10 @@ export default function App() {
 
       // Escape: Dismiss active top modal
       if (e.key === 'Escape') {
+        if (serviceTokensModalOpen) {
+          setServiceTokensModalOpen(false);
+          return;
+        }
         if (analyticsModalOpen) {
           setAnalyticsModalOpen(false);
           return;
@@ -356,6 +364,7 @@ export default function App() {
     backupModalOpen,
     modelOrchestratorModalOpen,
     analyticsModalOpen,
+    serviceTokensModalOpen,
   ]);
 
   // Sync dark mode class with HTML tag
@@ -809,6 +818,7 @@ export default function App() {
         onOpenRssFeeds={() => setRssModalOpen(true)}
         onOpenModelOrchestrator={() => setModelOrchestratorModalOpen(true)}
         onOpenAnalytics={() => setAnalyticsModalOpen(true)}
+        onOpenServiceTokens={canManageTokens ? () => setServiceTokensModalOpen(true) : undefined}
         syncStatus={syncStatus}
         isMobileOpen={mobileSidebarOpen}
         onCloseMobile={() => setMobileSidebarOpen(false)}
@@ -1180,6 +1190,13 @@ export default function App() {
               handleOpenDetail(link);
             }}
             onOpenModelOrchestrator={() => setModelOrchestratorModalOpen(true)}
+          />
+        )}
+
+        {serviceTokensModalOpen && (
+          <ServiceTokensModal
+            isOpen={serviceTokensModalOpen}
+            onClose={() => setServiceTokensModalOpen(false)}
           />
         )}
 

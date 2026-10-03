@@ -1,10 +1,24 @@
-import React, { useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { ApiService, AUTHENTICATION_REQUIRED_EVENT } from '../services/api';
+import type { SessionContext } from '../types';
 
 type AuthState = 'loading' | 'authenticated' | 'anonymous' | 'error';
 
+const SessionContextValue = createContext<SessionContext | null>(null);
+
+/** The signed-in caller's identity, available to everything rendered inside AuthGate. */
+export function useSession(): SessionContext | null {
+  return useContext(SessionContextValue);
+}
+
+/** Service tokens can only be managed from an interactive owner session (see server/auth/http.ts). */
+export function canManageServiceTokens(session: SessionContext | null): boolean {
+  return session?.authMethod === 'session' && session.workspace.role === 'owner';
+}
+
 export function AuthGate({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AuthState>('loading');
+  const [session, setSession] = useState<SessionContext | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -33,7 +47,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
 
         const payload = await response.json() as {
           authenticated?: boolean;
-          context?: { workspace?: { id?: unknown } };
+          context?: SessionContext;
         };
         const workspaceId = payload.context?.workspace?.id;
         if (!payload.authenticated || typeof workspaceId !== 'string' || workspaceId.trim().length === 0) {
@@ -46,6 +60,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
         // migrates only the local workspace cache and isolates all other
         // workspace data under a distinct browser-storage namespace.
         ApiService.setWorkspaceNamespace(workspaceId);
+        setSession(payload.context!);
         setState('authenticated');
       } catch {
         if (!active) return;
@@ -64,7 +79,9 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  if (state === 'authenticated') return <>{children}</>;
+  if (state === 'authenticated') {
+    return <SessionContextValue.Provider value={session}>{children}</SessionContextValue.Provider>;
+  }
   if (state === 'loading') {
     return <main className="min-h-screen bg-[#11100f] text-stone-300 grid place-items-center">Loading OmniLink…</main>;
   }
