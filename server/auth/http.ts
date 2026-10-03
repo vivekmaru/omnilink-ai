@@ -304,17 +304,17 @@ export function registerPasswordRoutes(router: Router, config: PasswordAuthEnvir
       const password = req.body?.password;
       const clientKey = clientAddress(req);
       if (clientFailures.isBlocked(clientKey) || (email && accountFailures.isBlocked(email))) return tooManyAttempts(res);
+      // Reserve the attempt before the expensive scrypt check so concurrent
+      // requests cannot all pass isBlocked() and queue unbounded hashing work.
+      clientFailures.record(clientKey);
       if (!email || typeof password !== 'string' || password.length === 0 || password.length > PASSWORD_MAX_LENGTH) {
-        clientFailures.record(clientKey);
         return invalidCredentials(res);
       }
+      accountFailures.record(email);
       const credential = db.getPasswordCredential(email);
       const valid = await verifyPassword(password, credential?.passwordHash ?? await decoyHash);
-      if (!credential || !valid) {
-        clientFailures.record(clientKey);
-        accountFailures.record(email);
-        return invalidCredentials(res);
-      }
+      if (!credential || !valid) return invalidCredentials(res);
+      clientFailures.release(clientKey);
       accountFailures.reset(email);
       startSession(res, db, credential.userId, credential.workspaceId);
       res.json({ authenticated: true });

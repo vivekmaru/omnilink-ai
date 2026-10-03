@@ -43,7 +43,9 @@ OMNILINK_AI_QUOTA_MONTHLY_UNITS=1000000
 OMNILINK_PASSWORD_SIGNUP=first-user
 ```
 
-On a fresh install the sign-in page offers "Create the owner account"; after that it shows a normal sign-in form. Passwords need at least 10 characters and are stored as salted scrypt hashes in `password_credentials`. Sign-in and sign-up require a same-origin `Origin` header, return the same error for unknown emails and wrong passwords, and are rate limited per client address and per account (in memory, per process).
+On a fresh install the sign-in page offers "Create the owner account"; after that it shows a normal sign-in form. Passwords need at least 10 characters and are stored as salted scrypt hashes in `password_credentials`. Sign-in and sign-up require a same-origin `Origin` header, return the same error for unknown emails and wrong passwords, and are rate limited per client address and per account (in memory, per process). Attempts are counted before the password hash is checked, so a burst of concurrent requests cannot exceed the limits.
+
+Behind a reverse proxy, set `OMNILINK_TRUST_PROXY` so the client address comes from `X-Forwarded-For` instead of the proxy's own address. Without it, every visitor shares one rate-limit bucket. Use the number of proxy hops (`1` for a single Caddy or nginx in front of OmniLink) or the proxy's address or subnet (`loopback`, `10.0.0.0/8`). `true` is rejected because it would trust addresses any client can forge.
 
 ## Staging release gate
 

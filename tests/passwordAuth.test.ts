@@ -71,6 +71,13 @@ describe('password provider configuration', () => {
     expect(config.auth).toEqual({ provider: 'password', signup: 'first-user', sessionSecret: 's'.repeat(32), sessionStore: 'sqlite' });
   });
 
+  it('parses OMNILINK_TRUST_PROXY and refuses to trust every forwarded address', () => {
+    expect(loadRuntimeConfig({}).trustProxy).toBe(false);
+    expect(loadRuntimeConfig({ OMNILINK_TRUST_PROXY: '1' }).trustProxy).toBe(1);
+    expect(loadRuntimeConfig({ OMNILINK_TRUST_PROXY: 'loopback, 10.0.0.0/8' }).trustProxy).toBe('loopback, 10.0.0.0/8');
+    expect(() => loadRuntimeConfig({ OMNILINK_TRUST_PROXY: 'true' })).toThrow(/spoofed/);
+  });
+
   it('rejects unknown providers, sign-up policies and short session secrets', () => {
     const base = { ...PASSWORD_ENV, OMNILINK_APP_ORIGIN: 'https://links.example.test' };
     expect(() => loadRuntimeConfig({ ...base, OMNILINK_AUTH_PROVIDER: 'ldap' })).toThrow(/OMNILINK_AUTH_PROVIDER/);
@@ -102,6 +109,14 @@ describe('password hashing helpers', () => {
     limiter.record('a');
     expect(limiter.isBlocked('a')).toBe(true);
     now = 1001;
+    expect(limiter.isBlocked('a')).toBe(false);
+  });
+
+  it('releases a reserved attempt', () => {
+    const limiter = new AttemptLimiter(1, 1000);
+    limiter.record('a');
+    expect(limiter.isBlocked('a')).toBe(true);
+    limiter.release('a');
     expect(limiter.isBlocked('a')).toBe(false);
   });
 });
@@ -177,5 +192,23 @@ describe('password sign-up and sign-in over HTTP', () => {
     }
     const blocked = await call('/auth/password/login', { method: 'POST', body: { email: 'a@example.test', password: 'a long enough password' } });
     expect(blocked.status).toBe(429);
+  });
+
+  it('counts concurrent attempts before hashing so a burst cannot exceed the account limit', async () => {
+    const { call } = await startServer({ OMNILINK_PASSWORD_SIGNUP: 'open' });
+    await call('/auth/password/signup', { method: 'POST', body: { email: 'a@example.test', password: 'a long enough password' } });
+    const burst = await Promise.all(Array.from({ length: 25 }, (_, attempt) =>
+      call('/auth/password/login', { method: 'POST', body: { email: 'a@example.test', password: `wrong ${attempt}` } })));
+    const statuses = burst.map((response) => response.status);
+    expect(statuses.filter((status) => status === 401)).toHaveLength(10);
+    expect(statuses.filter((status) => status === 429)).toHaveLength(15);
+  });
+
+  it('does not count a successful sign-in against the client address', async () => {
+    const { call } = await startServer({ OMNILINK_PASSWORD_SIGNUP: 'open' });
+    await call('/auth/password/signup', { method: 'POST', body: { email: 'a@example.test', password: 'a long enough password' } });
+    for (let attempt = 0; attempt < 35; attempt += 1) {
+      expect((await call('/auth/password/login', { method: 'POST', body: { email: 'a@example.test', password: 'a long enough password' } })).status).toBe(200);
+    }
   });
 });

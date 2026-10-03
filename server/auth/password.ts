@@ -108,6 +108,14 @@ export class AttemptLimiter {
     this.entries.set(key, { count: 1, resetAt: now + this.windowMs });
   }
 
+  /** Undo one earlier record(), e.g. an attempt reserved before it turned out to succeed. */
+  release(key: string): void {
+    const entry = this.entries.get(key);
+    if (!entry) return;
+    entry.count -= 1;
+    if (entry.count <= 0) this.entries.delete(key);
+  }
+
   reset(key: string): void {
     this.entries.delete(key);
   }
