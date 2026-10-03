@@ -83,21 +83,21 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     return <SessionContextValue.Provider value={session}>{children}</SessionContextValue.Provider>;
   }
   if (state === 'loading') {
-    return <main className="min-h-screen bg-[#11100f] text-stone-300 grid place-items-center">Loading OmniLink…</main>;
+    return <main className="min-h-screen grid place-items-center bg-[var(--bg)] text-[var(--ink-muted)]">Loading OmniLink…</main>;
   }
 
   return (
-    <main className="min-h-screen bg-[#11100f] text-stone-100 grid place-items-center p-6">
-      <section className="w-full max-w-md rounded-2xl border border-white/10 bg-[#1b1917] p-8 shadow-2xl">
-        <p className="text-xs font-mono uppercase tracking-[0.2em] text-orange-300">OmniLink AI</p>
-        <h1 className="mt-3 text-2xl font-semibold">Your workspace is protected</h1>
-        <p className="mt-3 text-sm leading-6 text-stone-400">
+    <main className="min-h-screen grid place-items-center p-6 bg-[var(--bg)] text-[var(--ink)]">
+      <section className="w-full max-w-md rounded-2xl border border-[var(--card-border)] bg-[var(--card-bg)] p-8 shadow-xl">
+        <p className="text-sm font-semibold text-[var(--accent)]">OmniLink AI</p>
+        <h1 className="mt-2 text-2xl font-semibold">Your workspace is protected</h1>
+        <p className="mt-3 text-[15px] leading-relaxed text-[var(--ink-muted)]">
           Sign in through the configured identity provider to open your personal repository.
         </p>
-        {state === 'error' && <p className="mt-4 text-sm text-red-300">The authentication service is unavailable. Try again shortly.</p>}
+        {state === 'error' && <p className="mt-4 text-sm text-rose-600 dark:text-rose-400">The authentication service is unavailable. Try again shortly.</p>}
         <a
           href="/auth/login"
-          className="mt-7 inline-flex w-full items-center justify-center rounded-lg bg-orange-500 px-4 py-3 text-sm font-semibold text-white hover:bg-orange-400"
+          className="mt-7 inline-flex w-full items-center justify-center rounded-lg bg-[var(--accent)] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[var(--accent-hover)]"
         >
           Sign in
         </a>
