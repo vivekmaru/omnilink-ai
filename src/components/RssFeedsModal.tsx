@@ -8,7 +8,6 @@ import {
   Search,
   CheckCircle2,
   AlertCircle,
-  Clock,
   Sparkles,
   Layers,
   FileCode,
@@ -24,7 +23,6 @@ import {
   Globe,
   Sliders,
   Check,
-  Zap,
 } from 'lucide-react';
 import { RssFeed, RssDiscoveryResult } from '../types';
 import { ApiService } from '../services/api';
@@ -394,7 +392,6 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
     );
   });
 
-  const totalUnreadFeedsCount = feeds.reduce((acc, f: any) => acc + (f.unreadCount || 0), 0);
 
   return (
     <div
@@ -422,10 +419,10 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
             </div>
             <div>
               <h2 id="rss-feeds-modal-title" className="text-xl font-semibold text-slate-900 dark:text-[#f7f6f3]">
-                RSS & Engineering Feeds
+                RSS feeds
               </h2>
               <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-                Automatically ingest and summarize new blog posts into your Unread reading queue
+                New posts are summarized and added to your reading queue.
               </p>
             </div>
           </div>
@@ -439,7 +436,7 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
               className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#d97757]/10 text-[#d97757] dark:text-[#e08264] border border-[#d97757]/30 hover:bg-[#d97757]/20 transition-all disabled:opacity-50"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${syncingAll ? 'animate-spin' : ''}`} />
-              {syncingAll ? 'Syncing...' : 'Sync All Feeds'}
+              {syncingAll ? 'Syncing...' : 'Sync all'}
             </button>
 
             <button
@@ -467,12 +464,7 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
               }`}
             >
               <Layers className="w-4 h-4" />
-              <span>Subscribed Feeds ({feeds.length})</span>
-              {totalUnreadFeedsCount > 0 && (
-                <span className="px-1.5 py-0.2 rounded-full bg-black/5 dark:bg-white/10 text-slate-600 dark:text-slate-300 text-xs font-bold">
-                  {totalUnreadFeedsCount} unread
-                </span>
-              )}
+              <span>Your feeds ({feeds.length})</span>
             </button>
 
             <button
@@ -486,7 +478,7 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
               }`}
             >
               <Plus className="w-4 h-4" />
-              <span>Add Feed URL</span>
+              <span>Add feed</span>
             </button>
 
             <button
@@ -500,7 +492,7 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
               }`}
             >
               <Compass className="w-4 h-4" />
-              <span>Curated Dev Catalog</span>
+              <span>Discover</span>
             </button>
 
             <button
@@ -514,7 +506,7 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
               }`}
             >
               <FileCode className="w-4 h-4" />
-              <span>OPML Import / Export</span>
+              <span>Import / export</span>
             </button>
           </div>
         </div>
@@ -524,14 +516,6 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
           {/* TAB 1: Subscribed Feeds */}
           {activeTab === 'subscriptions' && (
             <div className="space-y-4">
-              {/* Informative Instructions Banner */}
-              <div className="p-3.5 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-black/5 dark:border-white/5 flex items-start gap-2.5 text-xs text-slate-600 dark:text-slate-300">
-                <Sparkles className="w-4 h-4 text-[#d97757] dark:text-[#e08264] shrink-0 mt-0.5" />
-                <p className="leading-relaxed">
-                  Subscribed blogs are polled in the background. New articles automatically receive Gemini AI summaries and appear directly in your <strong>Unread Reading Queue</strong>.
-                </p>
-              </div>
-
               {/* Search, Status Sub-Filter & Bulk Controls */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between gap-3">
@@ -555,14 +539,6 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
                     )}
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('add')}
-                    className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-white bg-[#d97757] hover:bg-[#c46243] dark:bg-[#e08264] dark:hover:bg-[#e9957a] rounded-xl transition-colors shrink-0 shadow-xs cursor-pointer"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Add Feed URL
-                  </button>
                 </div>
 
                 {/* Sub-Filter Tabs & Bulk Pause/Resume Controls */}
@@ -685,187 +661,119 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                <ul className="divide-y divide-black/5 dark:divide-white/5 rounded-xl border border-black/10 dark:border-white/10 overflow-hidden">
                   {filteredFeeds.map((feed: any) => {
                     const isSyncing = syncingFeedId === feed.id;
+                    const statusText = feed.enabled
+                      ? feed.lastFetchedAt
+                        ? `Synced ${new Date(feed.lastFetchedAt).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}`
+                        : `Every ${feed.pollIntervalMinutes || 30} min`
+                      : 'Paused';
                     return (
-                      <div
+                      <li
                         key={feed.id}
                         id={`rss-card-${feed.id}`}
-                        className={`p-4 rounded-xl border transition-all duration-200 flex flex-col justify-between ${
-                          feed.enabled
-                            ? 'bg-white dark:bg-[#18181b] border-black/10 dark:border-white/10 hover:border-[#d97757]/40 shadow-2xs'
-                            : 'bg-black/[0.02] dark:bg-white/[0.02] border-black/10 dark:border-white/5 opacity-80'
-                        }`}
+                        className="flex items-center gap-3 px-4 py-3 bg-white dark:bg-[#18181b]"
                       >
-                        <div className="space-y-2.5">
-                          {/* Top Row: Favicon, Title, Status Badge & Toggle Switch */}
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex items-start gap-2.5 min-w-0">
-                              <img
-                                src={feed.faviconUrl || `https://www.google.com/s2/favicons?domain=${feed.url}&sz=64`}
-                                alt=""
-                                className="w-5 h-5 rounded-sm mt-0.5 shrink-0 bg-slate-200 dark:bg-slate-800"
-                                onError={(e) => {
-                                  (e.target as HTMLElement).style.display = 'none';
-                                }}
-                              />
-                              <div className="min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <h4 className="text-sm font-semibold text-slate-900 dark:text-[#f7f6f3] truncate">{feed.title}</h4>
-                                  <a
-                                    href={feed.siteUrl || feed.url}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                                    title="Open website"
-                                  >
-                                    <ExternalLink className="w-3 h-3" />
-                                  </a>
-                                </div>
-                                <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">
-                                  {feed.description || feed.url}
-                                </p>
-                              </div>
-                            </div>
+                        <img
+                          src={feed.faviconUrl || `https://www.google.com/s2/favicons?domain=${feed.url}&sz=64`}
+                          alt=""
+                          className={`w-5 h-5 rounded-sm shrink-0 bg-slate-200 dark:bg-slate-800 ${feed.enabled ? '' : 'opacity-50'}`}
+                          onError={(e) => {
+                            (e.target as HTMLElement).style.display = 'none';
+                          }}
+                        />
 
-                            {/* Status Indicator & Interactive Toggle Switch */}
-                            <div className="flex items-center gap-2 shrink-0">
-                              {feed.enabled ? (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                  <span>Active</span>
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                                  <span>Paused</span>
-                                </span>
-                              )}
-
-                              {/* Toggle Switch Component */}
-                              <button
-                                type="button"
-                                role="switch"
-                                aria-checked={feed.enabled}
-                                onClick={() => handleToggleFeed(feed)}
-                                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                                  feed.enabled ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-zinc-700'
-                                }`}
-                                title={
-                                  feed.enabled
-                                    ? 'Toggle OFF to pause background fetching without deleting feed'
-                                    : 'Toggle ON to resume automatic fetching'
-                                }
-                              >
-                                <span className="sr-only">{feed.enabled ? 'Pause feed' : 'Enable feed'}</span>
-                                <span
-                                  aria-hidden="true"
-                                  className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
-                                    feed.enabled ? 'translate-x-4' : 'translate-x-0'
-                                  }`}
-                                />
-                              </button>
-                            </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5">
+                            <h4
+                              className={`text-sm font-medium truncate ${
+                                feed.enabled ? 'text-slate-900 dark:text-[#f7f6f3]' : 'text-slate-500 dark:text-slate-400'
+                              }`}
+                            >
+                              {feed.title}
+                            </h4>
+                            <a
+                              href={feed.siteUrl || feed.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 shrink-0"
+                              title="Open website"
+                            >
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
                           </div>
-
-                          {/* Metadata row: Category, Tags, AI badge, and Unread Count */}
-                          <div className="flex flex-wrap items-center justify-between gap-1.5 text-xs pt-1">
-                            <div className="flex flex-wrap items-center gap-1.5">
-                              <span className="px-2 py-0.5 rounded bg-black/5 dark:bg-white/5 text-slate-700 dark:text-slate-300 border border-black/5 dark:border-white/5 text-xs font-semibold">
-                                {feed.category}
-                              </span>
-                              {feed.autoAiExtract && (
-                                <span className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/5 text-slate-600 dark:text-slate-300 border border-black/5 dark:border-white/5 text-xs font-medium">
-                                  <Sparkles className="w-2.5 h-2.5 text-[#d97757] dark:text-[#e08264]" />
-                                  AI TL;DR
-                                </span>
-                              )}
-                              {feed.defaultTags.slice(0, 3).map((tag: string) => (
-                                <span
-                                  key={tag}
-                                  className="px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/5 text-slate-500 dark:text-slate-400 text-xs"
-                                >
-                                  #{tag}
-                                </span>
-                              ))}
-                            </div>
-
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                            {statusText}
                             {feed.unreadCount !== undefined && feed.unreadCount > 0 && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  if (onFilterByFeed) {
-                                    onFilterByFeed(feed.id, feed.title);
-                                    onClose();
-                                  }
-                                }}
-                                title="View unread articles from this feed in repository"
-                                className="px-2 py-0.5 text-xs font-bold rounded-full bg-black/5 dark:bg-white/10 text-slate-700 dark:text-slate-300 border border-black/10 dark:border-white/10 hover:bg-black/10 transition-colors cursor-pointer"
-                              >
-                                {feed.unreadCount} unread
-                              </button>
+                              <>
+                                {' · '}
+                                {onFilterByFeed ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      onFilterByFeed(feed.id, feed.title);
+                                      onClose();
+                                    }}
+                                    title="Show this feed's articles"
+                                    className="underline-offset-2 hover:underline hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
+                                  >
+                                    {feed.unreadCount} unread
+                                  </button>
+                                ) : (
+                                  <span>{feed.unreadCount} unread</span>
+                                )}
+                              </>
                             )}
-                          </div>
+                          </p>
                         </div>
 
-                        {/* Bottom Actions Bar */}
-                        <div className="flex items-center justify-between pt-3 mt-3 border-t border-black/5 dark:border-white/5 text-xs">
-                          <div className="flex items-center gap-1.5 text-xs text-slate-400">
-                            <Clock className="w-3 h-3 text-slate-400" />
-                            <span>
-                              {feed.enabled
-                                ? feed.lastFetchedAt
-                                  ? `Synced ${new Date(feed.lastFetchedAt).toLocaleTimeString([], {
-                                      hour: '2-digit',
-                                      minute: '2-digit',
-                                    })}`
-                                  : `Every ${feed.pollIntervalMinutes || 30}m`
-                                : 'Paused (Polling Off)'}
-                            </span>
-                          </div>
-
-                          <div className="flex items-center gap-1">
-                            {/* Filter in repo button */}
-                            {onFilterByFeed && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  onFilterByFeed(feed.id, feed.title);
-                                  onClose();
-                                }}
-                                className="px-2.5 py-1 text-xs text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 rounded transition-colors cursor-pointer"
-                              >
-                                View Articles
-                              </button>
-                            )}
-
-                            {/* Sync button */}
-                            <button
-                              type="button"
-                              onClick={() => handleSyncFeed(feed)}
-                              disabled={isSyncing}
-                              title="Fetch latest posts right now"
-                              className="p-1.5 text-slate-400 hover:text-[#d97757] hover:bg-black/5 dark:hover:bg-white/5 rounded transition-colors cursor-pointer disabled:opacity-50"
-                            >
-                              <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-[#d97757]' : ''}`} />
-                            </button>
-
-                            {/* Delete / Unsubscribe button */}
-                            <button
-                              type="button"
-                              onClick={() => handleRequestUnsubscribe(feed)}
-                              title="Unsubscribe and remove feed"
-                              className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-black/5 dark:hover:bg-white/5 rounded transition-colors cursor-pointer"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => handleSyncFeed(feed)}
+                            disabled={isSyncing}
+                            title="Fetch latest posts now"
+                            aria-label={`Sync ${feed.title}`}
+                            className="p-1.5 text-slate-400 hover:text-[#d97757] hover:bg-black/5 dark:hover:bg-white/5 rounded transition-colors cursor-pointer disabled:opacity-50"
+                          >
+                            <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-[#d97757]' : ''}`} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleRequestUnsubscribe(feed)}
+                            title="Unsubscribe"
+                            aria-label={`Unsubscribe from ${feed.title}`}
+                            className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-black/5 dark:hover:bg-white/5 rounded transition-colors cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            role="switch"
+                            aria-checked={feed.enabled}
+                            onClick={() => handleToggleFeed(feed)}
+                            className={`ml-1 relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                              feed.enabled ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-zinc-700'
+                            }`}
+                            title={feed.enabled ? 'Pause this feed' : 'Resume this feed'}
+                          >
+                            <span className="sr-only">{feed.enabled ? 'Pause feed' : 'Enable feed'}</span>
+                            <span
+                              aria-hidden="true"
+                              className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                                feed.enabled ? 'translate-x-4' : 'translate-x-0'
+                              }`}
+                            />
+                          </button>
                         </div>
-                      </div>
+                      </li>
                     );
                   })}
-                </div>
+                </ul>
               )}
             </div>
           )}
@@ -1243,20 +1151,6 @@ export const RssFeedsModal: React.FC<RssFeedsModalProps> = ({
           )}
         </div>
 
-        {/* Modal Footer */}
-        <div className="px-6 py-3 border-t border-black/10 dark:border-white/10 bg-black/[0.02] dark:bg-white/[0.02] flex items-center justify-between text-xs text-slate-400">
-          <div className="flex items-center gap-2">
-            <Zap className="w-3.5 h-3.5 text-amber-500" />
-            <span>Articles auto-ingest into <strong>Unread</strong> queue with duplicates prevented</span>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-1.5 rounded-lg bg-black/5 dark:bg-white/5 text-slate-700 dark:text-slate-300 hover:bg-black/10 dark:hover:bg-white/10 transition-colors text-xs"
-          >
-            Close
-          </button>
-        </div>
       </div>
 
       {/* Custom Unsubscribe Confirmation Modal */}
