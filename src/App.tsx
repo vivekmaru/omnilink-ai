@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import {
   Plus,
   Search,
@@ -20,6 +20,8 @@ import { LinkListView } from './components/LinkListView';
 import { AddLinkModal } from './components/AddLinkModal';
 import { ToastContainer, ToastMessage } from './components/Toast';
 import { ApiService } from './services/api';
+import { useRoute } from './hooks/useRoute';
+import { linkPath } from './utils/route';
 import { canManageServiceTokens, useSession } from './components/AuthGate';
 
 // Code-splitting heavy secondary views and modal bundles via React.lazy
@@ -114,7 +116,6 @@ export default function App() {
 
   // Modals state
   const [addModalOpen, setAddModalOpen] = useState(false);
-  const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [askRepoModalOpen, setAskRepoModalOpen] = useState(false);
   const [extensionModalOpen, setExtensionModalOpen] = useState(false);
   const [mobileShareModalOpen, setMobileShareModalOpen] = useState(false);
@@ -128,6 +129,11 @@ export default function App() {
   const canManageTokens = canManageServiceTokens(useSession());
   const [exportSingleLink, setExportSingleLink] = useState<LinkItem | null>(null);
   const [selectedLink, setSelectedLink] = useState<LinkItem | null>(null);
+
+  // The article page lives at /link/:id; everything else is the library.
+  const { route, navigate, goBack } = useRoute();
+  const mainScrollRef = useRef<HTMLDivElement>(null);
+  const savedLibraryScroll = useRef(0);
   const [rssFeeds, setRssFeeds] = useState<RssFeed[]>([]);
 
   // Pre-fill state for Add Link Modal (e.g. from URL params or Mobile Share)
@@ -171,11 +177,6 @@ export default function App() {
           setExportSingleLink(null);
           return;
         }
-        if (detailModalOpen) {
-          setDetailModalOpen(false);
-          setSelectedLink(null);
-          return;
-        }
         if (addModalOpen) {
           setAddModalOpen(false);
           return;
@@ -194,6 +195,11 @@ export default function App() {
         }
         if (backupModalOpen) {
           setBackupModalOpen(false);
+          return;
+        }
+        // Leave the article page last, and never while typing (unsaved notes).
+        if (route.name === 'link' && !isInput) {
+          goBack();
           return;
         }
       }
@@ -356,7 +362,8 @@ export default function App() {
     shortcutsModalOpen,
     rssModalOpen,
     exportModalOpen,
-    detailModalOpen,
+    route,
+    goBack,
     addModalOpen,
     askRepoModalOpen,
     extensionModalOpen,
@@ -596,8 +603,10 @@ export default function App() {
     // Optimistically remove from state
     setLinks((prev) => prev.filter((l) => l.id !== id));
     if (selectedLink?.id === id) {
-      setDetailModalOpen(false);
       setSelectedLink(null);
+    }
+    if (route.name === 'link' && route.id === id) {
+      goBack();
     }
 
     // Hold deletion in buffer for 6 seconds before persisting to backend
@@ -764,9 +773,34 @@ export default function App() {
   };
 
   const handleOpenDetail = (link: LinkItem) => {
+    if (route.name === 'home') {
+      savedLibraryScroll.current = mainScrollRef.current?.scrollTop ?? 0;
+    }
     setSelectedLink(link);
-    setDetailModalOpen(true);
+    navigate(linkPath(link.id));
   };
+
+  // Prefer the live copy in `links` so edits made elsewhere show on the page.
+  const pageLink =
+    route.name === 'link'
+      ? links.find((l) => l.id === route.id) ?? (selectedLink?.id === route.id ? selectedLink : null)
+      : null;
+
+  // Return to the same spot in the library after leaving an article.
+  useLayoutEffect(() => {
+    if (route.name === 'home' && mainScrollRef.current) {
+      mainScrollRef.current.scrollTop = savedLibraryScroll.current;
+    }
+  }, [route.name]);
+
+  useEffect(() => {
+    if (!pageLink) return;
+    const previousTitle = document.title;
+    document.title = pageLink.title || pageLink.url;
+    return () => {
+      document.title = previousTitle;
+    };
+  }, [pageLink?.id, pageLink?.title]);
 
   const handleSimulateMobileShare = (url: string, title: string) => {
     setPrefillData({ url, title, notes: 'Saved from Mobile Quick Share sheet' });
@@ -829,7 +863,10 @@ export default function App() {
         {/* Cohesive Header Toolbar with Search and Action Buttons */}
         <Navbar
           searchQuery={filters.searchQuery}
-          onSearchChange={(searchQuery) => handleFilterChange({ searchQuery })}
+          onSearchChange={(searchQuery) => {
+            handleFilterChange({ searchQuery });
+            if (route.name === 'link') navigate('/');
+          }}
           onOpenAddModal={() => {
             setPrefillData({});
             setAddModalOpen(true);
@@ -841,255 +878,265 @@ export default function App() {
           onViewChange={setCurrentView}
         />
 
-        {/* Detailed Filters & Sorters */}
-        {currentView !== 'cluster' && (
-          <FilterBar
-            filters={filters}
-            onFilterChange={handleFilterChange}
-            availableCategories={availableCategories}
-            availableTags={availableTags}
-            activeCount={filteredLinks.length}
-            totalCount={links.length}
-            selectedCount={selectedIds.length}
-            onSelectAllFiltered={() => setSelectedIds(filteredLinks.map((l) => l.id))}
-            onClearSelection={() => setSelectedIds([])}
-            isAllSelected={filteredLinks.length > 0 && filteredLinks.every((l) => selectedIds.includes(l.id))}
-          />
-        )}
-
-        {/* Batch Actions Bar */}
-        {selectedIds.length > 0 && (
-          <div className="bg-[#d97757]/10 dark:bg-[#e08264]/10 border-b border-[#d97757]/20 dark:border-[#e08264]/20 px-4 sm:px-8 py-2.5 flex flex-wrap items-center justify-between gap-2.5 text-xs shrink-0 animate-in fade-in slide-in-from-top-1 duration-150">
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-bold text-[#d97757] dark:text-[#e08264] flex items-center gap-1.5">
-                <Check className="w-3.5 h-3.5 stroke-[3]" />
-                <span>{selectedIds.length} {selectedIds.length === 1 ? 'ITEM' : 'ITEMS'} SELECTED</span>
-              </span>
-              {filteredLinks.length > selectedIds.length && (
+        {route.name === 'link' ? (
+          <main className="flex-1 overflow-hidden">
+            {pageLink ? (
+              <React.Suspense fallback={null}>
+                <LinkDetailModal
+                  key={pageLink.id}
+                  variant="page"
+                  link={pageLink}
+                  isOpen
+                  onClose={() => goBack()}
+                  onUpdateLink={handleLinkUpdated}
+                  onOpenExportModal={(link) => {
+                    setExportSingleLink(link);
+                    setExportModalOpen(true);
+                  }}
+                />
+              </React.Suspense>
+            ) : loading ? (
+              <div className="p-16 text-center">
+                <div className="w-8 h-8 border-2 border-[#d97757] border-t-transparent rounded-full animate-spin mx-auto" />
+              </div>
+            ) : (
+              <div className="p-16 text-center space-y-3">
+                <p className="text-sm text-slate-600 dark:text-slate-300">This link isn't in your library.</p>
                 <button
                   type="button"
-                  onClick={() => setSelectedIds(filteredLinks.map((l) => l.id))}
-                  className="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 underline underline-offset-2 cursor-pointer"
+                  onClick={() => navigate('/')}
+                  className="text-sm text-[#d97757] dark:text-[#e08264] hover:underline cursor-pointer"
                 >
-                  Select all {filteredLinks.length} filtered
+                  Back to all links
                 </button>
-              )}
-            </div>
-
-            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-              {/* Category selector */}
-              <div className="relative">
-                <select
-                  defaultValue=""
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      handleBatchCategorize(e.target.value);
-                      e.target.value = '';
-                    }
-                  }}
-                  className="pl-2.5 pr-6 py-1 bg-white dark:bg-[#1f1e1d] rounded-lg font-medium text-xs text-slate-700 dark:text-slate-300 shadow-2xs border border-black/10 dark:border-white/10 cursor-pointer appearance-none"
-                  aria-label="Move selected bookmarks to category"
-                >
-                  <option value="" disabled>Move to Category...</option>
-                  {availableCategories.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
-                <Folder className="w-3 h-3 absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
               </div>
+            )}
+          </main>
+        ) : (
+          <>
+          {/* Detailed Filters & Sorters */}
+          {currentView !== 'cluster' && (
+            <FilterBar
+              filters={filters}
+              onFilterChange={handleFilterChange}
+              availableCategories={availableCategories}
+              availableTags={availableTags}
+              activeCount={filteredLinks.length}
+              totalCount={links.length}
+              selectedCount={selectedIds.length}
+              onSelectAllFiltered={() => setSelectedIds(filteredLinks.map((l) => l.id))}
+              onClearSelection={() => setSelectedIds([])}
+              isAllSelected={filteredLinks.length > 0 && filteredLinks.every((l) => selectedIds.includes(l.id))}
+            />
+          )}
 
-              <button
-                type="button"
-                onClick={() => {
-                  setExportSingleLink(null);
-                  setExportModalOpen(true);
-                }}
-                className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-[#1f1e1d] rounded-lg font-medium text-slate-800 dark:text-slate-200 shadow-2xs hover:bg-slate-50 dark:hover:bg-white/5 border border-black/10 dark:border-white/10 cursor-pointer"
-              >
-                <FileDown className="w-3.5 h-3.5 text-[#d97757] dark:text-[#e08264]" />
-                <span className="hidden sm:inline">Export .md ({selectedIds.length})</span>
-                <span className="sm:hidden">Export</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleBatchMarkRead}
-                className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-[#1f1e1d] rounded-lg font-medium text-slate-800 dark:text-slate-200 shadow-2xs hover:bg-slate-50 dark:hover:bg-white/5 border border-black/10 dark:border-white/10 cursor-pointer"
-                title="Mark all selected as Reviewed"
-              >
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                <span>Mark Reviewed</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleBatchMarkUnread}
-                className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-[#1f1e1d] rounded-lg font-medium text-slate-800 dark:text-slate-200 shadow-2xs hover:bg-slate-50 dark:hover:bg-white/5 border border-black/10 dark:border-white/10 cursor-pointer"
-                title="Mark all selected as Unread"
-              >
-                <Circle className="w-3.5 h-3.5 text-amber-500" />
-                <span>Mark Unread</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleBatchDelete}
-                className="flex items-center gap-1.5 px-3 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded-lg font-medium shadow-2xs cursor-pointer transition-colors"
-                title="Delete all selected bookmarks (with 6s Undo)"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                <span>Delete ({selectedIds.length})</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setSelectedIds([])}
-                className="px-2.5 py-1 text-xs font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 rounded-md border border-black/5 dark:border-white/5 hover:bg-black/5 dark:hover:bg-white/5 transition-all cursor-pointer"
-              >
-                Clear
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Scrollable Main Content */}
-        <div className="flex-1 overflow-y-auto p-3.5 sm:p-8">
-          {loading ? (
-            <div className="p-16 text-center space-y-3">
-              <div className="w-8 h-8 border-2 border-[#d97757] border-t-transparent rounded-full animate-spin mx-auto" />
-              <div className="text-xs text-slate-500 dark:text-slate-400">
-                Loading OmniLink Repository...
-              </div>
-            </div>
-          ) : filteredLinks.length === 0 && currentView !== 'cluster' ? (
-            <div
-              className="p-8 sm:p-12 text-center border border-black/10 dark:border-white/10 rounded-2xl space-y-5 max-w-lg mx-auto shadow-sm mt-4 sm:mt-8 animate-card-entrance"
-              style={{ backgroundColor: 'var(--card-bg)' }}
-            >
-              <div className="w-14 h-14 rounded-2xl bg-[#d97757]/10 dark:bg-[#e08264]/10 flex items-center justify-center mx-auto text-[#d97757] dark:text-[#e08264]">
-                <Search className="w-6 h-6" />
-              </div>
-              <div className="space-y-1.5">
-                <h3 className="font-newsreader font-medium text-2xl text-slate-900 dark:text-slate-100">
-                  {filters.searchQuery || filters.platform !== 'all' || filters.category !== 'all' || filters.tag !== 'all'
-                    ? 'No Matching Links'
-                    : 'Your Repository is Ready'}
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto leading-relaxed">
-                  {filters.searchQuery || filters.platform !== 'all' || filters.category !== 'all' || filters.tag !== 'all'
-                    ? 'No links match your active filters or query. Try resetting filters or adjusting terms.'
-                    : 'Extract web articles, GitHub repositories, Reddit threads, or YouTube videos with Gemini AI.'}
-                </p>
-              </div>
-
-              <div className="flex items-center justify-center gap-3 pt-2">
-                {filters.searchQuery || filters.platform !== 'all' || filters.category !== 'all' || filters.tag !== 'all' ? (
+          {/* Batch Actions Bar */}
+          {selectedIds.length > 0 && (
+            <div className="bg-[#d97757]/10 dark:bg-[#e08264]/10 border-b border-[#d97757]/20 dark:border-[#e08264]/20 px-4 sm:px-8 py-2.5 flex flex-wrap items-center justify-between gap-2.5 text-xs shrink-0 animate-in fade-in slide-in-from-top-1 duration-150">
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-bold text-[#d97757] dark:text-[#e08264] flex items-center gap-1.5">
+                  <Check className="w-3.5 h-3.5 stroke-[3]" />
+                  <span>{selectedIds.length} {selectedIds.length === 1 ? 'ITEM' : 'ITEMS'} SELECTED</span>
+                </span>
+                {filteredLinks.length > selectedIds.length && (
                   <button
-                    onClick={() =>
-                      handleFilterChange({
-                        searchQuery: '',
-                        platform: 'all',
-                        category: 'all',
-                        tag: 'all',
-                        readStatus: 'all',
-                        onlyFavorites: false,
-                        includeArchived: false,
-                      })
-                    }
-                    className="px-4 py-2 bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-200 transition-colors"
+                    type="button"
+                    onClick={() => setSelectedIds(filteredLinks.map((l) => l.id))}
+                    className="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 underline underline-offset-2 cursor-pointer"
                   >
-                    Reset All Filters
+                    Select all {filteredLinks.length} filtered
                   </button>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => {
-                        setPrefillData({});
-                        setAddModalOpen(true);
-                      }}
-                      className="flex items-center gap-1.5 px-4 py-2 bg-[#d97757] hover:bg-[#c46243] dark:bg-[#e08264] dark:hover:bg-[#e9957a] text-white text-xs font-semibold rounded-xl shadow-xs transition-all active:scale-95"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                      <span>Add New Link (N)</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        setPrefillData({
-                          url: 'https://github.com/google/gemini-api',
-                          title: 'Google Gemini API Official Repository',
-                          notes: 'Official SDKs and examples for Gemini multimodal models',
-                        });
-                        setAddModalOpen(true);
-                      }}
-                      className="px-3 py-2 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 border border-black/5 dark:border-white/5 rounded-xl text-xs text-slate-700 dark:text-slate-300 transition-colors"
-                    >
-                      + Sample GitHub Repo
-                    </button>
-                  </>
                 )}
               </div>
-            </div>
-          ) : (
-            <>
-              {/* View 1: 3-Column Card Grid */}
-              {currentView === 'grid' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5 sm:gap-5">
-                  {filteredLinks.map((link) => (
-                    <LinkCard
-                      key={link.id}
-                      link={link}
-                      isSelected={selectedIds.includes(link.id)}
-                      onToggleSelect={(id) =>
-                        setSelectedIds((prev) =>
-                          prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
-                        )
+
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                {/* Category selector */}
+                <div className="relative">
+                  <select
+                    defaultValue=""
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        handleBatchCategorize(e.target.value);
+                        e.target.value = '';
                       }
-                      selectionMode={selectedIds.length > 0}
-                      onSelect={handleOpenDetail}
-                      onToggleFavorite={handleToggleFavorite}
-                      onToggleArchive={handleToggleArchive}
-                      onDelete={handleDelete}
-                      onReExtractAI={handleReExtractAI}
-                      onExportMarkdown={(link) => {
-                        setExportSingleLink(link);
-                        setExportModalOpen(true);
-                      }}
-                    />
-                  ))}
+                    }}
+                    className="pl-2.5 pr-6 py-1 bg-white dark:bg-[#1f1e1d] rounded-lg font-medium text-xs text-slate-700 dark:text-slate-300 shadow-2xs border border-black/10 dark:border-white/10 cursor-pointer appearance-none"
+                    aria-label="Move selected bookmarks to category"
+                  >
+                    <option value="" disabled>Move to Category...</option>
+                    {availableCategories.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                  </select>
+                  <Folder className="w-3 h-3 absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                 </div>
-              )}
 
-              {/* View 2: High Density List Table */}
-              {currentView === 'list' && (
-                <LinkListView
-                  links={filteredLinks}
-                  selectedIds={selectedIds}
-                  onToggleSelectId={(id) =>
-                    setSelectedIds((prev) =>
-                      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
-                    )
-                  }
-                  onSelectAll={() => setSelectedIds(filteredLinks.map((l) => l.id))}
-                  onClearSelection={() => setSelectedIds([])}
-                  onOpenDetail={handleOpenDetail}
-                  onToggleFavorite={handleToggleFavorite}
-                  onToggleArchive={handleToggleArchive}
-                  onDelete={handleDelete}
-                />
-              )}
-
-              {/* View 3: Kanban Triaging Lanes */}
-              {currentView === 'kanban' && (
-                <React.Suspense
-                  fallback={
-                    <div className="p-12 text-center text-xs text-slate-400">
-                      Loading Kanban Lanes...
-                    </div>
-                  }
+                <button
+                  type="button"
+                  onClick={() => {
+                    setExportSingleLink(null);
+                    setExportModalOpen(true);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-[#1f1e1d] rounded-lg font-medium text-slate-800 dark:text-slate-200 shadow-2xs hover:bg-slate-50 dark:hover:bg-white/5 border border-black/10 dark:border-white/10 cursor-pointer"
                 >
-                  <KanbanView
+                  <FileDown className="w-3.5 h-3.5 text-[#d97757] dark:text-[#e08264]" />
+                  <span className="hidden sm:inline">Export .md ({selectedIds.length})</span>
+                  <span className="sm:hidden">Export</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleBatchMarkRead}
+                  className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-[#1f1e1d] rounded-lg font-medium text-slate-800 dark:text-slate-200 shadow-2xs hover:bg-slate-50 dark:hover:bg-white/5 border border-black/10 dark:border-white/10 cursor-pointer"
+                  title="Mark all selected as Reviewed"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                  <span>Mark Reviewed</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleBatchMarkUnread}
+                  className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-[#1f1e1d] rounded-lg font-medium text-slate-800 dark:text-slate-200 shadow-2xs hover:bg-slate-50 dark:hover:bg-white/5 border border-black/10 dark:border-white/10 cursor-pointer"
+                  title="Mark all selected as Unread"
+                >
+                  <Circle className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Mark Unread</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleBatchDelete}
+                  className="flex items-center gap-1.5 px-3 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded-lg font-medium shadow-2xs cursor-pointer transition-colors"
+                  title="Delete all selected bookmarks (with 6s Undo)"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Delete ({selectedIds.length})</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedIds([])}
+                  className="px-2.5 py-1 text-xs font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 rounded-md border border-black/5 dark:border-white/5 hover:bg-black/5 dark:hover:bg-white/5 transition-all cursor-pointer"
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Scrollable Main Content */}
+          <div ref={mainScrollRef} className="flex-1 overflow-y-auto p-3.5 sm:p-8">
+            {loading ? (
+              <div className="p-16 text-center space-y-3">
+                <div className="w-8 h-8 border-2 border-[#d97757] border-t-transparent rounded-full animate-spin mx-auto" />
+                <div className="text-xs text-slate-500 dark:text-slate-400">
+                  Loading OmniLink Repository...
+                </div>
+              </div>
+            ) : filteredLinks.length === 0 && currentView !== 'cluster' ? (
+              <div
+                className="p-8 sm:p-12 text-center border border-black/10 dark:border-white/10 rounded-2xl space-y-5 max-w-lg mx-auto shadow-sm mt-4 sm:mt-8 animate-card-entrance"
+                style={{ backgroundColor: 'var(--card-bg)' }}
+              >
+                <div className="w-14 h-14 rounded-2xl bg-[#d97757]/10 dark:bg-[#e08264]/10 flex items-center justify-center mx-auto text-[#d97757] dark:text-[#e08264]">
+                  <Search className="w-6 h-6" />
+                </div>
+                <div className="space-y-1.5">
+                  <h3 className="font-newsreader font-medium text-2xl text-slate-900 dark:text-slate-100">
+                    {filters.searchQuery || filters.platform !== 'all' || filters.category !== 'all' || filters.tag !== 'all'
+                      ? 'No Matching Links'
+                      : 'Your Repository is Ready'}
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto leading-relaxed">
+                    {filters.searchQuery || filters.platform !== 'all' || filters.category !== 'all' || filters.tag !== 'all'
+                      ? 'No links match your active filters or query. Try resetting filters or adjusting terms.'
+                      : 'Extract web articles, GitHub repositories, Reddit threads, or YouTube videos with Gemini AI.'}
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-center gap-3 pt-2">
+                  {filters.searchQuery || filters.platform !== 'all' || filters.category !== 'all' || filters.tag !== 'all' ? (
+                    <button
+                      onClick={() =>
+                        handleFilterChange({
+                          searchQuery: '',
+                          platform: 'all',
+                          category: 'all',
+                          tag: 'all',
+                          readStatus: 'all',
+                          onlyFavorites: false,
+                          includeArchived: false,
+                        })
+                      }
+                      className="px-4 py-2 bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-200 transition-colors"
+                    >
+                      Reset All Filters
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => {
+                          setPrefillData({});
+                          setAddModalOpen(true);
+                        }}
+                        className="flex items-center gap-1.5 px-4 py-2 bg-[#d97757] hover:bg-[#c46243] dark:bg-[#e08264] dark:hover:bg-[#e9957a] text-white text-xs font-semibold rounded-xl shadow-xs transition-all active:scale-95"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Add New Link (N)</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setPrefillData({
+                            url: 'https://github.com/google/gemini-api',
+                            title: 'Google Gemini API Official Repository',
+                            notes: 'Official SDKs and examples for Gemini multimodal models',
+                          });
+                          setAddModalOpen(true);
+                        }}
+                        className="px-3 py-2 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 border border-black/5 dark:border-white/5 rounded-xl text-xs text-slate-700 dark:text-slate-300 transition-colors"
+                      >
+                        + Sample GitHub Repo
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <>
+                {/* View 1: 3-Column Card Grid */}
+                {currentView === 'grid' && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5 sm:gap-5">
+                    {filteredLinks.map((link) => (
+                      <LinkCard
+                        key={link.id}
+                        link={link}
+                        isSelected={selectedIds.includes(link.id)}
+                        onToggleSelect={(id) =>
+                          setSelectedIds((prev) =>
+                            prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+                          )
+                        }
+                        selectionMode={selectedIds.length > 0}
+                        onSelect={handleOpenDetail}
+                        onToggleFavorite={handleToggleFavorite}
+                        onToggleArchive={handleToggleArchive}
+                        onDelete={handleDelete}
+                        onReExtractAI={handleReExtractAI}
+                        onExportMarkdown={(link) => {
+                          setExportSingleLink(link);
+                          setExportModalOpen(true);
+                        }}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {/* View 2: High Density List Table */}
+                {currentView === 'list' && (
+                  <LinkListView
                     links={filteredLinks}
                     selectedIds={selectedIds}
                     onToggleSelectId={(id) =>
@@ -1097,33 +1144,61 @@ export default function App() {
                         prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
                       )
                     }
+                    onSelectAll={() => setSelectedIds(filteredLinks.map((l) => l.id))}
+                    onClearSelection={() => setSelectedIds([])}
                     onOpenDetail={handleOpenDetail}
-                    onUpdateStatus={handleUpdateStatus}
                     onToggleFavorite={handleToggleFavorite}
+                    onToggleArchive={handleToggleArchive}
+                    onDelete={handleDelete}
                   />
-                </React.Suspense>
-              )}
+                )}
 
-              {/* View 4: Vector AI Spatial Cluster Map */}
-              {currentView === 'cluster' && (
-                <React.Suspense
-                  fallback={
-                    <div className="p-12 text-center text-xs text-slate-400">
-                      Loading Vector Knowledge Space...
-                    </div>
-                  }
-                >
-                  <ClusterView
-                    links={links}
-                    clusters={clusters}
-                    onClustersUpdated={setClusters}
-                    onOpenDetail={handleOpenDetail}
-                  />
-                </React.Suspense>
-              )}
-            </>
-          )}
-        </div>
+                {/* View 3: Kanban Triaging Lanes */}
+                {currentView === 'kanban' && (
+                  <React.Suspense
+                    fallback={
+                      <div className="p-12 text-center text-xs text-slate-400">
+                        Loading Kanban Lanes...
+                      </div>
+                    }
+                  >
+                    <KanbanView
+                      links={filteredLinks}
+                      selectedIds={selectedIds}
+                      onToggleSelectId={(id) =>
+                        setSelectedIds((prev) =>
+                          prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+                        )
+                      }
+                      onOpenDetail={handleOpenDetail}
+                      onUpdateStatus={handleUpdateStatus}
+                      onToggleFavorite={handleToggleFavorite}
+                    />
+                  </React.Suspense>
+                )}
+
+                {/* View 4: Vector AI Spatial Cluster Map */}
+                {currentView === 'cluster' && (
+                  <React.Suspense
+                    fallback={
+                      <div className="p-12 text-center text-xs text-slate-400">
+                        Loading Vector Knowledge Space...
+                      </div>
+                    }
+                  >
+                    <ClusterView
+                      links={links}
+                      clusters={clusters}
+                      onClustersUpdated={setClusters}
+                      onOpenDetail={handleOpenDetail}
+                    />
+                  </React.Suspense>
+                )}
+              </>
+            )}
+          </div>
+          </>
+        )}
       </div>
 
       {/* Lazy Loaded Modals */}
@@ -1140,22 +1215,6 @@ export default function App() {
       />
 
       <React.Suspense fallback={null}>
-        {detailModalOpen && (
-          <LinkDetailModal
-            link={selectedLink}
-            isOpen={detailModalOpen}
-            onClose={() => {
-              setDetailModalOpen(false);
-              setSelectedLink(null);
-            }}
-            onUpdateLink={handleLinkUpdated}
-            onOpenExportModal={(link) => {
-              setExportSingleLink(link);
-              setExportModalOpen(true);
-            }}
-          />
-        )}
-
         {askRepoModalOpen && (
           <AskRepoModal
             isOpen={askRepoModalOpen}
