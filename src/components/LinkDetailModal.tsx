@@ -17,6 +17,7 @@ import {
   Send,
   FileDown,
   Rss,
+  ArrowLeft,
 } from 'lucide-react';
 import { LinkItem, ReadStatus } from '../types';
 import { ApiService } from '../services/api';
@@ -29,6 +30,8 @@ interface LinkDetailModalProps {
   onClose: () => void;
   onUpdateLink: (updated: LinkItem) => void;
   onOpenExportModal?: (link: LinkItem) => void;
+  /** 'page' renders inline as a full-height article view instead of an overlay. */
+  variant?: 'modal' | 'page';
 }
 
 export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
@@ -37,8 +40,10 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
   onClose,
   onUpdateLink,
   onOpenExportModal,
+  variant = 'modal',
 }) => {
   if (!isOpen || !link) return null;
+  const isPage = variant === 'page';
 
   const [notes, setNotes] = useState(link.notes || '');
   const [category, setCategory] = useState(link.category);
@@ -150,13 +155,23 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-xs">
+    <div
+      className={
+        isPage
+          ? 'h-full flex justify-center'
+          : 'fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-xs'
+      }
+    >
       <div
         id="link-detail-modal-card"
-        role="dialog"
-        aria-modal="true"
+        role={isPage ? 'article' : 'dialog'}
+        aria-modal={isPage ? undefined : true}
         aria-labelledby="link-detail-modal-title"
-        className="w-full max-w-3xl max-h-[90vh] border rounded-[24px] shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+        className={
+          isPage
+            ? 'w-full max-w-3xl h-full flex flex-col overflow-hidden border-x'
+            : 'w-full max-w-3xl max-h-[90vh] border rounded-[24px] shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150'
+        }
         style={{
           backgroundColor: 'var(--card-bg)',
           borderColor: 'var(--card-border)',
@@ -164,8 +179,19 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
       >
         {/* Modal Top Header: Platform & Actions */}
         <div className="flex items-center justify-between gap-3 px-5 sm:px-6 py-3 border-b border-black/10 dark:border-white/10 shrink-0 bg-black/[0.01] dark:bg-white/[0.01]">
-          {/* Left: where this came from */}
+          {/* Left: back (page only) and where this came from */}
           <div className="flex items-center gap-2 min-w-0 text-xs text-slate-500 dark:text-slate-400">
+            {isPage && (
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex items-center gap-1 -ml-2 mr-1 px-2 py-1 rounded-full text-sm text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer shrink-0"
+                aria-label="Back to links"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Back</span>
+              </button>
+            )}
             {link.feedTitle || link.isRssFeedItem ? <Rss className="w-3.5 h-3.5 shrink-0" /> : null}
             <span className="truncate capitalize">
               {link.feedTitle || link.platform.replace('_', ' ')}
@@ -206,16 +232,20 @@ export const LinkDetailModal: React.FC<LinkDetailModalProps> = ({
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
 
-            <div className="w-px h-5 bg-black/10 dark:border-white/10 mx-0.5" />
+            {!isPage && (
+              <>
+                <div className="w-px h-5 bg-black/10 dark:border-white/10 mx-0.5" />
 
-            <button
-              type="button"
-              onClick={onClose}
-              className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
-              aria-label="Close dialog"
-            >
-              <X className="w-4 h-4" />
-            </button>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
+                  aria-label="Close dialog"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </>
+            )}
           </div>
         </div>
 
