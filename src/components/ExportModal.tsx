@@ -32,6 +32,8 @@ import {
 interface ExportModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /** 'page' renders inline in the Settings page instead of as a pop-up. */
+  variant?: 'modal' | 'page';
   allLinks: LinkItem[];
   filteredLinks: LinkItem[];
   selectedIds: string[];
@@ -47,8 +49,10 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   selectedIds,
   initialSelectedLink,
   onToast,
+  variant = 'modal',
 }) => {
   if (!isOpen) return null;
+  const isPage = variant === 'page';
 
   // Determine initial scope: If single link passed -> single; else if selectedIds exist -> selected; else filtered/all
   const [scope, setScope] = useState<'selected' | 'filtered' | 'all' | 'single'>(() => {
@@ -132,15 +136,15 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   return (
     <div
       id="export-markdown-modal-backdrop"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
-      onClick={onClose}
+      className={isPage ? 'h-full' : 'fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200'}
+      onClick={isPage ? undefined : onClose}
     >
       <div
         id="export-markdown-modal"
-        role="dialog"
-        aria-modal="true"
+        role={isPage ? 'region' : 'dialog'}
+        aria-modal={isPage ? undefined : true}
         aria-labelledby="export-modal-title"
-        className="relative w-full max-w-4xl max-h-[90vh] flex flex-col rounded-2xl border shadow-2xl overflow-hidden text-slate-900 dark:text-[#f7f6f3] transition-all"
+        className={isPage ? 'h-full flex flex-col overflow-hidden text-slate-900 dark:text-[#f7f6f3]' : 'relative w-full max-w-4xl max-h-[90vh] flex flex-col rounded-2xl border shadow-2xl overflow-hidden text-slate-900 dark:text-[#f7f6f3] transition-all'}
         style={{
           backgroundColor: 'var(--card-bg)',
           borderColor: 'var(--card-border)',
@@ -167,13 +171,15 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            <button
-              onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-              title="Close modal (Esc)"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            {!isPage && (
+              <button
+                onClick={onClose}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                title="Close modal (Esc)"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
           </div>
         </div>
 
@@ -303,7 +309,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         </div>
 
         {/* Modal Body */}
-        <div className="flex-1 overflow-y-auto min-h-[320px] max-h-[500px]">
+        <div className={`flex-1 overflow-y-auto min-h-[320px] ${isPage ? '' : 'max-h-[500px]'}`}>
           {activeTab === 'preview' ? (
             <div className="p-5 flex flex-col h-full space-y-3">
               {/* Output Preview Window */}
@@ -510,12 +516,14 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           </div>
 
           <div className="flex items-center gap-2.5">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 rounded-lg border border-black/10 dark:border-white/10 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-            >
-              Cancel
-            </button>
+            {!isPage && (
+              <button
+                onClick={onClose}
+                className="px-4 py-2 rounded-lg border border-black/10 dark:border-white/10 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+              >
+                Cancel
+              </button>
+            )}
 
             <button
               onClick={handleDownload}

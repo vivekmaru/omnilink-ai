@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback } from 'react';
 import {
   Plus,
   Search,
@@ -21,7 +21,7 @@ import { AddLinkModal } from './components/AddLinkModal';
 import { ToastContainer, ToastMessage } from './components/Toast';
 import { ApiService } from './services/api';
 import { useRoute } from './hooks/useRoute';
-import { linkPath } from './utils/route';
+import { linkPath, settingsPath, SettingsSection } from './utils/route';
 import { canManageServiceTokens, useSession } from './components/AuthGate';
 
 // Code-splitting heavy secondary views and modal bundles via React.lazy
@@ -29,14 +29,10 @@ const KanbanView = React.lazy(() => import('./components/KanbanView').then((m) =
 const ClusterView = React.lazy(() => import('./components/ClusterView').then((m) => ({ default: m.ClusterView })));
 const LinkArticlePage = React.lazy(() => import('./components/LinkArticlePage').then((m) => ({ default: m.LinkArticlePage })));
 const AskRepoModal = React.lazy(() => import('./components/AskRepoModal').then((m) => ({ default: m.AskRepoModal })));
-const ExtensionModal = React.lazy(() => import('./components/ExtensionModal').then((m) => ({ default: m.ExtensionModal })));
-const MobileShareModal = React.lazy(() => import('./components/MobileShareModal').then((m) => ({ default: m.MobileShareModal })));
-const BackupModal = React.lazy(() => import('./components/BackupModal').then((m) => ({ default: m.BackupModal })));
 const KeyboardShortcutsModal = React.lazy(() => import('./components/KeyboardShortcutsModal').then((m) => ({ default: m.KeyboardShortcutsModal })));
+const SettingsPage = React.lazy(() => import('./components/SettingsPage').then((m) => ({ default: m.SettingsPage })));
 const ExportModal = React.lazy(() => import('./components/ExportModal').then((m) => ({ default: m.ExportModal })));
 const RssFeedsModal = React.lazy(() => import('./components/RssFeedsModal').then((m) => ({ default: m.RssFeedsModal })));
-const ModelOrchestratorModal = React.lazy(() => import('./components/ModelOrchestratorModal').then((m) => ({ default: m.ModelOrchestratorModal })));
-const ServiceTokensModal = React.lazy(() => import('./components/ServiceTokensModal').then((m) => ({ default: m.ServiceTokensModal })));
 const AnalyticsModal = React.lazy(() => import('./components/AnalyticsModal').then((m) => ({ default: m.AnalyticsModal })));
 import {
   ClusterGroup,
@@ -117,21 +113,21 @@ export default function App() {
   // Modals state
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [askRepoModalOpen, setAskRepoModalOpen] = useState(false);
-  const [extensionModalOpen, setExtensionModalOpen] = useState(false);
-  const [mobileShareModalOpen, setMobileShareModalOpen] = useState(false);
-  const [backupModalOpen, setBackupModalOpen] = useState(false);
   const [shortcutsModalOpen, setShortcutsModalOpen] = useState(false);
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [rssModalOpen, setRssModalOpen] = useState(false);
-  const [modelOrchestratorModalOpen, setModelOrchestratorModalOpen] = useState(false);
   const [analyticsModalOpen, setAnalyticsModalOpen] = useState(false);
-  const [serviceTokensModalOpen, setServiceTokensModalOpen] = useState(false);
   const canManageTokens = canManageServiceTokens(useSession());
   const [exportSingleLink, setExportSingleLink] = useState<LinkItem | null>(null);
   const [selectedLink, setSelectedLink] = useState<LinkItem | null>(null);
 
   // The article page lives at /link/:id; everything else is the library.
   const { route, navigate, goBack } = useRoute();
+  // Moving between Settings sections replaces the entry, so Back leaves Settings in one step.
+  const openSettings = useCallback(
+    (section: SettingsSection) => navigate(settingsPath(section), { replace: route.name === 'settings' }),
+    [navigate, route.name]
+  );
   const mainScrollRef = useRef<HTMLDivElement>(null);
   const savedLibraryScroll = useRef(0);
   const [rssFeeds, setRssFeeds] = useState<RssFeed[]>([]);
@@ -152,16 +148,8 @@ export default function App() {
 
       // Escape: Dismiss active top modal
       if (e.key === 'Escape') {
-        if (serviceTokensModalOpen) {
-          setServiceTokensModalOpen(false);
-          return;
-        }
         if (analyticsModalOpen) {
           setAnalyticsModalOpen(false);
-          return;
-        }
-        if (modelOrchestratorModalOpen) {
-          setModelOrchestratorModalOpen(false);
           return;
         }
         if (shortcutsModalOpen) {
@@ -185,20 +173,8 @@ export default function App() {
           setAskRepoModalOpen(false);
           return;
         }
-        if (extensionModalOpen) {
-          setExtensionModalOpen(false);
-          return;
-        }
-        if (mobileShareModalOpen) {
-          setMobileShareModalOpen(false);
-          return;
-        }
-        if (backupModalOpen) {
-          setBackupModalOpen(false);
-          return;
-        }
-        // Leave the article page last, and never while typing (unsaved notes).
-        if (route.name === 'link' && !isInput) {
+        // Leave the article or Settings page last, and never while typing (unsaved notes).
+        if (route.name !== 'home' && !isInput) {
           goBack();
           return;
         }
@@ -237,7 +213,7 @@ export default function App() {
       // Model Orchestrator: Cmd/Ctrl + O
       if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === 'o') {
         e.preventDefault();
-        setModelOrchestratorModalOpen(true);
+        openSettings('ai-models');
         return;
       }
 
@@ -251,29 +227,28 @@ export default function App() {
       // Export Markdown: Cmd/Ctrl + Shift + E
       if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'e') {
         e.preventDefault();
-        setExportSingleLink(null);
-        setExportModalOpen(true);
+        openSettings('export');
         return;
       }
 
       // Extension: Cmd/Ctrl + E
       if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === 'e') {
         e.preventDefault();
-        setExtensionModalOpen(true);
+        openSettings('extension');
         return;
       }
 
       // Mobile Share: Cmd/Ctrl + M
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'm') {
         e.preventDefault();
-        setMobileShareModalOpen(true);
+        openSettings('mobile');
         return;
       }
 
       // Backup: Cmd/Ctrl + B
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'b') {
         e.preventDefault();
-        setBackupModalOpen(true);
+        openSettings('backup');
         return;
       }
 
@@ -363,15 +338,11 @@ export default function App() {
     rssModalOpen,
     exportModalOpen,
     route,
+    openSettings,
     goBack,
     addModalOpen,
     askRepoModalOpen,
-    extensionModalOpen,
-    mobileShareModalOpen,
-    backupModalOpen,
-    modelOrchestratorModalOpen,
     analyticsModalOpen,
-    serviceTokensModalOpen,
   ]);
 
   // Sync dark mode class with HTML tag
@@ -841,18 +812,11 @@ export default function App() {
         availableCategories={availableCategories}
         darkMode={darkMode}
         onToggleDarkMode={() => setDarkMode(!darkMode)}
-        onOpenBackup={() => setBackupModalOpen(true)}
-        onOpenMobileShare={() => setMobileShareModalOpen(true)}
-        onOpenExtension={() => setExtensionModalOpen(true)}
         onOpenShortcutsHelp={() => setShortcutsModalOpen(true)}
-        onOpenExportMarkdown={() => {
-          setExportSingleLink(null);
-          setExportModalOpen(true);
-        }}
+        onOpenSettings={() => navigate(settingsPath(), { replace: route.name === 'settings' })}
+        settingsActive={route.name === 'settings'}
         onOpenRssFeeds={() => setRssModalOpen(true)}
-        onOpenModelOrchestrator={() => setModelOrchestratorModalOpen(true)}
         onOpenAnalytics={() => setAnalyticsModalOpen(true)}
-        onOpenServiceTokens={canManageTokens ? () => setServiceTokensModalOpen(true) : undefined}
         syncStatus={syncStatus}
         isMobileOpen={mobileSidebarOpen}
         onCloseMobile={() => setMobileSidebarOpen(false)}
@@ -865,7 +829,7 @@ export default function App() {
           searchQuery={filters.searchQuery}
           onSearchChange={(searchQuery) => {
             handleFilterChange({ searchQuery });
-            if (route.name === 'link') navigate('/');
+            if (route.name !== 'home') navigate('/');
           }}
           onOpenAddModal={() => {
             setPrefillData({});
@@ -878,7 +842,28 @@ export default function App() {
           onViewChange={setCurrentView}
         />
 
-        {route.name === 'link' ? (
+        {route.name === 'settings' ? (
+          <main className="flex-1 overflow-hidden">
+            <React.Suspense fallback={null}>
+              <SettingsPage
+                section={route.section}
+                onSelectSection={(section) => openSettings(section)}
+                onBack={() => goBack()}
+                canManageTokens={canManageTokens}
+                links={links}
+                filteredLinks={filteredLinks}
+                selectedIds={selectedIds}
+                onLinksRestored={(restored) => {
+                  setLinks(restored);
+                  ApiService.fetchStats().then(setStats).catch(() => {});
+                  addToast('success', `Restored ${restored.length} links from backup`);
+                }}
+                onSimulateShare={handleSimulateMobileShare}
+                onToast={addToast}
+              />
+            </React.Suspense>
+          </main>
+        ) : route.name === 'link' ? (
           <main className="flex-1 overflow-hidden">
             {pageLink ? (
               <React.Suspense fallback={null}>
@@ -1222,42 +1207,7 @@ export default function App() {
               setAskRepoModalOpen(false);
               handleOpenDetail(link);
             }}
-            onOpenModelOrchestrator={() => setModelOrchestratorModalOpen(true)}
-          />
-        )}
-
-        {serviceTokensModalOpen && (
-          <ServiceTokensModal
-            isOpen={serviceTokensModalOpen}
-            onClose={() => setServiceTokensModalOpen(false)}
-          />
-        )}
-
-        {extensionModalOpen && (
-          <ExtensionModal
-            isOpen={extensionModalOpen}
-            onClose={() => setExtensionModalOpen(false)}
-          />
-        )}
-
-        {mobileShareModalOpen && (
-          <MobileShareModal
-            isOpen={mobileShareModalOpen}
-            onClose={() => setMobileShareModalOpen(false)}
-            onSimulateShare={handleSimulateMobileShare}
-          />
-        )}
-
-        {backupModalOpen && (
-          <BackupModal
-            isOpen={backupModalOpen}
-            onClose={() => setBackupModalOpen(false)}
-            links={links}
-            onLinksRestored={(restored) => {
-              setLinks(restored);
-              ApiService.fetchStats().then(setStats).catch(() => {});
-              addToast('success', `Restored ${restored.length} links from backup`);
-            }}
+            onOpenModelOrchestrator={() => openSettings('ai-models')}
           />
         )}
 
@@ -1288,15 +1238,12 @@ export default function App() {
               setAddModalOpen(true);
             }}
             onOpenAskRepo={() => setAskRepoModalOpen(true)}
-            onOpenExtension={() => setExtensionModalOpen(true)}
-            onOpenMobileShare={() => setMobileShareModalOpen(true)}
-            onOpenBackup={() => setBackupModalOpen(true)}
-            onOpenExportMarkdown={() => {
-              setExportSingleLink(null);
-              setExportModalOpen(true);
-            }}
+            onOpenExtension={() => openSettings('extension')}
+            onOpenMobileShare={() => openSettings('mobile')}
+            onOpenBackup={() => openSettings('backup')}
+            onOpenExportMarkdown={() => openSettings('export')}
             onOpenRssFeeds={() => setRssModalOpen(true)}
-            onOpenModelOrchestrator={() => setModelOrchestratorModalOpen(true)}
+            onOpenModelOrchestrator={() => openSettings('ai-models')}
             onOpenAnalytics={() => setAnalyticsModalOpen(true)}
             onToggleTheme={() => {
               setDarkMode((prev) => !prev);
@@ -1332,13 +1279,6 @@ export default function App() {
                 includeArchived: false,
               }));
             }}
-          />
-        )}
-
-        {modelOrchestratorModalOpen && (
-          <ModelOrchestratorModal
-            isOpen={modelOrchestratorModalOpen}
-            onClose={() => setModelOrchestratorModalOpen(false)}
           />
         )}
 

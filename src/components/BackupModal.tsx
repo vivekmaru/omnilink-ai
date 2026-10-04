@@ -19,6 +19,8 @@ import { ApiService } from '../services/api';
 interface BackupModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /** 'page' renders inline in the Settings page instead of as a pop-up. */
+  variant?: 'modal' | 'page';
   links: LinkItem[];
   onLinksRestored: (restoredLinks: LinkItem[]) => void;
 }
@@ -28,6 +30,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
   onClose,
   links,
   onLinksRestored,
+  variant = 'modal',
 }) => {
   const [passphrase, setPassphrase] = useState('');
   const [confirmPassphrase, setConfirmPassphrase] = useState('');
@@ -38,6 +41,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
   const [success, setSuccess] = useState<string | null>(null);
 
   if (!isOpen) return null;
+  const isPage = variant === 'page';
 
   // Handle AES-GCM Encrypted Export
   const handleExportEncrypted = async (e: React.FormEvent) => {
@@ -172,15 +176,15 @@ export const BackupModal: React.FC<BackupModalProps> = ({
   return (
     <div
       id="backup-modal-backdrop"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150"
-      onClick={onClose}
+      className={isPage ? 'h-full' : 'fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150'}
+      onClick={isPage ? undefined : onClose}
     >
       <div
         id="backup-modal-card"
-        role="dialog"
-        aria-modal="true"
+        role={isPage ? 'region' : 'dialog'}
+        aria-modal={isPage ? undefined : true}
         aria-labelledby="backup-modal-title"
-        className="w-full max-w-2xl max-h-[90vh] rounded-2xl border shadow-2xl flex flex-col overflow-hidden text-slate-900 dark:text-[#f7f6f3] transition-all"
+        className={isPage ? 'h-full flex flex-col overflow-hidden text-slate-900 dark:text-[#f7f6f3]' : 'w-full max-w-2xl max-h-[90vh] rounded-2xl border shadow-2xl flex flex-col overflow-hidden text-slate-900 dark:text-[#f7f6f3] transition-all'}
         style={{
           backgroundColor: 'var(--card-bg)',
           borderColor: 'var(--card-border)',
@@ -202,13 +206,15 @@ export const BackupModal: React.FC<BackupModalProps> = ({
               </p>
             </div>
           </div>
-          <button
-            id="btn-close-backup-modal"
-            onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          {!isPage && (
+            <button
+              id="btn-close-backup-modal"
+              onClick={onClose}
+              className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
         {/* Status Alerts */}

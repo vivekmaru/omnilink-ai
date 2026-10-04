@@ -16,13 +16,8 @@ import {
   ChevronRight,
   Folder,
   BarChart3,
-  Cpu,
   Keyboard,
-  FileDown,
-  Chrome,
-  Share2,
-  ShieldCheck,
-  KeyRound,
+  Settings,
   Columns3,
   Network,
   Sun,
@@ -47,16 +42,13 @@ interface SidebarProps {
   availableCategories: string[];
   darkMode: boolean;
   onToggleDarkMode: () => void;
-  onOpenBackup: () => void;
-  onOpenMobileShare: () => void;
-  onOpenExtension: () => void;
   onOpenShortcutsHelp?: () => void;
-  onOpenExportMarkdown?: () => void;
+  onOpenSettings: () => void;
+  /** True while the Settings page is showing, to highlight its entry. */
+  settingsActive?: boolean;
   onOpenRssFeeds?: () => void;
-  onOpenModelOrchestrator?: () => void;
   onOpenAnalytics?: () => void;
   /** Only provided when the signed-in user may manage service tokens. */
-  onOpenServiceTokens?: () => void;
   syncStatus: 'synced' | 'syncing' | 'offline' | 'error';
   isMobileOpen?: boolean;
   onCloseMobile?: () => void;
@@ -79,15 +71,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
   availableCategories,
   darkMode,
   onToggleDarkMode,
-  onOpenBackup,
-  onOpenMobileShare,
-  onOpenExtension,
   onOpenShortcutsHelp,
-  onOpenExportMarkdown,
+  onOpenSettings,
+  settingsActive = false,
   onOpenRssFeeds,
-  onOpenModelOrchestrator,
   onOpenAnalytics,
-  onOpenServiceTokens,
   syncStatus,
   isMobileOpen = false,
   onCloseMobile,
@@ -97,7 +85,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [platformsOpen, setPlatformsOpen] = useState(true);
   const [categoriesOpen, setCategoriesOpen] = useState(true);
   const [utilitiesOpen, setUtilitiesOpen] = useState(true);
-  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const renderNavAction = (
     icon: React.ReactNode,
@@ -453,31 +440,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
             )}
           </div>
 
-          {/* Section 5: Settings (set-up tasks, collapsed by default) */}
-          <div className="nav-section">
-            <button
-              onClick={() => setSettingsOpen(!settingsOpen)}
-              className="w-full flex items-center justify-between px-1 py-1 nav-label hover:opacity-90 transition-opacity"
-              aria-expanded={settingsOpen}
-            >
-              <span>Settings</span>
-              {settingsOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-            </button>
-            {settingsOpen && (
-              <div className="mt-1.5 space-y-0.5">
-                {onOpenModelOrchestrator &&
-                  renderNavAction(<Cpu className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />, 'AI models', onOpenModelOrchestrator)}
-                {renderNavAction(<Chrome className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />, 'Chrome extension', onOpenExtension)}
-                {renderNavAction(<Share2 className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />, 'Mobile sharing', onOpenMobileShare)}
-                {onOpenExportMarkdown &&
-                  renderNavAction(<FileDown className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />, 'Export to Markdown', onOpenExportMarkdown)}
-                {renderNavAction(<ShieldCheck className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />, 'Backup and restore', onOpenBackup)}
-                {onOpenServiceTokens &&
-                  renderNavAction(<KeyRound className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />, 'Service tokens', onOpenServiceTokens)}
-                {onOpenShortcutsHelp &&
-                  renderNavAction(<Keyboard className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />, 'Keyboard shortcuts', onOpenShortcutsHelp)}
-              </div>
-            )}
+          {/* Section 5: Settings and help */}
+          <div className="nav-section space-y-0.5">
+            {renderNavAction(<Settings className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />, 'Settings', onOpenSettings, { active: settingsActive })}
+            {onOpenShortcutsHelp &&
+              renderNavAction(<Keyboard className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />, 'Keyboard shortcuts', onOpenShortcutsHelp)}
           </div>
         </nav>
 

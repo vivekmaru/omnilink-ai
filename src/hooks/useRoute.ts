@@ -11,10 +11,15 @@ export function useRoute() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  const navigate = useCallback((path: string) => {
+  /** `replace` swaps the current entry instead of adding one, e.g. when moving between Settings sections. */
+  const navigate = useCallback((path: string, { replace = false }: { replace?: boolean } = {}) => {
     if (path !== window.location.pathname) {
-      // Mark entries pushed by the app so "Back" can return to the previous view.
-      window.history.pushState({ fromApp: true }, '', path);
+      if (replace) {
+        window.history.replaceState(window.history.state, '', path);
+      } else {
+        // Mark entries pushed by the app so "Back" can return to the previous view.
+        window.history.pushState({ fromApp: true }, '', path);
+      }
     }
     setRoute(parseRoute(path));
   }, []);
