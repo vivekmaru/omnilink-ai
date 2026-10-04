@@ -265,6 +265,7 @@ export interface OrchestrationExecutionTelemetry {
 }
 
 export interface ModelOrchestratorStats {
+  telemetrySource?: 'persisted-attempts';
   totalRequests: number;
   successCount: number;
   failureCount: number;

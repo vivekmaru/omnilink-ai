@@ -6,6 +6,8 @@ import { GoogleGenAI, Type } from '@google/genai';
 import dotenv from 'dotenv';
 import { RssFeedManager, CURATED_DEV_FEEDS } from './server/rssService';
 import { ModelOrchestrator } from './server/modelOrchestrator';
+import { getPersistedOrchestratorStats } from './server/orchestratorStats';
+import { isWeakExtractedTitle, titleFromUrl } from './server/linkPreview';
 import { GeminiModelId } from './src/types';
 import { analyzeAndSuggestTags } from './src/services/autoTagging';
 import { normalizeUrl, checkDuplicateInLinks } from './src/utils/url';
@@ -1056,7 +1058,7 @@ app.post('/api/links/preview-metadata', async (req, res) => {
     // is available in its <head> (for example OzBargain numeric URLs).
     try {
       const metadata = await ReadabilityService.extractMetadataFromUrl(url, 2500);
-      scrapedTitle = metadata.title || '';
+      scrapedTitle = isWeakExtractedTitle(metadata.title) ? '' : (metadata.title || '');
       scrapedDescription = metadata.description || '';
     } catch {
       // Full extraction and URL fallback below remain best-effort.
@@ -1066,7 +1068,7 @@ app.post('/api/links/preview-metadata', async (req, res) => {
     try {
       const snapshot = await ReadabilityService.extractFromUrl(url, 4500);
       if (snapshot) {
-        scrapedTitle = scrapedTitle || snapshot.title || '';
+        if (!scrapedTitle && !isWeakExtractedTitle(snapshot.title)) scrapedTitle = snapshot.title || '';
         scrapedDescription = scrapedDescription || snapshot.excerpt || '';
         author = snapshot.byline || '';
       }
@@ -1076,20 +1078,7 @@ app.post('/api/links/preview-metadata', async (req, res) => {
 
     // Fallback: derive title from URL path if not found
     if (!scrapedTitle) {
-      try {
-        const parsed = new URL(url);
-        const pathSegments = parsed.pathname.split('/').filter(Boolean);
-        if (pathSegments.length > 0) {
-          scrapedTitle = pathSegments[pathSegments.length - 1]
-            .replace(/[-_]/g, ' ')
-            .replace(/\.(html|php|asp|aspx)$/i, '');
-          scrapedTitle = scrapedTitle.charAt(0).toUpperCase() + scrapedTitle.slice(1);
-        } else {
-          scrapedTitle = parsed.hostname;
-        }
-      } catch {
-        scrapedTitle = url;
-      }
+      scrapedTitle = titleFromUrl(url);
     }
 
     res.json({
@@ -1210,7 +1199,12 @@ Allowed Categories: Dev & Tech, AI & Machine Learning, Design & UI, Reddit Discu
 // GET /api/ai/orchestrator-stats - Real-time Model Routing & Telemetry Stats
 app.get('/api/ai/orchestrator-stats', (req, res) => {
   try {
-    const stats = ModelOrchestrator.getStats();
+    const liveStats = ModelOrchestrator.getStats();
+    // Local mode does not record quota attempts. Multi-user telemetry must
+    // always come from the current workspace, including an empty history.
+    const stats = runtimeConfig.mode === 'local'
+      ? liveStats
+      : getPersistedOrchestratorStats(omniDb, workspaceFor(req), liveStats);
     res.json({ success: true, stats });
   } catch (err: any) {
     res.status(500).json({ error: err.message || 'Failed to fetch orchestrator stats' });

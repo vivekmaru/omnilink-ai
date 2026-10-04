@@ -74,8 +74,12 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       fetchStats();
+      const refreshTimer = window.setInterval(fetchStats, 5_000);
+      return () => window.clearInterval(refreshTimer);
     }
   }, [isOpen]);
+
+  const persistedAttempts = stats?.telemetrySource === 'persisted-attempts';
 
   const runSimulator = async () => {
     setSimulating(true);
@@ -186,7 +190,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
             </div>
           )}
           <div className="p-3 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-black/5 dark:border-white/5">
-            <span className="text-xs text-slate-400 block mb-0.5">Total AI Calls</span>
+            <span className="text-xs text-slate-400 block mb-0.5">{persistedAttempts ? 'AI Attempts This Month' : 'Total AI Calls'}</span>
             <span className="text-base font-bold tabular-nums text-slate-900 dark:text-[#f7f6f3]">
               {stats?.totalRequests || 0}
             </span>
@@ -195,14 +199,14 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
           <div className="p-3 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-black/5 dark:border-white/5">
             <span className="text-xs text-slate-400 block mb-0.5">Est. API Cost</span>
             <span className="text-base font-bold tabular-nums text-[#d97757] dark:text-[#e08264]">
-              {formatCost(stats?.totalEstimatedCostUsd || 0)}
+              {persistedAttempts ? '—' : formatCost(stats?.totalEstimatedCostUsd || 0)}
             </span>
           </div>
 
           <div className="p-3 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-black/5 dark:border-white/5">
             <span className="text-xs text-slate-400 block mb-0.5">Avg Latency</span>
             <span className="text-base font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
-              {stats?.avgLatencyMs || 480} ms
+              {persistedAttempts ? '—' : `${stats?.avgLatencyMs || 480} ms`}
             </span>
           </div>
 
@@ -329,14 +333,14 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
                           <div>
                             <span className="text-slate-400 text-xs block">Est. Cost</span>
                             <span className="font-semibold text-[#d97757] dark:text-[#e08264]">
-                              {formatCost(model.estimatedCostUsd || 0)}
+                              {persistedAttempts ? '—' : formatCost(model.estimatedCostUsd || 0)}
                             </span>
                           </div>
 
                           <div className="text-right">
                             <span className="text-slate-400 text-xs block">Avg Latency</span>
                             <span className="font-semibold text-slate-700 dark:text-slate-300">
-                              ~{model.avgLatencyMs}ms
+                              {persistedAttempts ? '—' : `~${model.avgLatencyMs}ms`}
                             </span>
                           </div>
                         </div>
@@ -454,17 +458,17 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
                           )}
                         </div>
                         <div className="col-span-2 text-right text-slate-500 dark:text-slate-400 text-xs">
-                          {log.latencyMs} ms
+                          {persistedAttempts ? '—' : `${log.latencyMs} ms`}
                         </div>
                         <div className="col-span-2 text-right text-xs text-[#d97757] dark:text-[#e08264]">
-                          {formatCost(log.estimatedCostUsd || 0)}
+                          {persistedAttempts ? '—' : formatCost(log.estimatedCostUsd || 0)}
                         </div>
                       </div>
                     ))
                   ) : (
                     <div className="py-12 text-center text-xs text-slate-400 space-y-1">
                       <Cpu className="w-6 h-6 mx-auto opacity-40 mb-2" />
-                      <p className="font-medium text-slate-600 dark:text-slate-400">No external AI calls logged in this session yet.</p>
+                      <p className="font-medium text-slate-600 dark:text-slate-400">{persistedAttempts ? 'No external AI attempts logged this month yet.' : 'No external AI calls logged in this session yet.'}</p>
                       <p className="text-slate-400 text-xs">Calls made when adding links, asking Ask Repo AI, or syncing RSS feeds will appear here.</p>
                     </div>
                   )}
