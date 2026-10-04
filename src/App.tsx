@@ -27,7 +27,7 @@ import { canManageServiceTokens, useSession } from './components/AuthGate';
 // Code-splitting heavy secondary views and modal bundles via React.lazy
 const KanbanView = React.lazy(() => import('./components/KanbanView').then((m) => ({ default: m.KanbanView })));
 const ClusterView = React.lazy(() => import('./components/ClusterView').then((m) => ({ default: m.ClusterView })));
-const LinkDetailModal = React.lazy(() => import('./components/LinkDetailModal').then((m) => ({ default: m.LinkDetailModal })));
+const LinkArticlePage = React.lazy(() => import('./components/LinkArticlePage').then((m) => ({ default: m.LinkArticlePage })));
 const AskRepoModal = React.lazy(() => import('./components/AskRepoModal').then((m) => ({ default: m.AskRepoModal })));
 const ExtensionModal = React.lazy(() => import('./components/ExtensionModal').then((m) => ({ default: m.ExtensionModal })));
 const MobileShareModal = React.lazy(() => import('./components/MobileShareModal').then((m) => ({ default: m.MobileShareModal })));
@@ -882,12 +882,10 @@ export default function App() {
           <main className="flex-1 overflow-hidden">
             {pageLink ? (
               <React.Suspense fallback={null}>
-                <LinkDetailModal
+                <LinkArticlePage
                   key={pageLink.id}
-                  variant="page"
                   link={pageLink}
-                  isOpen
-                  onClose={() => goBack()}
+                  onBack={() => goBack()}
                   onUpdateLink={handleLinkUpdated}
                   onOpenExportModal={(link) => {
                     setExportSingleLink(link);
