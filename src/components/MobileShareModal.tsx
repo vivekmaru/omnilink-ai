@@ -19,6 +19,8 @@ import {
 interface MobileShareModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /** 'page' renders inline in the Settings page instead of as a pop-up. */
+  variant?: 'modal' | 'page';
   onSimulateShare: (url: string, title: string) => void;
 }
 
@@ -26,6 +28,7 @@ export const MobileShareModal: React.FC<MobileShareModalProps> = ({
   isOpen,
   onClose,
   onSimulateShare,
+  variant = 'modal',
 }) => {
   const [activeTab, setActiveTab] = useState<'pwa' | 'shortcuts' | 'webhook'>('pwa');
   const [copiedLink, setCopiedLink] = useState(false);
@@ -37,6 +40,7 @@ export const MobileShareModal: React.FC<MobileShareModalProps> = ({
   const [isTesting, setIsTesting] = useState(false);
 
   if (!isOpen) return null;
+  const isPage = variant === 'page';
 
   const currentOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
   const quickShareUrl = `${currentOrigin}/api/share/quick`;
@@ -94,13 +98,13 @@ export const MobileShareModal: React.FC<MobileShareModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-xs animate-in fade-in duration-150">
+    <div className={isPage ? 'h-full' : 'fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-xs animate-in fade-in duration-150'}>
       <div
         id="mobile-share-modal-card"
-        role="dialog"
-        aria-modal="true"
+        role={isPage ? 'region' : 'dialog'}
+        aria-modal={isPage ? undefined : true}
         aria-labelledby="mobile-share-modal-title"
-        className="w-full max-w-2xl bg-white dark:bg-[#1f1e1d] border border-black/10 dark:border-white/10 rounded-2xl shadow-2xl overflow-hidden transition-all text-slate-900 dark:text-[#f7f6f3]"
+        className={isPage ? 'h-full flex flex-col overflow-hidden text-slate-900 dark:text-[#f7f6f3]' : 'w-full max-w-2xl bg-white dark:bg-[#1f1e1d] border border-black/10 dark:border-white/10 rounded-2xl shadow-2xl overflow-hidden transition-all text-slate-900 dark:text-[#f7f6f3]'}
         style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }}
       >
         {/* Modal Header */}
@@ -118,12 +122,14 @@ export const MobileShareModal: React.FC<MobileShareModalProps> = ({
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          {!isPage && (
+            <button
+              onClick={onClose}
+              className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
 
         {/* Surface Tabs */}
@@ -165,7 +171,7 @@ export const MobileShareModal: React.FC<MobileShareModalProps> = ({
           </button>
         </div>
 
-        <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className={`p-6 space-y-6 overflow-y-auto ${isPage ? 'flex-1' : 'max-h-[70vh]'}`}>
           {/* TAB 1: PWA Web Share Target */}
           {activeTab === 'pwa' && (
             <div className="space-y-5">

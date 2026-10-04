@@ -11,13 +11,16 @@ import { generateBookmarkletCode, generateExtensionZip } from '../services/exten
 interface ExtensionModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /** 'page' renders inline in the Settings page instead of as a pop-up. */
+  variant?: 'modal' | 'page';
 }
 
-export const ExtensionModal: React.FC<ExtensionModalProps> = ({ isOpen, onClose }) => {
+export const ExtensionModal: React.FC<ExtensionModalProps> = ({ isOpen, onClose, variant = 'modal' }) => {
   const [downloading, setDownloading] = useState(false);
   const [copiedBookmarklet, setCopiedBookmarklet] = useState(false);
 
   if (!isOpen) return null;
+  const isPage = variant === 'page';
 
   const currentOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
   const bookmarkletCode = generateBookmarkletCode(currentOrigin);
@@ -50,15 +53,15 @@ export const ExtensionModal: React.FC<ExtensionModalProps> = ({ isOpen, onClose 
   return (
     <div
       id="extension-modal-backdrop"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150"
-      onClick={onClose}
+      className={isPage ? 'h-full' : 'fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150'}
+      onClick={isPage ? undefined : onClose}
     >
       <div
         id="extension-modal-card"
-        role="dialog"
-        aria-modal="true"
+        role={isPage ? 'region' : 'dialog'}
+        aria-modal={isPage ? undefined : true}
         aria-labelledby="extension-modal-title"
-        className="w-full max-w-2xl rounded-2xl border shadow-2xl overflow-hidden flex flex-col text-slate-900 dark:text-[#f7f6f3] transition-all"
+        className={isPage ? 'h-full flex flex-col overflow-hidden text-slate-900 dark:text-[#f7f6f3]' : 'w-full max-w-2xl rounded-2xl border shadow-2xl overflow-hidden flex flex-col text-slate-900 dark:text-[#f7f6f3] transition-all'}
         style={{
           backgroundColor: 'var(--card-bg)',
           borderColor: 'var(--card-border)',
@@ -80,17 +83,19 @@ export const ExtensionModal: React.FC<ExtensionModalProps> = ({ isOpen, onClose 
               </p>
             </div>
           </div>
-          <button
-            id="btn-close-extension-modal"
-            onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          {!isPage && (
+            <button
+              id="btn-close-extension-modal"
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
         {/* Modal Body */}
-        <div className="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
+        <div className={`p-6 space-y-5 overflow-y-auto ${isPage ? 'flex-1' : 'max-h-[80vh]'}`}>
           {/* Main Download Card */}
           <div className="p-5 rounded-xl bg-[#d97757]/5 dark:bg-[#e08264]/10 border border-[#d97757]/25 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="space-y-1.5">

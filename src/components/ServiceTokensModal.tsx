@@ -6,6 +6,8 @@ import { SERVICE_TOKEN_SCOPES, type ServiceToken, type ServiceTokenScope } from 
 interface ServiceTokensModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /** 'page' renders inline in the Settings page instead of as a pop-up. */
+  variant?: 'modal' | 'page';
 }
 
 const SCOPE_DESCRIPTIONS: Record<ServiceTokenScope, string> = {
@@ -49,7 +51,7 @@ const ghostButtonClass =
 const primaryButtonClass =
   'rounded-md bg-[#d97757] hover:bg-[#c46243] px-4 py-2 text-sm font-semibold text-white transition-colors disabled:opacity-50';
 
-export const ServiceTokensModal: React.FC<ServiceTokensModalProps> = ({ isOpen, onClose }) => {
+export const ServiceTokensModal: React.FC<ServiceTokensModalProps> = ({ isOpen, onClose, variant = 'modal' }) => {
   const [tokens, setTokens] = useState<ServiceToken[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -85,6 +87,7 @@ export const ServiceTokensModal: React.FC<ServiceTokensModalProps> = ({ isOpen, 
   }, [isOpen, loadTokens]);
 
   if (!isOpen) return null;
+  const isPage = variant === 'page';
 
   const toggleScope = (scope: ServiceTokenScope) => {
     setScopes((current) => (current.includes(scope) ? current.filter((s) => s !== scope) : [...current, scope]));
@@ -143,14 +146,14 @@ export const ServiceTokensModal: React.FC<ServiceTokensModalProps> = ({ isOpen, 
   return (
     <div
       id="service-tokens-modal-backdrop"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
-      onClick={handleClose}
+      className={isPage ? 'h-full' : 'fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs'}
+      onClick={isPage ? undefined : handleClose}
     >
       <div
-        role="dialog"
-        aria-modal="true"
+        role={isPage ? 'region' : 'dialog'}
+        aria-modal={isPage ? undefined : true}
         aria-labelledby="service-tokens-modal-title"
-        className="w-full max-w-2xl rounded-xl border shadow-2xl overflow-hidden flex flex-col text-slate-900 dark:text-[#f9fafb]"
+        className={isPage ? 'h-full flex flex-col overflow-hidden text-slate-900 dark:text-[#f7f6f3]' : 'w-full max-w-2xl rounded-xl border shadow-2xl overflow-hidden flex flex-col text-slate-900 dark:text-[#f9fafb]'}
         style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -166,17 +169,19 @@ export const ServiceTokensModal: React.FC<ServiceTokensModalProps> = ({ isOpen, 
               </p>
             </div>
           </div>
-          <button
-            onClick={handleClose}
-            aria-label="Close"
-            className="flex items-center gap-1.5 p-1.5 rounded-md text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-          >
-            <span className="font-mono text-xs text-slate-400">ESC</span>
-            <X className="w-5 h-5" />
-          </button>
+          {!isPage && (
+            <button
+              onClick={handleClose}
+              aria-label="Close"
+              className="flex items-center gap-1.5 p-1.5 rounded-md text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+            >
+              <span className="font-mono text-xs text-slate-400">ESC</span>
+              <X className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
-        <div className="p-6 space-y-8 max-h-[75vh] overflow-y-auto">
+        <div className={`p-6 space-y-8 overflow-y-auto ${isPage ? 'flex-1' : 'max-h-[75vh]'}`}>
           {newToken ? (
             <section aria-live="polite" className="rounded-md border border-[#d97757]/30 bg-[#d97757]/5 p-4 space-y-3">
               <div>

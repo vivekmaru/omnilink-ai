@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { linkPath, parseRoute } from '../src/utils/route';
+import { linkPath, parseRoute, settingsPath } from '../src/utils/route';
 
 describe('parseRoute', () => {
   it('treats the root and unknown paths as home', () => {
     expect(parseRoute('/')).toEqual({ name: 'home' });
-    expect(parseRoute('/settings/whatever')).toEqual({ name: 'home' });
+    expect(parseRoute('/settingsx')).toEqual({ name: 'home' });
     expect(parseRoute('/link/')).toEqual({ name: 'home' });
   });
 
@@ -20,5 +20,12 @@ describe('parseRoute', () => {
 
   it('falls back to home on malformed encoding', () => {
     expect(parseRoute('/link/%E0%A4%A')).toEqual({ name: 'home' });
+  });
+
+  it('reads the settings section, ignoring unknown ones', () => {
+    expect(parseRoute('/settings')).toEqual({ name: 'settings', section: null });
+    expect(parseRoute(settingsPath('backup'))).toEqual({ name: 'settings', section: 'backup' });
+    expect(parseRoute('/settings/tokens/')).toEqual({ name: 'settings', section: 'tokens' });
+    expect(parseRoute('/settings/whatever')).toEqual({ name: 'settings', section: null });
   });
 });

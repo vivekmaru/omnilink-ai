@@ -28,11 +28,14 @@ import { ApiService } from '../services/api';
 interface ModelOrchestratorModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /** 'page' renders inline in the Settings page instead of as a pop-up. */
+  variant?: 'modal' | 'page';
 }
 
 export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
   isOpen,
   onClose,
+  variant = 'modal',
 }) => {
   const [stats, setStats] = useState<ModelOrchestratorStats | null>(null);
   const [aiUsage, setAiUsage] = useState<{ used: number; limit: number | null; remaining: number | null; resetAt?: string } | null>(null);
@@ -104,6 +107,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
   };
 
   if (!isOpen) return null;
+  const isPage = variant === 'page';
 
   const formatCost = (cost: number) => {
     if (!cost || cost === 0) return '$0.0000';
@@ -112,13 +116,13 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-xs">
+    <div className={isPage ? 'h-full' : 'fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-xs'}>
       <div
         id="model-orchestrator-modal"
-        role="dialog"
-        aria-modal="true"
+        role={isPage ? 'region' : 'dialog'}
+        aria-modal={isPage ? undefined : true}
         aria-labelledby="model-orchestrator-modal-title"
-        className="border rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden bg-white dark:bg-[#18181b] text-slate-900 dark:text-[#f7f6f3]"
+        className={isPage ? 'h-full flex flex-col overflow-hidden text-slate-900 dark:text-[#f7f6f3]' : 'border rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden bg-white dark:bg-[#18181b] text-slate-900 dark:text-[#f7f6f3]'}
         style={{
           backgroundColor: 'var(--card-bg)',
           borderColor: 'var(--card-border)',
@@ -162,13 +166,15 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </button>
-            <button
-              id="orchestrator-close-btn"
-              onClick={onClose}
-              className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
+            {!isPage && (
+              <button
+                id="orchestrator-close-btn"
+                onClick={onClose}
+                className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
         </div>
 
@@ -579,13 +585,15 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
             <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
             <span>Adaptive Orchestration Engine Online</span>
           </div>
-          <button
-            id="orchestrator-done-btn"
-            onClick={onClose}
-            className="px-4 py-1.5 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-slate-800 dark:text-slate-200 rounded-xl font-medium transition-colors"
-          >
-            Done
-          </button>
+          {!isPage && (
+            <button
+              id="orchestrator-done-btn"
+              onClick={onClose}
+              className="px-4 py-1.5 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-slate-800 dark:text-slate-200 rounded-xl font-medium transition-colors"
+            >
+              Done
+            </button>
+          )}
         </div>
       </div>
     </div>
