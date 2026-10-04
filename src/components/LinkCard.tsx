@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ExternalLink,
   Star,
@@ -10,17 +10,14 @@ import {
   FileText,
   Copy,
   Check,
-  MoreVertical,
+  MoreHorizontal,
+  CheckSquare,
   Trash2,
   Archive,
   RotateCw,
-  Folder,
-  User,
-  CheckCircle2,
-  Circle,
   Rss,
 } from 'lucide-react';
-import { LinkItem, PlatformType, ReadStatus } from '../types';
+import { LinkItem, PlatformType } from '../types';
 
 interface LinkCardProps {
   link: LinkItem;
@@ -49,6 +46,16 @@ export const LinkCard: React.FC<LinkCardProps> = ({
 }) => {
   const [copied, setCopied] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const close = (e: MouseEvent) => {
+      if (!menuRef.current?.contains(e.target as Node)) setMenuOpen(false);
+    };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, [menuOpen]);
 
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -126,35 +133,19 @@ export const LinkCard: React.FC<LinkCardProps> = ({
 
   const platformMeta = getPlatformMeta(link.platform);
 
-  // Status is a quiet dot; unread is the default, so only show it when it carries meaning
-  const getStatusBadge = (status: ReadStatus) => {
-    switch (status) {
-      case 'read':
-        return (
-          <span title="Reviewed" aria-label="Reviewed" className="flex items-center px-1">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-          </span>
-        );
-      case 'reading':
-        return (
-          <span title="In progress" aria-label="In progress" className="flex items-center px-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#d97757] dark:bg-[#e08264]" />
-          </span>
-        );
-      default:
-        return (
-          <span title="Unread" aria-label="Unread" className="flex items-center px-1.5">
-            <span className="w-2 h-2 rounded-full bg-amber-500/80" />
-          </span>
-        );
-    }
-  };
+  // Unread is the default, so it gets no marker; only progress is spelled out
+  const statusLabel =
+    link.readStatus === 'read' ? 'Read' : link.readStatus === 'reading' ? 'Reading' : null;
+  const showCheckbox = !!onToggleSelect && (selectionMode || isSelected);
+
+  const menuItemClass =
+    'w-full px-3 py-1.5 flex items-center gap-2 text-slate-700 dark:text-slate-300 hover:bg-black/5 dark:hover:bg-white/5 transition-colors';
 
   return (
     <div
       id={`link-card-${link.id}`}
       onClick={(e) => {
-        if (e.shiftKey || e.metaKey || e.ctrlKey) {
+        if (e.shiftKey || e.metaKey || e.ctrlKey || selectionMode) {
           e.preventDefault();
           if (onToggleSelect) {
             onToggleSelect(link.id, e);
@@ -163,39 +154,32 @@ export const LinkCard: React.FC<LinkCardProps> = ({
         }
         onSelect(link);
       }}
-      className={`group relative flex flex-col justify-between p-4 sm:p-5 rounded-2xl border transition-all duration-200 cursor-pointer bg-white dark:bg-[#18181b] ${
+      className={`group relative flex flex-col justify-between p-4 sm:p-5 rounded-2xl border transition-colors duration-200 cursor-pointer bg-white dark:bg-[#18181b] ${
         isSelected
-          ? 'ring-2 ring-[#d97757] dark:ring-[#e08264] border-[#d97757] dark:border-[#e08264] bg-[#d97757]/[0.03] dark:bg-[#e08264]/[0.04] shadow-md'
-          : 'border-slate-200/80 dark:border-white/[0.07] hover:border-[#d97757]/50 dark:hover:border-[#e08264]/40 hover:shadow-md hover:-translate-y-0.5'
-      } min-h-[170px] animate-card-entrance card-interactive ${
-        link.isArchived ? 'opacity-60' : ''
-      }`}
+          ? 'ring-2 ring-[#d97757] dark:ring-[#e08264] border-[#d97757] dark:border-[#e08264] bg-[#d97757]/[0.03] dark:bg-[#e08264]/[0.04]'
+          : 'border-slate-200/80 dark:border-white/[0.07] hover:border-slate-300 dark:hover:border-white/[0.16]'
+      } min-h-[170px] animate-card-entrance ${link.isArchived ? 'opacity-60' : ''}`}
     >
       <div className="space-y-2.5 sm:space-y-3">
-        {/* Card Header: Platform Tag & Clean Actions */}
+        {/* Header: source line on the left, star and menu in a fixed spot on the right */}
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0 flex-1">
-            {/* Multi-Select Checkbox */}
-            {onToggleSelect && (
+            {showCheckbox && (
               <button
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onToggleSelect(link.id, e);
+                  onToggleSelect!(link.id, e);
                 }}
-                className={`p-1 -ml-1.5 rounded-md transition-all cursor-pointer ${
-                  isSelected
-                    ? 'opacity-100 text-[#d97757] dark:text-[#e08264]'
-                    : 'opacity-0 group-hover:opacity-100 focus:opacity-100 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
-                } ${selectionMode ? '!opacity-100' : ''}`}
-                title={isSelected ? 'Deselect bookmark' : 'Select bookmark for batch actions'}
-                aria-label={isSelected ? 'Deselect bookmark' : 'Select bookmark for batch actions'}
+                className="p-1 -ml-1.5 rounded-md cursor-pointer"
+                title={isSelected ? 'Deselect' : 'Select'}
+                aria-label={isSelected ? 'Deselect' : 'Select'}
               >
                 <div
-                  className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${
+                  className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${
                     isSelected
-                      ? 'bg-[#d97757] dark:bg-[#e08264] border-[#d97757] dark:border-[#e08264] text-white shadow-2xs'
-                      : 'border-slate-300 dark:border-white/30 bg-black/5 dark:bg-white/5 hover:border-[#d97757] dark:hover:border-[#e08264]'
+                      ? 'bg-[#d97757] dark:bg-[#e08264] border-[#d97757] dark:border-[#e08264] text-white'
+                      : 'border-slate-300 dark:border-white/30 bg-black/5 dark:bg-white/5'
                   }`}
                 >
                   {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
@@ -215,121 +199,151 @@ export const LinkCard: React.FC<LinkCardProps> = ({
                   · {link.aiSummary.estimatedReadTimeMinutes} min read
                 </span>
               )}
+              {statusLabel && (
+                <span
+                  className={`shrink-0 ${
+                    link.readStatus === 'reading'
+                      ? 'text-[#c25e3e] dark:text-[#e08264]'
+                      : 'text-slate-400 dark:text-slate-500'
+                  }`}
+                >
+                  · {statusLabel}
+                </span>
+              )}
             </span>
           </div>
 
-          {/* Top Right: Status Badge & Consistent Action Buttons */}
-          <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
-            {getStatusBadge(link.readStatus)}
-
-            {/* Quick Actions Cluster (touch-friendly on mobile) */}
-            <div className="flex items-center gap-0.5 ml-0.5">
-              <a
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="hidden sm:block p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all"
-                title="Open original URL in new tab"
-                aria-label="Open original URL in new tab"
-              >
-                <ExternalLink className="w-3.5 h-3.5" />
-              </a>
-
+          <div className="flex items-center gap-0.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+            {link.isFavorite && (
               <button
                 type="button"
                 onClick={handleStar}
-                className={`p-1.5 rounded-lg transition-all ${
-                  link.isFavorite
-                    ? 'text-amber-400 bg-amber-500/10'
-                    : 'text-slate-400 hover:text-amber-400 hover:bg-black/5 dark:hover:bg-white/5 opacity-70 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100'
-                }`}
-                title={link.isFavorite ? 'Remove Star' : 'Star Link'}
-                aria-label={link.isFavorite ? 'Remove Star' : 'Star Link'}
+                className="p-1.5 rounded-lg text-amber-400 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                title="Remove star"
+                aria-label="Remove star"
               >
-                <Star className={`w-3.5 h-3.5 ${link.isFavorite ? 'fill-current' : ''}`} />
+                <Star className="w-3.5 h-3.5 fill-current" />
               </button>
+            )}
 
+            <div className="relative" ref={menuRef}>
               <button
                 type="button"
-                onClick={handleCopy}
-                className="hidden sm:block p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all"
-                title="Copy URL"
-                aria-label="Copy URL"
+                onClick={() => setMenuOpen(!menuOpen)}
+                className={`p-1.5 rounded-lg transition-colors hover:bg-black/5 dark:hover:bg-white/5 ${
+                  menuOpen
+                    ? 'text-slate-700 dark:text-slate-200 bg-black/5 dark:bg-white/5'
+                    : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200'
+                }`}
+                title="Actions"
+                aria-label="Actions"
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
               >
-                {copied ? (
-                  <Check className="w-3.5 h-3.5 text-emerald-500" />
-                ) : (
-                  <Copy className="w-3.5 h-3.5" />
-                )}
+                <MoreHorizontal className="w-4 h-4" />
               </button>
 
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setMenuOpen(!menuOpen)}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 opacity-70 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-all"
-                  title="More Actions"
-                  aria-label="More Actions"
+              {menuOpen && (
+                <div
+                  role="menu"
+                  className="absolute right-0 top-8 z-20 w-48 py-1.5 rounded-xl bg-white dark:bg-[#1e1e24] border border-slate-200 dark:border-white/10 shadow-xl text-xs"
+                  onClick={(e) => e.stopPropagation()}
                 >
-                  <MoreVertical className="w-3.5 h-3.5" />
-                </button>
-
-                {menuOpen && (
-                  <div
-                    className="absolute right-0 top-8 z-20 w-44 py-1.5 rounded-xl bg-white dark:bg-[#1e1e24] border border-slate-200 dark:border-white/10 shadow-xl text-xs"
-                    onClick={(e) => e.stopPropagation()}
+                  <a
+                    role="menuitem"
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setMenuOpen(false)}
+                    className={menuItemClass}
                   >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>Open original</span>
+                  </a>
+                  <button type="button" role="menuitem" onClick={handleCopy} className={menuItemClass}>
+                    {copied ? (
+                      <Check className="w-3.5 h-3.5 text-emerald-500" />
+                    ) : (
+                      <Copy className="w-3.5 h-3.5" />
+                    )}
+                    <span>{copied ? 'Copied' : 'Copy link'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={(e) => {
+                      handleStar(e);
+                      setMenuOpen(false);
+                    }}
+                    className={menuItemClass}
+                  >
+                    <Star className="w-3.5 h-3.5" />
+                    <span>{link.isFavorite ? 'Remove star' : 'Star'}</span>
+                  </button>
+                  {onToggleSelect && (
                     <button
                       type="button"
-                      onClick={handleArchive}
-                      className="w-full px-3 py-1.5 flex items-center gap-2 text-slate-700 dark:text-slate-300 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                      role="menuitem"
+                      onClick={(e) => {
+                        setMenuOpen(false);
+                        onToggleSelect(link.id, e);
+                      }}
+                      className={menuItemClass}
                     >
-                      <Archive className="w-3.5 h-3.5" />
-                      <span>{link.isArchived ? 'Unarchive' : 'Archive'}</span>
+                      <CheckSquare className="w-3.5 h-3.5" />
+                      <span>{isSelected ? 'Deselect' : 'Select'}</span>
                     </button>
-                    {onExportMarkdown && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setMenuOpen(false);
-                          onExportMarkdown(link);
-                        }}
-                        className="w-full px-3 py-1.5 flex items-center gap-2 text-slate-700 dark:text-slate-300 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-                      >
-                        <FileText className="w-3.5 h-3.5" />
-                        <span>Export Markdown</span>
-                      </button>
-                    )}
-                    {onReExtractAI && (
-                      <button
-                        type="button"
-                        onClick={handleReExtract}
-                        className="w-full px-3 py-1.5 flex items-center gap-2 text-[#d97757] dark:text-[#e08264] hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-                      >
-                        <RotateCw className="w-3.5 h-3.5" />
-                        <span>Re-extract AI</span>
-                      </button>
-                    )}
-                    <div className="my-1 border-t border-slate-100 dark:border-white/5" />
+                  )}
+                  <div className="my-1 border-t border-slate-100 dark:border-white/5" />
+                  <button type="button" role="menuitem" onClick={handleArchive} className={menuItemClass}>
+                    <Archive className="w-3.5 h-3.5" />
+                    <span>{link.isArchived ? 'Unarchive' : 'Archive'}</span>
+                  </button>
+                  {onExportMarkdown && (
                     <button
                       type="button"
-                      onClick={handleDelete}
-                      className="w-full px-3 py-1.5 flex items-center gap-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors"
+                      role="menuitem"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMenuOpen(false);
+                        onExportMarkdown(link);
+                      }}
+                      className={menuItemClass}
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      <span>Delete</span>
+                      <FileText className="w-3.5 h-3.5" />
+                      <span>Export Markdown</span>
                     </button>
-                  </div>
-                )}
-              </div>
+                  )}
+                  {onReExtractAI && (
+                    <button type="button" role="menuitem" onClick={handleReExtract} className={menuItemClass}>
+                      <RotateCw className="w-3.5 h-3.5" />
+                      <span>Re-extract AI</span>
+                    </button>
+                  )}
+                  <div className="my-1 border-t border-slate-100 dark:border-white/5" />
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={handleDelete}
+                    className="w-full px-3 py-1.5 flex items-center gap-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Delete</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         {/* Serif Editorial Title */}
-        <h3 className="font-newsreader text-xl font-medium leading-snug text-slate-900 dark:text-[#f7f6f3] group-hover:text-[#d97757] dark:group-hover:text-[#e08264] transition-colors line-clamp-2">
+        <h3
+          className={`font-newsreader text-xl font-medium leading-snug line-clamp-2 ${
+            link.readStatus === 'read'
+              ? 'text-slate-500 dark:text-slate-400'
+              : 'text-slate-900 dark:text-[#f7f6f3]'
+          }`}
+        >
           {link.title || link.url}
         </h3>
 
