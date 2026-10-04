@@ -129,9 +129,13 @@ export const LinkArticlePage: React.FC<LinkArticlePageProps> = ({
     return clean && !tags.includes(clean) ? [...tags, clean] : tags;
   };
 
+  // Tag updates are functional so a blur-commit and a following click never overwrite each other
+  const addTags = (incoming: string[]) =>
+    setTags((prev) => [...prev, ...incoming.filter((t, i) => t && !prev.includes(t) && incoming.indexOf(t) === i)]);
+
   const handleAddTag = () => {
     if (!tagInput.trim()) return;
-    setTags(withPendingTag());
+    addTags([tagInput.trim().toLowerCase()]);
     setTagInput('');
   };
 
@@ -142,10 +146,7 @@ export const LinkArticlePage: React.FC<LinkArticlePageProps> = ({
       description: link.description || link.summary?.tldr,
       notes,
     });
-    const newTags = res.suggestedTags.map((s) => s.tag.toLowerCase()).filter((t) => !tags.includes(t));
-    if (newTags.length > 0) {
-      setTags([...tags, ...newTags]);
-    }
+    addTags(res.suggestedTags.map((s) => s.tag.toLowerCase()));
   };
 
   const handleSave = async () => {
@@ -423,7 +424,7 @@ export const LinkArticlePage: React.FC<LinkArticlePageProps> = ({
                         <span>{t}</span>
                         <button
                           type="button"
-                          onClick={() => setTags(tags.filter((item) => item !== t))}
+                          onClick={() => setTags((prev) => prev.filter((item) => item !== t))}
                           className="hover:text-rose-500 text-slate-400 cursor-pointer"
                           aria-label={`Remove tag ${t}`}
                         >
