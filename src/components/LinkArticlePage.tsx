@@ -89,7 +89,8 @@ export const LinkArticlePage: React.FC<LinkArticlePageProps> = ({
     notes !== (link.notes || '') ||
     category !== link.category ||
     readStatus !== link.readStatus ||
-    tags.join('\n') !== (link.tags || []).join('\n');
+    tags.join('\n') !== (link.tags || []).join('\n') ||
+    tagInput.trim() !== '';
 
   const handleCopyUrl = () => {
     navigator.clipboard.writeText(link.url);
@@ -122,12 +123,15 @@ export const LinkArticlePage: React.FC<LinkArticlePageProps> = ({
     setTimeout(() => setCopiedSnippetIdx(null), 1500);
   };
 
+  // Tags including whatever is still typed in the tag box, so Save never drops it
+  const withPendingTag = () => {
+    const clean = tagInput.trim().toLowerCase();
+    return clean && !tags.includes(clean) ? [...tags, clean] : tags;
+  };
+
   const handleAddTag = () => {
     if (!tagInput.trim()) return;
-    const clean = tagInput.trim().toLowerCase();
-    if (!tags.includes(clean)) {
-      setTags([...tags, clean]);
-    }
+    setTags(withPendingTag());
     setTagInput('');
   };
 
@@ -147,7 +151,10 @@ export const LinkArticlePage: React.FC<LinkArticlePageProps> = ({
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const updated = await ApiService.updateLink(link.id, { notes, category, readStatus, tags });
+      const nextTags = withPendingTag();
+      setTags(nextTags);
+      setTagInput('');
+      const updated = await ApiService.updateLink(link.id, { notes, category, readStatus, tags: nextTags });
       onUpdateLink(updated);
       setSavedSuccess(true);
       setTimeout(() => setSavedSuccess(false), 2000);
