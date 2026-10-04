@@ -158,14 +158,14 @@ export const ExportModal: React.FC<ExportModalProps> = ({
               <FileText className="w-5 h-5" />
             </div>
             <div className="min-w-0">
-              <h3 id="export-modal-title" className="font-newsreader text-xl font-medium tracking-tight flex items-center gap-2.5">
+              <h3 id="export-modal-title" className="text-lg font-semibold tracking-tight text-slate-900 dark:text-[#f7f6f3] flex items-center gap-2.5">
                 Export to Markdown
                 <span className="text-xs font-normal px-2 py-0.5 rounded bg-[#d97757]/10 text-[#d97757] dark:text-[#e08264] border border-[#d97757]/20">
                   {options.preset.toUpperCase()}
                 </span>
               </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                Formatted for 1-click copy-pasting or file importing into Obsidian, Notion, and Logseq
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                Copy or download your links for Obsidian, Notion or Logseq
               </p>
             </div>
           </div>

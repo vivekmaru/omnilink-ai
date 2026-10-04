@@ -198,11 +198,11 @@ export const BackupModal: React.FC<BackupModalProps> = ({
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
-              <h3 id="backup-modal-title" className="font-newsreader text-xl font-medium tracking-tight">
-                AES-256 Vault Encryption & Backup
+              <h3 id="backup-modal-title" className="text-lg font-semibold tracking-tight text-slate-900 dark:text-[#f7f6f3]">
+                Backup and restore
               </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Zero-knowledge encrypted exports, offline portability, and Markdown digests
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                Download a password-protected copy of your library, or restore one
               </p>
             </div>
           </div>
@@ -238,11 +238,11 @@ export const BackupModal: React.FC<BackupModalProps> = ({
             <div className="flex items-center gap-2">
               <Lock className="w-4 h-4 text-[#d97757] dark:text-[#e08264]" />
               <h4 className="font-semibold text-sm text-slate-900 dark:text-[#f7f6f3]">
-                Create Encrypted AES-256 Backup (.enc)
+                Encrypted backup
               </h4>
             </div>
             <p className="text-xs text-slate-600 dark:text-slate-400">
-              Derives keys using PBKDF2 with 100,000 SHA-256 iterations and encrypts repository data using AES-GCM.
+              Your links are encrypted with a passphrase you choose (AES-256). Keep it safe: without it the backup can't be restored.
             </p>
 
             <form onSubmit={handleExportEncrypted} className="space-y-3">
@@ -271,7 +271,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
                 className="flex items-center justify-center gap-2 w-full py-2.5 bg-[#d97757] hover:bg-[#c46243] text-white text-xs font-semibold rounded-xl shadow-xs transition-all disabled:opacity-50 active:scale-[0.99]"
               >
                 <Download className="w-3.5 h-3.5" />
-                <span>{encrypting ? 'Encrypting Vault...' : `Export Encrypted Vault (${links.length} Links)`}</span>
+                <span>{encrypting ? 'Encrypting…' : `Download backup (${links.length} ${links.length === 1 ? 'link' : 'links'})`}</span>
               </button>
             </form>
           </div>
@@ -281,7 +281,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
             <div className="flex items-center gap-2">
               <Unlock className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               <h4 className="font-semibold text-sm text-slate-900 dark:text-[#f7f6f3]">
-                Restore from Encrypted / Plain Backup
+                Restore
               </h4>
             </div>
 
@@ -296,7 +296,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
 
               <label className="flex items-center justify-center gap-2 w-full py-2.5 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-semibold cursor-pointer transition-colors border border-black/10 dark:border-white/10">
                 <Upload className="w-3.5 h-3.5" />
-                <span>Select .enc or .json Backup File</span>
+                <span>Choose a .enc or .json backup file</span>
                 <input
                   type="file"
                   accept=".json,.enc"
@@ -310,7 +310,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
           {/* Unencrypted & Portable Digests */}
           <div className="space-y-3">
             <div className="text-xs font-semibold text-slate-400 dark:text-slate-500">
-              Portable Plain Text Digests
+              Unencrypted exports
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <button

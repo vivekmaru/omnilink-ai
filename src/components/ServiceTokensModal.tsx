@@ -161,10 +161,10 @@ export const ServiceTokensModal: React.FC<ServiceTokensModalProps> = ({ isOpen, 
           <div className="flex items-start gap-3">
             <KeyRound className="w-5 h-5 mt-1 text-[#d97757] dark:text-[#e08264] shrink-0" />
             <div>
-              <h3 id="service-tokens-modal-title" className="text-2xl font-semibold tracking-tight">
+              <h3 id="service-tokens-modal-title" className="text-lg font-semibold tracking-tight text-slate-900 dark:text-[#f7f6f3]">
                 Service tokens
               </h3>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
                 Tokens let the browser extension, mobile shortcuts and MCP clients reach this workspace.
               </p>
             </div>

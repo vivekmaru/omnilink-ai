@@ -114,11 +114,11 @@ export const MobileShareModal: React.FC<MobileShareModalProps> = ({
               <Smartphone className="w-4 h-4" />
             </div>
             <div>
-              <h3 id="mobile-share-modal-title" className="font-newsreader font-medium text-lg text-slate-900 dark:text-[#f7f6f3]">
-                Mobile Quick Share & Ingress Hub
+              <h3 id="mobile-share-modal-title" className="text-lg font-semibold tracking-tight text-slate-900 dark:text-[#f7f6f3]">
+                Mobile sharing
               </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Capture links seamlessly from iOS, Android, Apple Shortcuts, and webhooks
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                Save links from your phone's share sheet, Apple Shortcuts or a webhook
               </p>
             </div>
           </div>
@@ -143,7 +143,7 @@ export const MobileShareModal: React.FC<MobileShareModalProps> = ({
             }`}
           >
             <Share2 className="w-3.5 h-3.5" />
-            <span>Native Share Sheet (PWA)</span>
+            <span>Share sheet</span>
           </button>
 
           <button
@@ -155,7 +155,7 @@ export const MobileShareModal: React.FC<MobileShareModalProps> = ({
             }`}
           >
             <Zap className="w-3.5 h-3.5" />
-            <span>Apple Shortcuts (iOS)</span>
+            <span>Apple Shortcuts</span>
           </button>
 
           <button
@@ -167,7 +167,7 @@ export const MobileShareModal: React.FC<MobileShareModalProps> = ({
             }`}
           >
             <Terminal className="w-3.5 h-3.5" />
-            <span>Webhook & Automations</span>
+            <span>Webhook</span>
           </button>
         </div>
 
