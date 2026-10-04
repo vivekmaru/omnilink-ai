@@ -75,11 +75,11 @@ export const ExtensionModal: React.FC<ExtensionModalProps> = ({ isOpen, onClose,
               <Chrome className="w-5 h-5" />
             </div>
             <div>
-              <h3 id="extension-modal-title" className="font-newsreader text-xl font-medium tracking-tight">
-                Chrome Extension & Web Companion
+              <h3 id="extension-modal-title" className="text-lg font-semibold tracking-tight text-slate-900 dark:text-[#f7f6f3]">
+                Chrome extension
               </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                1-click save from Reddit, Instagram, GitHub & the web into OmniLink
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                Save any page to OmniLink in one click
               </p>
             </div>
           </div>
@@ -101,14 +101,11 @@ export const ExtensionModal: React.FC<ExtensionModalProps> = ({ isOpen, onClose,
             <div className="space-y-1.5">
               <div className="flex items-center gap-2">
                 <h4 className="font-semibold text-sm text-slate-900 dark:text-[#f7f6f3]">
-                  Official Manifest V3 Chrome Extension
+                  OmniLink for Chrome
                 </h4>
-                <span className="text-xs font-semibold px-2 py-0.5 rounded bg-[#d97757]/15 text-[#d97757] dark:text-[#e08264]">
-                  V3 Ready
-                </span>
               </div>
               <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed max-w-md">
-                Package pre-configured with active tab reader, right-click context menu, and auto-sync to{' '}
+                Comes set up to save to{' '}
                 <code className="px-2 py-0.5 rounded bg-black/5 dark:bg-black/40 border border-black/10 dark:border-white/10 font-mono text-xs text-[#d97757] dark:text-[#e08264] font-medium break-all inline-block my-0.5">
                   {currentOrigin}
                 </code>
@@ -130,7 +127,7 @@ export const ExtensionModal: React.FC<ExtensionModalProps> = ({ isOpen, onClose,
           {/* Step-by-Step Install Guide */}
           <div className="space-y-3 pt-1">
             <h4 className="text-xs font-semibold text-slate-400 dark:text-slate-500">
-              HOW TO INSTALL IN CHROME, BRAVE, OR EDGE (30 SECONDS)
+              How to install in Chrome, Brave or Edge
             </h4>
 
             <div className="space-y-2 text-xs">

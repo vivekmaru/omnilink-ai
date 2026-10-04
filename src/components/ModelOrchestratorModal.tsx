@@ -136,8 +136,8 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 id="model-orchestrator-modal-title" className="text-lg font-semibold text-slate-900 dark:text-[#f7f6f3]">
-                  Gemini Model Usage & Router
+                <h2 id="model-orchestrator-modal-title" className="text-lg font-semibold tracking-tight text-slate-900 dark:text-[#f7f6f3]">
+                  AI models
                 </h2>
                 <span className="px-2 py-0.5 text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-full flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
@@ -145,7 +145,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
                 </span>
               </div>
               <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-                Model utilization, estimated API cost, and dynamic task assignment
+                Which Gemini models OmniLink uses for each job, and what they cost
               </p>
             </div>
           </div>
@@ -235,7 +235,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
             }`}
           >
             <Layers className="w-3.5 h-3.5" />
-            Model Usage & Triggers
+            Models and cost
           </button>
 
           <button
@@ -248,7 +248,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
             }`}
           >
             <Activity className="w-3.5 h-3.5" />
-            Live Execution Logs
+            Recent calls
             {stats && stats.totalRequests > 0 && (
               <span className="ml-1 px-1.5 py-0.2 bg-black/5 dark:bg-white/10 text-slate-600 dark:text-slate-300 rounded text-xs">
                 {stats.totalRequests}
@@ -282,7 +282,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <h3 className="text-base font-semibold text-slate-900 dark:text-[#f7f6f3]">
-                    Assigned Model Tiers & Spend Breakdown
+                    Models in use
                   </h3>
                   <span className="text-xs text-slate-400">
                     Pricing based on Google GenAI rates
@@ -317,7 +317,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
                           <div className="p-2.5 rounded-lg bg-white dark:bg-[#18181b] border border-black/5 dark:border-white/5 text-xs text-slate-700 dark:text-slate-300 leading-relaxed mb-2.5">
                             <div className="text-xs font-semibold text-[#d97757] dark:text-[#e08264] mb-0.5 flex items-center gap-1">
                               <Sparkles className="w-2.5 h-2.5" />
-                              <span>When OmniLink Uses This</span>
+                              <span>Used for</span>
                             </div>
                             {model.whenUsed || model.role}
                           </div>
@@ -583,7 +583,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
         <div className="flex items-center justify-between px-6 py-3 border-t border-black/10 dark:border-white/10 bg-black/[0.02] dark:bg-white/[0.02] text-xs text-slate-500 dark:text-slate-400">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-            <span>Adaptive Orchestration Engine Online</span>
+            <span>Connected</span>
           </div>
           {!isPage && (
             <button
