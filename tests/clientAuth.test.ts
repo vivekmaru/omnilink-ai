@@ -19,6 +19,7 @@ describe('client authentication seams', () => {
     ApiService.clearWorkspaceNamespace();
     ApiService.clearServiceToken();
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   it('namespaces browser caches and clears the previous workspace on identity switch', () => {
@@ -84,6 +85,34 @@ describe('client authentication seams', () => {
     await expect(ApiService.askRepository('test question')).rejects.toBeInstanceOf(ApiAuthenticationError);
     expect(ApiService.getWorkspaceNamespace()).toBeNull();
     expect(localStorage.getItem('omnilink_local_cache_v1:workspace-a')).toBeNull();
+  });
+
+  it('rejects online transport failures without creating a local save', async () => {
+    ApiService.setWorkspaceNamespace('workspace-a');
+    ApiService.setLocalCache([]);
+    vi.stubGlobal('navigator', { onLine: true });
+    const failure = new TypeError('Failed to fetch');
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(failure));
+    await expect(ApiService.createLink({ url: 'https://example.test' })).rejects.toBe(failure);
+    expect(ApiService.getLocalCache()).toEqual([]);
+  });
+
+  it('allows a local save when the browser is explicitly offline', async () => {
+    ApiService.setWorkspaceNamespace('workspace-a');
+    vi.stubGlobal('navigator', { onLine: false });
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
+    const link = await ApiService.createLink({ url: 'https://example.test' });
+    expect(link.id).toMatch(/^local-/);
+    expect(ApiService.getLocalCache()).toEqual([link]);
+  });
+
+  it.each([401, 403, 429, 500])('never converts HTTP %s into an offline save', async (status) => {
+    ApiService.setWorkspaceNamespace('workspace-a');
+    ApiService.setLocalCache([]);
+    vi.stubGlobal('navigator', { onLine: false });
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('{}', { status })));
+    await expect(ApiService.createLink({ url: 'https://example.test' })).rejects.toThrow();
+    expect(ApiService.getLocalCache()).toEqual([]);
   });
 
   it('resolves MCP credentials from the service-token environment variable', () => {
