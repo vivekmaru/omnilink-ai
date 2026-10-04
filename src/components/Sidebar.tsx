@@ -97,6 +97,37 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [platformsOpen, setPlatformsOpen] = useState(true);
   const [categoriesOpen, setCategoriesOpen] = useState(true);
   const [utilitiesOpen, setUtilitiesOpen] = useState(true);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  const renderNavAction = (
+    icon: React.ReactNode,
+    label: string,
+    onClick: () => void,
+    { active = false, count }: { active?: boolean; count?: number } = {}
+  ) => (
+    <button
+      key={label}
+      onClick={() => {
+        onClick();
+        if (onCloseMobile) onCloseMobile();
+      }}
+      className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] transition-colors ${
+        active
+          ? 'bg-black/5 dark:bg-white/10 text-slate-900 dark:text-white font-medium'
+          : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
+      }`}
+    >
+      <div className="flex items-center gap-2.5">
+        {icon}
+        <span>{label}</span>
+      </div>
+      {count !== undefined && (
+        <span className="text-xs px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-medium">
+          {count}
+        </span>
+      )}
+    </button>
+  );
 
   const getCategoryCount = (cat: string) => {
     if (stats?.categoriesBreakdown?.[cat] !== undefined) {
@@ -399,7 +430,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
           )}
 
-          {/* Section 4: Workspace Utilities (Only Analytics, Vault, Shortcuts) */}
+          {/* Section 4: Workspace (views and daily tools) */}
           <div className="nav-section">
             <button
               onClick={() => setUtilitiesOpen(!utilitiesOpen)}
@@ -410,100 +441,41 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </button>
             {utilitiesOpen && (
               <div className="mt-1.5 space-y-0.5">
-                <button
-                  onClick={() => {
-                    onViewChange('kanban');
-                    if (onCloseMobile) onCloseMobile();
-                  }}
-                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] transition-colors ${
-                    currentView === 'kanban'
-                      ? 'bg-black/5 dark:bg-white/10 text-slate-900 dark:text-white font-medium'
-                      : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Columns3 className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
-                    <span>Kanban board</span>
-                  </div>
-                </button>
-                <button
-                  onClick={() => {
-                    onViewChange('cluster');
-                    if (onCloseMobile) onCloseMobile();
-                  }}
-                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] transition-colors ${
-                    currentView === 'cluster'
-                      ? 'bg-black/5 dark:bg-white/10 text-slate-900 dark:text-white font-medium'
-                      : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Network className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
-                    <span>Topic clusters</span>
-                  </div>
-                </button>
-                {onOpenAnalytics && (
-                  <button
-                    onClick={() => {
-                      onOpenAnalytics();
-                      if (onCloseMobile) onCloseMobile();
-                    }}
-                    className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors group"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <BarChart3 className="w-3.5 h-3.5 text-[#d97757] dark:text-[#e08264]" />
-                      <span>Analytics</span>
-                    </div>
-                    <span className="font-mono text-xs text-slate-400">⌘⇧A</span>
-                  </button>
-                )}
+                {renderNavAction(<Columns3 className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />, 'Kanban board', () => onViewChange('kanban'), { active: currentView === 'kanban' })}
+                {renderNavAction(<Network className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />, 'Topic clusters', () => onViewChange('cluster'), { active: currentView === 'cluster' })}
+                {onOpenRssFeeds &&
+                  renderNavAction(<Rss className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />, 'RSS feeds', onOpenRssFeeds, {
+                    count: rssFeedsCount > 0 ? rssFeedsCount : undefined,
+                  })}
+                {onOpenAnalytics &&
+                  renderNavAction(<BarChart3 className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />, 'Analytics', onOpenAnalytics)}
+              </div>
+            )}
+          </div>
 
-                {onOpenBackup && (
-                  <button
-                    onClick={() => {
-                      onOpenBackup();
-                      if (onCloseMobile) onCloseMobile();
-                    }}
-                    className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors group"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <ShieldCheck className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
-                      <span>Encrypted Vault</span>
-                    </div>
-                    <span className="font-mono text-xs text-slate-400">⌘B</span>
-                  </button>
-                )}
-
-                {onOpenServiceTokens && (
-                  <button
-                    onClick={() => {
-                      onOpenServiceTokens();
-                      if (onCloseMobile) onCloseMobile();
-                    }}
-                    className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors group"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <KeyRound className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
-                      <span>Service Tokens</span>
-                    </div>
-                  </button>
-                )}
-
-                {onOpenShortcutsHelp && (
-                  <button
-                    onClick={() => {
-                      onOpenShortcutsHelp();
-                      if (onCloseMobile) onCloseMobile();
-                    }}
-                    className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors group"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <Keyboard className="w-3.5 h-3.5 text-slate-400" />
-                      <span>Keyboard Shortcuts</span>
-                    </div>
-                    <span className="font-mono text-xs text-slate-400">?</span>
-                  </button>
-                )}
+          {/* Section 5: Settings (set-up tasks, collapsed by default) */}
+          <div className="nav-section">
+            <button
+              onClick={() => setSettingsOpen(!settingsOpen)}
+              className="w-full flex items-center justify-between px-1 py-1 nav-label hover:opacity-90 transition-opacity"
+              aria-expanded={settingsOpen}
+            >
+              <span>Settings</span>
+              {settingsOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+            </button>
+            {settingsOpen && (
+              <div className="mt-1.5 space-y-0.5">
+                {onOpenModelOrchestrator &&
+                  renderNavAction(<Cpu className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />, 'AI models', onOpenModelOrchestrator)}
+                {renderNavAction(<Chrome className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />, 'Chrome extension', onOpenExtension)}
+                {renderNavAction(<Share2 className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />, 'Mobile sharing', onOpenMobileShare)}
+                {onOpenExportMarkdown &&
+                  renderNavAction(<FileDown className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />, 'Export to Markdown', onOpenExportMarkdown)}
+                {renderNavAction(<ShieldCheck className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />, 'Backup and restore', onOpenBackup)}
+                {onOpenServiceTokens &&
+                  renderNavAction(<KeyRound className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />, 'Service tokens', onOpenServiceTokens)}
+                {onOpenShortcutsHelp &&
+                  renderNavAction(<Keyboard className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />, 'Keyboard shortcuts', onOpenShortcutsHelp)}
               </div>
             )}
           </div>

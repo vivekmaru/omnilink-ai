@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   Search,
   Sparkles,
@@ -8,15 +8,6 @@ import {
   LayoutGrid,
   List,
   Keyboard,
-  FileDown,
-  Rss,
-  Cpu,
-  BarChart3,
-  Wrench,
-  ChevronDown,
-  ShieldCheck,
-  Share2,
-  Chrome,
 } from 'lucide-react';
 import { ViewMode } from '../types';
 
@@ -27,14 +18,6 @@ interface HeaderProps {
   onOpenAskRepo: () => void;
   onToggleMobileSidebar: () => void;
   onOpenShortcutsHelp?: () => void;
-  onOpenExportMarkdown?: () => void;
-  onOpenRssFeeds?: () => void;
-  onOpenModelOrchestrator?: () => void;
-  onOpenAnalytics?: () => void;
-  onOpenBackup?: () => void;
-  onOpenMobileShare?: () => void;
-  onOpenExtension?: () => void;
-  rssFeedsCount?: number;
   currentView: ViewMode;
   onViewChange: (mode: ViewMode) => void;
 }
@@ -46,20 +29,10 @@ export const Navbar: React.FC<HeaderProps> = ({
   onOpenAskRepo,
   onToggleMobileSidebar,
   onOpenShortcutsHelp,
-  onOpenExportMarkdown,
-  onOpenRssFeeds,
-  onOpenModelOrchestrator,
-  onOpenAnalytics,
-  onOpenBackup,
-  onOpenMobileShare,
-  onOpenExtension,
-  rssFeedsCount = 0,
   currentView,
   onViewChange,
 }) => {
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const [toolsOpen, setToolsOpen] = useState(false);
-  const toolsMenuRef = useRef<HTMLDivElement>(null);
 
   // Global Keyboard Shortcuts: ⌘K or / for search, ⌘J for Ask AI, N for Add Link, ? or ⌘/ for Help
   useEffect(() => {
@@ -84,9 +57,7 @@ export const Navbar: React.FC<HeaderProps> = ({
         e.preventDefault();
         onOpenAddModal();
       } else if (e.key === 'Escape') {
-        if (toolsOpen) {
-          setToolsOpen(false);
-        } else if (document.activeElement === searchInputRef.current) {
+        if (document.activeElement === searchInputRef.current) {
           onSearchChange('');
           searchInputRef.current?.blur();
         }
@@ -94,20 +65,7 @@ export const Navbar: React.FC<HeaderProps> = ({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onOpenAskRepo, onOpenAddModal, onOpenShortcutsHelp, onSearchChange, toolsOpen]);
-
-  // Click outside to close tools menu
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (toolsMenuRef.current && !toolsMenuRef.current.contains(e.target as Node)) {
-        setToolsOpen(false);
-      }
-    };
-    if (toolsOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [toolsOpen]);
+  }, [onOpenAskRepo, onOpenAddModal, onOpenShortcutsHelp, onSearchChange]);
 
   return (
     <header
@@ -190,129 +148,6 @@ export const Navbar: React.FC<HeaderProps> = ({
 
       {/* Right: Distilled Tools Menu & Primary Actions */}
       <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-        {/* Consolidated Tools Dropdown */}
-        <div className="relative" ref={toolsMenuRef}>
-          <button
-            id="btn-navbar-tools"
-            onClick={() => setToolsOpen(!toolsOpen)}
-            className={`flex items-center gap-1 px-2 py-1.5 sm:px-3 sm:py-1.5 rounded-md text-xs font-medium transition-all border shrink-0 ${
-              toolsOpen
-                ? 'bg-black/10 dark:bg-white/10 text-slate-900 dark:text-white border-black/20 dark:border-white/20'
-                : 'bg-transparent hover:bg-black/5 dark:hover:bg-white/5 text-slate-700 dark:text-slate-300 border-black/10 dark:border-white/10'
-            }`}
-            title="Tools & Utilities"
-            aria-expanded={toolsOpen}
-            aria-haspopup="true"
-          >
-            <Wrench className="w-3.5 h-3.5 text-[#d97757] dark:text-[#e08264]" />
-            <span className="hidden md:inline">Tools</span>
-            {rssFeedsCount > 0 && (
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-            )}
-            <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform ${toolsOpen ? 'rotate-180' : ''}`} />
-          </button>
-
-          {toolsOpen && (
-            <div
-              className="absolute right-0 top-10 z-50 w-60 p-1.5 rounded-xl border shadow-xl animate-in fade-in zoom-in-95 duration-100"
-              style={{
-                backgroundColor: 'var(--card-bg)',
-                borderColor: 'var(--card-border)',
-              }}
-            >
-              <div className="px-2.5 py-1.5 text-xs font-semibold text-slate-400 dark:text-slate-500 border-b border-black/5 dark:border-white/5 mb-1">
-                Tools & Integrations
-              </div>
-
-              {onOpenModelOrchestrator && (
-                <button
-                  onClick={() => {
-                    onOpenModelOrchestrator();
-                    setToolsOpen(false);
-                  }}
-                  className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors group"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Cpu className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 group-hover:scale-110 transition-transform" />
-                    <span>Gemini Model Router</span>
-                  </div>
-                  <span className="font-mono text-xs opacity-50">⌘O</span>
-                </button>
-              )}
-
-              {onOpenRssFeeds && (
-                <button
-                  onClick={() => {
-                    onOpenRssFeeds();
-                    setToolsOpen(false);
-                  }}
-                  className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors group"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Rss className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 group-hover:scale-110 transition-transform" />
-                    <span>RSS Feeds</span>
-                  </div>
-                  {rssFeedsCount > 0 ? (
-                    <span className="text-xs px-1.5 py-0.2 rounded bg-black/5 dark:bg-white/10 text-slate-600 dark:text-slate-300 font-semibold">
-                      {rssFeedsCount}
-                    </span>
-                  ) : (
-                    <span className="font-mono text-xs opacity-50">⌘R</span>
-                  )}
-                </button>
-              )}
-
-              {onOpenExportMarkdown && (
-                <button
-                  onClick={() => {
-                    onOpenExportMarkdown();
-                    setToolsOpen(false);
-                  }}
-                  className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors group"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <FileDown className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 group-hover:scale-110 transition-transform" />
-                    <span>Export Markdown (.md)</span>
-                  </div>
-                  <span className="font-mono text-xs opacity-50">⌘⇧E</span>
-                </button>
-              )}
-
-              {onOpenExtension && (
-                <button
-                  onClick={() => {
-                    onOpenExtension();
-                    setToolsOpen(false);
-                  }}
-                  className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors group"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Chrome className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 group-hover:scale-110 transition-transform" />
-                    <span>Chrome Extension Hub</span>
-                  </div>
-                  <span className="font-mono text-xs opacity-50">⌘E</span>
-                </button>
-              )}
-
-              {onOpenMobileShare && (
-                <button
-                  onClick={() => {
-                    onOpenMobileShare();
-                    setToolsOpen(false);
-                  }}
-                  className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors group"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Share2 className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 group-hover:scale-110 transition-transform" />
-                    <span>Mobile Share & QR</span>
-                  </div>
-                  <span className="font-mono text-xs opacity-50">⌘M</span>
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-
         {/* Primary AI Button: Ask Repo AI */}
         <button
           id="btn-ask-repo-ai"

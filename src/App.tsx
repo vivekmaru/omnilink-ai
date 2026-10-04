@@ -836,17 +836,6 @@ export default function App() {
           }}
           onOpenAskRepo={() => setAskRepoModalOpen(true)}
           onOpenShortcutsHelp={() => setShortcutsModalOpen(true)}
-          onOpenExportMarkdown={() => {
-            setExportSingleLink(null);
-            setExportModalOpen(true);
-          }}
-          onOpenRssFeeds={() => setRssModalOpen(true)}
-          onOpenModelOrchestrator={() => setModelOrchestratorModalOpen(true)}
-          onOpenAnalytics={() => setAnalyticsModalOpen(true)}
-          onOpenBackup={() => setBackupModalOpen(true)}
-          onOpenMobileShare={() => setMobileShareModalOpen(true)}
-          onOpenExtension={() => setExtensionModalOpen(true)}
-          rssFeedsCount={rssFeeds.length}
           onToggleMobileSidebar={() => setMobileSidebarOpen(!mobileSidebarOpen)}
           currentView={currentView}
           onViewChange={setCurrentView}
