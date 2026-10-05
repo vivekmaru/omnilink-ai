@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import {
   Inbox,
-  Circle,
+  BookOpen,
+  BookMarked,
   CheckCircle2,
   Star,
   Archive,
@@ -86,6 +87,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [categoriesOpen, setCategoriesOpen] = useState(true);
   const [utilitiesOpen, setUtilitiesOpen] = useState(true);
 
+  const rowClass = (active: boolean) =>
+    `w-full flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-md text-[0.85rem] transition-colors ${
+      active
+        ? 'bg-black/[0.06] dark:bg-white/10 text-slate-900 dark:text-ink font-medium'
+        : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
+    }`;
+  const iconClass = 'w-3.5 h-3.5 shrink-0 text-slate-500 dark:text-slate-400';
+  // Plain number, hidden when zero so empty rows stay quiet
+  const renderCount = (count?: number) =>
+    count ? <span className="text-xs tabular-nums text-slate-500 dark:text-slate-400">{count}</span> : null;
+
   const renderNavAction = (
     icon: React.ReactNode,
     label: string,
@@ -98,21 +110,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
         onClick();
         if (onCloseMobile) onCloseMobile();
       }}
-      className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] transition-colors ${
-        active
-          ? 'bg-black/5 dark:bg-white/10 text-slate-900 dark:text-white font-medium'
-          : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
-      }`}
+      className={rowClass(active)}
     >
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-2.5 min-w-0">
         {icon}
-        <span>{label}</span>
+        <span className="truncate">{label}</span>
       </div>
-      {count !== undefined && (
-        <span className="text-xs px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-medium">
-          {count}
-        </span>
-      )}
+      {renderCount(count)}
     </button>
   );
 
@@ -134,6 +138,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }
     return 0;
   };
+
+  const visiblePlatforms = (
+    [
+      { id: 'github', label: 'GitHub', icon: <Github className={iconClass} /> },
+      { id: 'reddit_post', label: 'Reddit', icon: <MessageSquare className={iconClass} /> },
+      { id: 'instagram_short', label: 'Instagram', icon: <Instagram className={iconClass} /> },
+      { id: 'youtube', label: 'YouTube', icon: <Youtube className={iconClass} /> },
+      { id: 'twitter_x', label: 'X / Twitter', icon: <Twitter className={iconClass} /> },
+      { id: 'paper', label: 'Papers & Docs', icon: <FileText className={iconClass} /> },
+    ] as { id: PlatformType; label: string; icon: React.ReactNode }[]
+  )
+    .map((item) => ({ ...item, count: getPlatformCount(item.id) }))
+    .filter((item) => item.count > 0 || filters.platform === item.id);
 
   const handleLibrarySelect = (
     readStatus: ReadStatus | 'all',
@@ -206,168 +223,75 @@ export const Sidebar: React.FC<SidebarProps> = ({
               onClick={() => setLibraryOpen(!libraryOpen)}
               className="w-full flex items-center justify-between px-1 py-1 nav-label hover:opacity-90 transition-opacity"
             >
-              <span>Repository</span>
+              <span>Library</span>
               {libraryOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
             </button>
             {libraryOpen && (
               <div className="mt-1.5 space-y-0.5">
-                <button
-                  onClick={() => handleLibrarySelect('all', false, false)}
-                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] transition-colors ${
-                    isLibraryActive('all', false, false)
-                      ? 'bg-black/[0.06] dark:bg-white/10 text-slate-900 dark:text-ink font-semibold'
-                      : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Inbox className="w-3.5 h-3.5 opacity-75" />
-                    <span>All Links</span>
-                  </div>
-                  <span className="text-xs px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-medium">
-                    {totalLinksCount}
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => handleLibrarySelect('unread', false, false)}
-                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] transition-colors ${
-                    isLibraryActive('unread', false, false)
-                      ? 'bg-black/[0.06] dark:bg-white/10 text-slate-900 dark:text-ink font-semibold'
-                      : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Circle className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
-                    <span>Reading Queue</span>
-                  </div>
-                  <span className="text-xs px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-medium">
-                    {unreadCount}
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => handleLibrarySelect('reading', false, false)}
-                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] transition-colors ${
-                    isLibraryActive('reading', false, false)
-                      ? 'bg-black/[0.06] dark:bg-white/10 text-slate-900 dark:text-ink font-semibold'
-                      : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Circle className="w-2.5 h-2.5 fill-cyan-500 text-cyan-500" />
-                    <span>In Progress</span>
-                  </div>
-                  <span className="text-xs px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-medium">
-                    {readingCount}
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => handleLibrarySelect('read', false, false)}
-                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] transition-colors ${
-                    isLibraryActive('read', false, false)
-                      ? 'bg-black/[0.06] dark:bg-white/10 text-slate-900 dark:text-ink font-semibold'
-                      : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                    <span>Reviewed</span>
-                  </div>
-                  <span className="text-xs px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-medium">
-                    {readCount}
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => handleLibrarySelect('all', true, false)}
-                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] transition-colors ${
-                    isLibraryActive('all', true, false)
-                      ? 'bg-black/[0.06] dark:bg-white/10 text-slate-900 dark:text-ink font-semibold'
-                      : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                    <span>Starred</span>
-                  </div>
-                  <span className="text-xs px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-medium">
-                    {favoritesCount}
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => handleLibrarySelect('all', false, true)}
-                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] transition-colors ${
-                    isLibraryActive('all', false, true)
-                      ? 'bg-black/[0.06] dark:bg-white/10 text-slate-900 dark:text-ink font-semibold'
-                      : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Archive className="w-3.5 h-3.5 opacity-75" />
-                    <span>Archived</span>
-                  </div>
-                  <span className="text-xs px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-medium">
-                    {archivedCount}
-                  </span>
-                </button>
+                {(
+                  [
+                    { label: 'All links', icon: <Inbox className={iconClass} />, status: 'all', fav: false, archived: false, count: totalLinksCount },
+                    { label: 'To read', icon: <BookOpen className={iconClass} />, status: 'unread', fav: false, archived: false, count: unreadCount },
+                    { label: 'Reading', icon: <BookMarked className={iconClass} />, status: 'reading', fav: false, archived: false, count: readingCount },
+                    { label: 'Read', icon: <CheckCircle2 className={iconClass} />, status: 'read', fav: false, archived: false, count: readCount },
+                    { label: 'Starred', icon: <Star className={iconClass} />, status: 'all', fav: true, archived: false, count: favoritesCount },
+                    { label: 'Archived', icon: <Archive className={iconClass} />, status: 'all', fav: false, archived: true, count: archivedCount },
+                  ] as const
+                ).map((item) => (
+                  <button
+                    key={item.label}
+                    onClick={() => handleLibrarySelect(item.status, item.fav, item.archived)}
+                    className={rowClass(isLibraryActive(item.status, item.fav, item.archived))}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      {item.icon}
+                      <span>{item.label}</span>
+                    </div>
+                    {renderCount(item.count)}
+                  </button>
+                ))}
               </div>
             )}
           </div>
 
-          {/* Section 2: Platforms */}
-          <div className="nav-section">
-            <button
-              onClick={() => setPlatformsOpen(!platformsOpen)}
-              className="w-full flex items-center justify-between px-1 py-1 nav-label hover:opacity-90 transition-opacity"
-            >
-              <span>Platforms</span>
-              {platformsOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-            </button>
-            {platformsOpen && (
-              <div className="mt-1.5 space-y-0.5">
-                {[
-                  { id: 'github', label: 'GitHub', icon: <Github className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" /> },
-                  { id: 'reddit_post', label: 'Reddit', icon: <MessageSquare className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" /> },
-                  { id: 'instagram_short', label: 'Instagram', icon: <Instagram className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" /> },
-                  { id: 'youtube', label: 'YouTube', icon: <Youtube className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" /> },
-                  { id: 'twitter_x', label: 'X / Twitter', icon: <Twitter className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" /> },
-                  { id: 'paper', label: 'Papers & Docs', icon: <FileText className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" /> },
-                ].map((item) => {
-                  const count = getPlatformCount(item.id as PlatformType);
-                  const isSelected = filters.platform === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => {
-                        onFilterChange({
-                          platform: isSelected ? 'all' : (item.id as PlatformType),
-                          includeArchived: false,
-                        });
-                        if (onCloseMobile) onCloseMobile();
-                      }}
-                      className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] transition-colors ${
-                        isSelected
-                          ? 'bg-black/[0.06] dark:bg-white/10 text-slate-900 dark:text-ink font-semibold'
-                          : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5 truncate">
-                        {item.icon}
-                        <span className="truncate">{item.label}</span>
-                      </div>
-                      {count > 0 && (
-                        <span className="text-xs px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-medium">
-                          {count}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+          {/* Section 2: Platforms, only the ones that have links (or the active filter) */}
+          {visiblePlatforms.length > 0 && (
+            <div className="nav-section">
+              <button
+                onClick={() => setPlatformsOpen(!platformsOpen)}
+                className="w-full flex items-center justify-between px-1 py-1 nav-label hover:opacity-90 transition-opacity"
+              >
+                <span>Platforms</span>
+                {platformsOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+              </button>
+              {platformsOpen && (
+                <div className="mt-1.5 space-y-0.5">
+                  {visiblePlatforms.map((item) => {
+                    const isSelected = filters.platform === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => {
+                          onFilterChange({
+                            platform: isSelected ? 'all' : item.id,
+                            includeArchived: false,
+                          });
+                          if (onCloseMobile) onCloseMobile();
+                        }}
+                        className={rowClass(isSelected)}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          {item.icon}
+                          <span className="truncate">{item.label}</span>
+                        </div>
+                        {renderCount(item.count)}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Section 3: Categories */}
           {availableCategories.length > 0 && (
@@ -394,21 +318,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           });
                           if (onCloseMobile) onCloseMobile();
                         }}
-                        className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] transition-colors ${
-                          isSelected
-                            ? 'bg-black/[0.06] dark:bg-white/10 text-slate-900 dark:text-ink font-semibold'
-                            : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
-                        }`}
+                        className={rowClass(isSelected)}
                       >
-                        <div className="flex items-center gap-2 truncate">
-                          <Folder className="w-3.5 h-3.5 opacity-60 shrink-0" />
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <Folder className={iconClass} />
                           <span className="truncate">{cat}</span>
                         </div>
-                        {count > 0 && (
-                          <span className="text-xs px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-medium">
-                            {count}
-                          </span>
-                        )}
+                        {renderCount(count)}
                       </button>
                     );
                   })}
@@ -428,23 +344,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </button>
             {utilitiesOpen && (
               <div className="mt-1.5 space-y-0.5">
-                {renderNavAction(<Columns3 className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />, 'Kanban board', () => onViewChange('kanban'), { active: currentView === 'kanban' })}
-                {renderNavAction(<Network className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />, 'Topic clusters', () => onViewChange('cluster'), { active: currentView === 'cluster' })}
+                {renderNavAction(<Columns3 className={iconClass} />, 'Kanban board', () => onViewChange('kanban'), { active: currentView === 'kanban' })}
+                {renderNavAction(<Network className={iconClass} />, 'Topic clusters', () => onViewChange('cluster'), { active: currentView === 'cluster' })}
                 {onOpenRssFeeds &&
-                  renderNavAction(<Rss className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />, 'RSS feeds', onOpenRssFeeds, {
+                  renderNavAction(<Rss className={iconClass} />, 'RSS feeds', onOpenRssFeeds, {
                     count: rssFeedsCount > 0 ? rssFeedsCount : undefined,
                   })}
                 {onOpenAnalytics &&
-                  renderNavAction(<BarChart3 className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />, 'Analytics', onOpenAnalytics)}
+                  renderNavAction(<BarChart3 className={iconClass} />, 'Analytics', onOpenAnalytics)}
               </div>
             )}
           </div>
 
           {/* Section 5: Settings and help */}
           <div className="nav-section space-y-0.5">
-            {renderNavAction(<Settings className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />, 'Settings', onOpenSettings, { active: settingsActive })}
+            {renderNavAction(<Settings className={iconClass} />, 'Settings', onOpenSettings, { active: settingsActive })}
             {onOpenShortcutsHelp &&
-              renderNavAction(<Keyboard className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />, 'Keyboard shortcuts', onOpenShortcutsHelp)}
+              renderNavAction(<Keyboard className={iconClass} />, 'Keyboard shortcuts', onOpenShortcutsHelp)}
           </div>
         </nav>
 
