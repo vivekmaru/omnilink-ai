@@ -1,10 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import {
   X,
-  BarChart3,
-  CheckCircle2,
   Clock,
-  BookOpen,
   Star,
   Archive,
   Sparkles,
@@ -15,12 +12,9 @@ import {
   Twitter,
   FileText,
   Tag,
-  Folder,
   ArrowRight,
-  TrendingUp,
   Layers,
   PieChart,
-  HelpCircle,
 } from 'lucide-react';
 import { LinkItem, PlatformType, ReadStatus, SystemStats } from '../types';
 
@@ -180,26 +174,28 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
 
   if (!isOpen) return null;
 
+  const iconClass = 'w-4 h-4 text-slate-500 dark:text-slate-400';
+
   const getPlatformMeta = (platform: string) => {
     switch (platform) {
       case 'github':
-        return { label: 'GitHub Repos', icon: <Github className="w-4 h-4 text-slate-700 dark:text-slate-200" />, color: 'bg-slate-800' };
+        return { label: 'GitHub', icon: <Github className={iconClass} /> };
       case 'reddit_post':
-        return { label: 'Reddit Posts', icon: <MessageSquare className="w-4 h-4 text-orange-500" />, color: 'bg-orange-600' };
+        return { label: 'Reddit posts', icon: <MessageSquare className={iconClass} /> };
       case 'reddit_comment':
-        return { label: 'Reddit Comments', icon: <MessageSquare className="w-4 h-4 text-orange-400" />, color: 'bg-orange-500' };
+        return { label: 'Reddit comments', icon: <MessageSquare className={iconClass} /> };
       case 'instagram_short':
-        return { label: 'Instagram Shorts', icon: <Instagram className="w-4 h-4 text-amber-600" />, color: 'bg-amber-600' };
+        return { label: 'Instagram', icon: <Instagram className={iconClass} /> };
       case 'youtube':
-        return { label: 'YouTube Videos', icon: <Youtube className="w-4 h-4 text-rose-500" />, color: 'bg-rose-600' };
+        return { label: 'YouTube', icon: <Youtube className={iconClass} /> };
       case 'twitter_x':
-        return { label: 'X / Twitter', icon: <Twitter className="w-4 h-4 text-sky-400" />, color: 'bg-sky-500' };
+        return { label: 'X / Twitter', icon: <Twitter className={iconClass} /> };
       case 'article':
-        return { label: 'Tech Articles & Blogs', icon: <FileText className="w-4 h-4 text-emerald-500" />, color: 'bg-emerald-600' };
+        return { label: 'Articles', icon: <FileText className={iconClass} /> };
       case 'paper':
-        return { label: 'Research Papers', icon: <FileText className="w-4 h-4 text-indigo-400" />, color: 'bg-indigo-600' };
+        return { label: 'Papers', icon: <FileText className={iconClass} /> };
       default:
-        return { label: 'Web & Other', icon: <Layers className="w-4 h-4 text-slate-400" />, color: 'bg-slate-600' };
+        return { label: 'Other', icon: <Layers className={iconClass} /> };
     }
   };
 
@@ -231,10 +227,34 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
     }
   };
 
+  const panel = 'rounded-lg border border-black/[0.08] dark:border-white/[0.08]';
+  const sectionLabel = 'text-xs font-medium text-slate-500 dark:text-slate-400';
+  const barTrack = 'w-full h-1.5 rounded-full bg-black/[0.06] dark:bg-white/[0.08] overflow-hidden';
+  const tabClass = (tab: typeof activeTab) =>
+    `px-3 py-2 text-sm border-b-2 -mb-px transition-colors flex items-center gap-2 whitespace-nowrap ${
+      activeTab === tab
+        ? 'border-accent text-slate-900 dark:text-ink font-medium'
+        : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+    }`;
+  const tabIcon = 'w-3.5 h-3.5 text-slate-400';
+
+  const statusRows: { status: ReadStatus; label: string; count: number; rate: number; swatch: string }[] = [
+    { status: 'unread', label: 'To read', count: analyticsData.unread, rate: analyticsData.unreadRate, swatch: 'bg-slate-300 dark:bg-slate-600' },
+    { status: 'reading', label: 'Reading', count: analyticsData.reading, rate: analyticsData.readingRate, swatch: 'bg-accent/50' },
+    { status: 'read', label: 'Read', count: analyticsData.read, rate: analyticsData.completionRate, swatch: 'bg-accent' },
+  ];
+
+  const depthBuckets = [
+    { label: 'Under 3 min', count: analyticsData.quickReads, hint: 'Short posts and tips' },
+    { label: '3–10 min', count: analyticsData.mediumReads, hint: 'Articles and tutorials' },
+    { label: '10–30 min', count: analyticsData.deepDives, hint: 'Longer guides' },
+    { label: '30 min or more', count: analyticsData.longForm, hint: 'Papers and videos' },
+  ];
+
   return (
     <div
       id="analytics-modal-backdrop"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-xs"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -244,259 +264,153 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby="analytics-modal-title"
-        className="w-full max-w-4xl max-h-[90vh] flex flex-col rounded-xl border shadow-2xl overflow-hidden transition-all text-slate-900 dark:text-ink"
+        className="w-full max-w-4xl max-h-[90vh] flex flex-col rounded-xl border shadow-xl overflow-hidden text-slate-900 dark:text-ink"
         style={{
-          backgroundColor: 'var(--bg)',
+          backgroundColor: 'var(--card-bg)',
           borderColor: 'var(--card-border)',
         }}
       >
-        {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-black/10 dark:border-white/10 shrink-0 bg-black/5 dark:bg-white/5">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-accent/10 dark:bg-accent/15 text-accent border border-accent/20">
-              <BarChart3 className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 id="analytics-modal-title" className="text-xl font-semibold tracking-tight">
-                  Knowledge Analytics & Usage Insights
-                </h2>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-medium">
-                  Live Telemetry
-                </span>
-              </div>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-                Comprehensive distribution metrics across reading velocity, platforms, tags, and topics.
-              </p>
-            </div>
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-black/[0.08] dark:border-white/[0.08] shrink-0">
+          <div>
+            <h2 id="analytics-modal-title" className="text-base font-semibold text-slate-900 dark:text-ink">
+              Analytics
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              How your links break down by status, platform, tag and reading time.
+            </p>
           </div>
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+            aria-label="Close"
+            className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
             title="Close (Esc)"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Navigation Tabs */}
-        <div className="flex items-center gap-2 px-6 pt-3 border-b border-black/10 dark:border-white/10 shrink-0 bg-black/5 dark:bg-white/5 overflow-x-auto no-scrollbar">
-          <button
-            onClick={() => setActiveTab('overview')}
-            className={`px-3.5 py-2 text-sm font-medium border-b-2 transition-all flex items-center gap-2 whitespace-nowrap ${
-              activeTab === 'overview'
-                ? 'border-accent text-accent font-semibold'
-                : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
-            }`}
-          >
-            <PieChart className="w-3.5 h-3.5" />
-            <span>Overview & KPIs</span>
+        {/* Tabs */}
+        <div className="flex items-center gap-1 px-6 border-b border-black/[0.08] dark:border-white/[0.08] shrink-0 overflow-x-auto no-scrollbar">
+          <button onClick={() => setActiveTab('overview')} className={tabClass('overview')}>
+            <PieChart className={tabIcon} />
+            <span>Overview</span>
           </button>
-
-          <button
-            onClick={() => setActiveTab('platforms')}
-            className={`px-3.5 py-2 text-sm font-medium border-b-2 transition-all flex items-center gap-2 whitespace-nowrap ${
-              activeTab === 'platforms'
-                ? 'border-accent text-accent font-semibold'
-                : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
-            }`}
-          >
-            <Layers className="w-3.5 h-3.5" />
-            <span>Platform Breakdown ({analyticsData.platformsSorted.length})</span>
+          <button onClick={() => setActiveTab('platforms')} className={tabClass('platforms')}>
+            <Layers className={tabIcon} />
+            <span>Platforms</span>
           </button>
-
-          <button
-            onClick={() => setActiveTab('tags')}
-            className={`px-3.5 py-2 text-sm font-medium border-b-2 transition-all flex items-center gap-2 whitespace-nowrap ${
-              activeTab === 'tags'
-                ? 'border-accent text-accent font-semibold'
-                : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
-            }`}
-          >
-            <Tag className="w-3.5 h-3.5" />
-            <span>Tag Frequency & Cloud</span>
+          <button onClick={() => setActiveTab('tags')} className={tabClass('tags')}>
+            <Tag className={tabIcon} />
+            <span>Tags</span>
           </button>
-
-          <button
-            onClick={() => setActiveTab('reading')}
-            className={`px-3.5 py-2 text-sm font-medium border-b-2 transition-all flex items-center gap-2 whitespace-nowrap ${
-              activeTab === 'reading'
-                ? 'border-accent text-accent font-semibold'
-                : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
-            }`}
-          >
-            <Clock className="w-3.5 h-3.5" />
-            <span>Reading Velocity & Time</span>
+          <button onClick={() => setActiveTab('reading')} className={tabClass('reading')}>
+            <Clock className={tabIcon} />
+            <span>Reading</span>
           </button>
         </div>
 
-        {/* Modal Body Scroll Area */}
+        {/* Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          
-          {/* TAB 1: OVERVIEW & KPIS */}
+
+          {/* Overview */}
           {activeTab === 'overview' && (
             <div className="space-y-6">
-              
-              {/* Primary KPI Cards Grid */}
+
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="p-4 rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 space-y-1">
-                  <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                    <span>Total Vault Links</span>
-                    <Layers className="w-3.5 h-3.5 opacity-60" />
-                  </div>
-                  <div className="tabular-nums text-2xl font-bold tracking-tight text-slate-900 dark:text-ink">
+                <div className={`p-4 ${panel} space-y-1`}>
+                  <div className={sectionLabel}>Links</div>
+                  <div className="tabular-nums text-2xl font-semibold text-slate-900 dark:text-ink">
                     {analyticsData.total}
                   </div>
-                  <div className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1">
-                    <span>{analyticsData.favorites} starred</span>
-                    <span>•</span>
-                    <span>{analyticsData.archived} archived</span>
+                  <div className="text-xs text-slate-500 dark:text-slate-400">
+                    {analyticsData.favorites} starred · {analyticsData.archived} archived
                   </div>
                 </div>
 
-                <div className="p-4 rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 space-y-1">
-                  <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                    <span>Completion Rate</span>
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                  </div>
-                  <div className="tabular-nums text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400">
+                <div className={`p-4 ${panel} space-y-1`}>
+                  <div className={sectionLabel}>Read</div>
+                  <div className="tabular-nums text-2xl font-semibold text-slate-900 dark:text-ink">
                     {analyticsData.completionRate}%
                   </div>
-                  <div className="text-xs text-slate-400 dark:text-slate-500">
-                    {analyticsData.read} reviewed of {analyticsData.total}
+                  <div className="text-xs text-slate-500 dark:text-slate-400">
+                    {analyticsData.read} of {analyticsData.total} links
                   </div>
                 </div>
 
-                <div className="p-4 rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 space-y-1">
-                  <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                    <span>Est. Reading Time</span>
-                    <Clock className="w-3.5 h-3.5 text-amber-500" />
-                  </div>
-                  <div className="tabular-nums text-2xl font-bold tracking-tight text-slate-900 dark:text-ink">
+                <div className={`p-4 ${panel} space-y-1`}>
+                  <div className={sectionLabel}>Reading time</div>
+                  <div className="tabular-nums text-2xl font-semibold text-slate-900 dark:text-ink">
                     {analyticsData.totalHours > 0 ? `${analyticsData.totalHours}h ` : ''}{analyticsData.remainingMins}m
                   </div>
-                  <div className="text-xs text-slate-400 dark:text-slate-500">
-                    Total consumption backlog
+                  <div className="text-xs text-slate-500 dark:text-slate-400">
+                    Estimated, all links
                   </div>
                 </div>
 
-                <div className="p-4 rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 space-y-1">
-                  <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                    <span>AI Knowledge Density</span>
-                    <Sparkles className="w-3.5 h-3.5 text-accent" />
-                  </div>
-                  <div className="tabular-nums text-2xl font-bold tracking-tight text-accent">
+                <div className={`p-4 ${panel} space-y-1`}>
+                  <div className={sectionLabel}>Average AI score</div>
+                  <div className="tabular-nums text-2xl font-semibold text-slate-900 dark:text-ink">
                     {analyticsData.avgAiScore}<span className="text-sm font-normal text-slate-400">/100</span>
                   </div>
-                  <div className="text-xs text-slate-400 dark:text-slate-500">
-                    Gemini synthesized quality
+                  <div className="text-xs text-slate-500 dark:text-slate-400">
+                    Across scored links
                   </div>
                 </div>
               </div>
 
-              {/* Read vs Unread vs Reading Ratio Section */}
-              <div className="p-5 rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 space-y-4">
+              {/* Status breakdown */}
+              <div className={`p-5 ${panel} space-y-4`}>
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <BookOpen className="w-4 h-4 text-accent" />
-                    <h3 className="text-sm font-semibold tracking-tight">Read vs. Unread Ratio</h3>
-                  </div>
-                  <span className="text-xs text-slate-400">
-                    {analyticsData.read} of {analyticsData.total} items completed
+                  <h3 className="text-sm font-medium">Reading status</h3>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">
+                    {analyticsData.read} of {analyticsData.total} read
                   </span>
                 </div>
 
-                {/* Segmented Stacked Progress Bar */}
-                <div className="w-full h-4 rounded-md overflow-hidden flex bg-black/10 dark:bg-white/10 p-0.5 gap-0.5">
-                  {analyticsData.unread > 0 && (
-                    <div
-                      style={{ width: `${analyticsData.unreadRate}%` }}
-                      className="h-full bg-amber-500 rounded-xs transition-all duration-500 relative group cursor-pointer"
-                      title={`Unread: ${analyticsData.unread} items (${analyticsData.unreadRate}%)`}
-                      onClick={() => handleSelectStatus('unread')}
-                    />
-                  )}
-                  {analyticsData.reading > 0 && (
-                    <div
-                      style={{ width: `${analyticsData.readingRate}%` }}
-                      className="h-full bg-cyan-500 rounded-xs transition-all duration-500 relative group cursor-pointer"
-                      title={`Reading: ${analyticsData.reading} items (${analyticsData.readingRate}%)`}
-                      onClick={() => handleSelectStatus('reading')}
-                    />
-                  )}
-                  {analyticsData.read > 0 && (
-                    <div
-                      style={{ width: `${analyticsData.completionRate}%` }}
-                      className="h-full bg-emerald-500 rounded-xs transition-all duration-500 relative group cursor-pointer"
-                      title={`Read: ${analyticsData.read} items (${analyticsData.completionRate}%)`}
-                      onClick={() => handleSelectStatus('read')}
-                    />
+                <div className="w-full h-3 rounded-md overflow-hidden flex gap-0.5 bg-black/[0.06] dark:bg-white/[0.08]">
+                  {statusRows.map((s) =>
+                    s.count > 0 ? (
+                      <div
+                        key={s.status}
+                        style={{ width: `${s.rate}%` }}
+                        className={`h-full ${s.swatch} cursor-pointer`}
+                        title={`${s.label}: ${s.count} links (${s.rate}%)`}
+                        onClick={() => handleSelectStatus(s.status)}
+                      />
+                    ) : null
                   )}
                 </div>
 
-                {/* Status Breakdown Legend & Triage Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-                  <button
-                    onClick={() => handleSelectStatus('unread')}
-                    className="p-3 rounded-lg border border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10 text-left transition-colors flex items-center justify-between group"
-                  >
-                    <div>
-                      <div className="flex items-center gap-1.5 text-xs font-medium text-amber-600 dark:text-amber-400">
-                        <div className="w-2 h-2 rounded-full bg-amber-500" />
-                        <span>Unread Inbox</span>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {statusRows.map((s) => (
+                    <button
+                      key={s.status}
+                      onClick={() => handleSelectStatus(s.status)}
+                      className="p-3 rounded-lg border border-black/[0.08] dark:border-white/[0.08] hover:bg-black/5 dark:hover:bg-white/5 text-left transition-colors flex items-center justify-between group"
+                    >
+                      <div>
+                        <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
+                          <span className={`w-2 h-2 rounded-full ${s.swatch}`} />
+                          <span>{s.label}</span>
+                        </div>
+                        <div className="tabular-nums text-lg font-semibold text-slate-900 dark:text-ink mt-0.5">
+                          {s.count} <span className="text-xs font-normal text-slate-400">({s.rate}%)</span>
+                        </div>
                       </div>
-                      <div className="tabular-nums text-lg font-bold text-slate-900 dark:text-ink mt-0.5">
-                        {analyticsData.unread} <span className="text-xs font-normal text-slate-400">({analyticsData.unreadRate}%)</span>
-                      </div>
-                    </div>
-                    <ArrowRight className="w-3.5 h-3.5 text-amber-500 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </button>
-
-                  <button
-                    onClick={() => handleSelectStatus('reading')}
-                    className="p-3 rounded-lg border border-cyan-500/20 bg-cyan-500/5 hover:bg-cyan-500/10 text-left transition-colors flex items-center justify-between group"
-                  >
-                    <div>
-                      <div className="flex items-center gap-1.5 text-xs font-medium text-cyan-600 dark:text-cyan-400">
-                        <div className="w-2 h-2 rounded-full bg-cyan-500" />
-                        <span>In Progress</span>
-                      </div>
-                      <div className="tabular-nums text-lg font-bold text-slate-900 dark:text-ink mt-0.5">
-                        {analyticsData.reading} <span className="text-xs font-normal text-slate-400">({analyticsData.readingRate}%)</span>
-                      </div>
-                    </div>
-                    <ArrowRight className="w-3.5 h-3.5 text-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </button>
-
-                  <button
-                    onClick={() => handleSelectStatus('read')}
-                    className="p-3 rounded-lg border border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/10 text-left transition-colors flex items-center justify-between group"
-                  >
-                    <div>
-                      <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                        <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                        <span>Read</span>
-                      </div>
-                      <div className="tabular-nums text-lg font-bold text-slate-900 dark:text-ink mt-0.5">
-                        {analyticsData.read} <span className="text-xs font-normal text-slate-400">({analyticsData.completionRate}%)</span>
-                      </div>
-                    </div>
-                    <ArrowRight className="w-3.5 h-3.5 text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </button>
+                      <ArrowRight className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              {/* 2-Column Mini Breakdowns: Top Platforms & Top Categories */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                
-                {/* Top Platforms Preview */}
-                <div className="p-5 rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 space-y-3">
+
+                {/* Top platforms */}
+                <div className={`p-5 ${panel} space-y-3`}>
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Layers className="w-4 h-4 text-slate-500" />
-                      <h3 className="text-sm font-semibold tracking-tight">Top Platforms</h3>
-                    </div>
+                    <h3 className="text-sm font-medium">Top platforms</h3>
                     <button
                       onClick={() => setActiveTab('platforms')}
                       className="text-xs text-accent hover:underline"
@@ -505,28 +419,28 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                     </button>
                   </div>
 
-                  <div className="space-y-2.5 pt-1">
+                  <div className="space-y-1">
                     {analyticsData.platformsSorted.slice(0, 4).map((p) => {
                       const meta = getPlatformMeta(p.platform);
                       return (
                         <div
                           key={p.platform}
                           onClick={() => handleSelectPlatform(p.platform)}
-                          className="group cursor-pointer p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                          className="cursor-pointer p-2 rounded-md hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
                         >
-                          <div className="flex items-center justify-between text-xs mb-1">
+                          <div className="flex items-center justify-between text-sm mb-1.5">
                             <div className="flex items-center gap-2">
                               {meta.icon}
-                              <span className="font-medium">{meta.label}</span>
+                              <span>{meta.label}</span>
                             </div>
-                            <span className="text-xs text-slate-500">
-                              {p.count} items ({p.percentage}%)
+                            <span className="text-xs text-slate-500 dark:text-slate-400 tabular-nums">
+                              {p.count} ({p.percentage}%)
                             </span>
                           </div>
-                          <div className="w-full h-1.5 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden">
+                          <div className={barTrack}>
                             <div
                               style={{ width: `${Math.max(p.percentage, 4)}%` }}
-                              className="h-full bg-accent rounded-full transition-all duration-500"
+                              className="h-full bg-accent rounded-full"
                             />
                           </div>
                         </div>
@@ -535,35 +449,32 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                   </div>
                 </div>
 
-                {/* Top Categories Preview */}
-                <div className="p-5 rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 space-y-3">
+                {/* Top categories */}
+                <div className={`p-5 ${panel} space-y-3`}>
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Folder className="w-4 h-4 text-slate-500" />
-                      <h3 className="text-sm font-semibold tracking-tight">Category Allocation</h3>
-                    </div>
-                    <span className="text-xs text-slate-400">
-                      {analyticsData.categoriesSorted.length} categories
+                    <h3 className="text-sm font-medium">Categories</h3>
+                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                      {analyticsData.categoriesSorted.length} total
                     </span>
                   </div>
 
-                  <div className="space-y-2.5 pt-1">
+                  <div className="space-y-1">
                     {analyticsData.categoriesSorted.slice(0, 4).map((c) => (
                       <div
                         key={c.category}
                         onClick={() => handleSelectCategory(c.category)}
-                        className="group cursor-pointer p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                        className="cursor-pointer p-2 rounded-md hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
                       >
-                        <div className="flex items-center justify-between text-xs mb-1">
-                          <span className="font-medium truncate">{c.category}</span>
-                          <span className="text-xs text-slate-500">
+                        <div className="flex items-center justify-between text-sm mb-1.5">
+                          <span className="truncate">{c.category}</span>
+                          <span className="text-xs text-slate-500 dark:text-slate-400 tabular-nums">
                             {c.count} ({c.percentage}%)
                           </span>
                         </div>
-                        <div className="w-full h-1.5 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden">
+                        <div className={barTrack}>
                           <div
                             style={{ width: `${Math.max(c.percentage, 4)}%` }}
-                            className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                            className="h-full bg-accent rounded-full"
                           />
                         </div>
                       </div>
@@ -572,51 +483,39 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                 </div>
 
               </div>
-
             </div>
           )}
 
-          {/* TAB 2: PLATFORM BREAKDOWN */}
+          {/* Platforms */}
           {activeTab === 'platforms' && (
-            <div className="space-y-5">
-              <div className="p-4 rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-semibold">Distribution by Ingestion Platform</h3>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-                    Click any platform bar to filter the active repository.
-                  </p>
-                </div>
-                <span className="text-xs text-slate-500">
-                  Total {analyticsData.total} links
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  Click a platform to show only its links.
+                </p>
+                <span className="text-xs text-slate-500 dark:text-slate-400">
+                  {analyticsData.total} links
                 </span>
               </div>
 
-              {/* Full Platform Bar Chart */}
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {analyticsData.platformsSorted.map((item) => {
                   const meta = getPlatformMeta(item.platform);
                   return (
                     <div
                       key={item.platform}
                       onClick={() => handleSelectPlatform(item.platform)}
-                      className="p-3.5 rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 hover:border-accent/40 transition-all cursor-pointer group"
+                      className={`p-3.5 ${panel} hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors cursor-pointer group`}
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2.5">
-                          <div className="p-1.5 rounded-md bg-black/5 dark:bg-white/5">
-                            {meta.icon}
-                          </div>
-                          <div>
-                            <span className="text-xs font-semibold">{meta.label}</span>
-                            <span className="hidden sm:inline-block text-xs text-slate-400 ml-2">
-                              {item.platform}
-                            </span>
-                          </div>
+                        <div className="flex items-center gap-2">
+                          {meta.icon}
+                          <span className="text-sm font-medium">{meta.label}</span>
                         </div>
 
                         <div className="flex items-center gap-3">
-                          <span className="text-xs font-bold text-slate-900 dark:text-ink">
-                            {item.count} <span className="text-xs font-normal text-slate-400">({item.percentage}%)</span>
+                          <span className="text-sm text-slate-900 dark:text-ink tabular-nums">
+                            {item.count} <span className="text-xs text-slate-400">({item.percentage}%)</span>
                           </span>
                           <span className="text-xs text-accent opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
                             Filter <ArrowRight className="w-3 h-3" />
@@ -624,11 +523,10 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                         </div>
                       </div>
 
-                      {/* Bar Visualization */}
-                      <div className="w-full h-2.5 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden">
+                      <div className={barTrack}>
                         <div
                           style={{ width: `${Math.max(item.percentage, 2)}%` }}
-                          className="h-full bg-gradient-to-r from-accent to-accent-hover dark:to-accent rounded-full transition-all duration-500"
+                          className="h-full bg-accent rounded-full"
                         />
                       </div>
                     </div>
@@ -638,72 +536,59 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
             </div>
           )}
 
-          {/* TAB 3: TAG FREQUENCY & CLOUD */}
+          {/* Tags */}
           {activeTab === 'tags' && (
             <div className="space-y-5">
-              <div className="p-4 rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-semibold">Most Frequent Repository Tags</h3>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-                    Ranked by density across your saved links and AI auto-generated taxonomies.
-                  </p>
-                </div>
-                <span className="text-xs text-slate-500">
-                  {analyticsData.tagsSorted.length} unique tags
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  Your most used tags. Click one to filter.
+                </p>
+                <span className="text-xs text-slate-500 dark:text-slate-400">
+                  {analyticsData.tagsSorted.length} tags
                 </span>
               </div>
 
-              {/* Tag Cloud Pills */}
-              <div className="p-5 rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 space-y-3">
-                <span className="text-xs font-semibold text-slate-500">Interactive Tag Cloud</span>
+              <div className={`p-5 ${panel} space-y-3`}>
+                <div className={sectionLabel}>All tags</div>
                 <div className="flex flex-wrap gap-2">
                   {analyticsData.tagsSorted.map((t, idx) => (
                     <button
                       key={t.tag}
                       onClick={() => handleSelectTag(t.tag)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-2 ${
+                      className={`px-2.5 py-1 rounded-md text-xs border transition-colors flex items-center gap-1.5 ${
                         idx < 3
-                          ? 'bg-accent/15 text-accent dark:bg-accent/20 border border-accent/30 font-semibold'
-                          : 'bg-black/5 dark:bg-white/5 text-slate-700 dark:text-slate-300 border border-black/10 dark:border-white/10 hover:border-accent/40'
+                          ? 'border-accent/30 bg-accent/10 text-accent font-medium'
+                          : 'border-black/10 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-black/5 dark:hover:bg-white/5'
                       }`}
                     >
                       <span>#{t.tag}</span>
-                      <span className="text-xs opacity-70 px-1 py-0.2 rounded bg-black/5 dark:bg-white/10">
-                        {t.count}
-                      </span>
+                      <span className="text-slate-400 tabular-nums">{t.count}</span>
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Ranked Tag Bars */}
-              <div className="space-y-2.5">
-                <span className="text-xs font-semibold text-slate-500">Ranked Frequency Breakdown</span>
+              <div className="space-y-2">
+                <div className={sectionLabel}>By number of links</div>
                 {analyticsData.tagsSorted.map((t, idx) => (
                   <div
                     key={t.tag}
                     onClick={() => handleSelectTag(t.tag)}
-                    className="p-3 rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 hover:border-accent/40 transition-all cursor-pointer group"
+                    className={`p-3 ${panel} hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors cursor-pointer`}
                   >
-                    <div className="flex items-center justify-between text-xs mb-1.5">
+                    <div className="flex items-center justify-between text-sm mb-1.5">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-slate-400 w-4">
-                          #{idx + 1}
-                        </span>
-                        <span className="font-medium text-slate-800 dark:text-slate-200">
-                          {t.tag}
-                        </span>
+                        <span className="text-xs text-slate-400 w-5 tabular-nums">{idx + 1}</span>
+                        <span className="text-slate-800 dark:text-slate-200">{t.tag}</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-slate-500">
-                          {t.count} bookmarks ({t.percentage}%)
-                        </span>
-                      </div>
+                      <span className="text-xs text-slate-500 dark:text-slate-400 tabular-nums">
+                        {t.count} links ({t.percentage}%)
+                      </span>
                     </div>
-                    <div className="w-full h-1.5 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden">
+                    <div className={barTrack}>
                       <div
                         style={{ width: `${Math.max(t.percentage * 1.5, 4)}%` }}
-                        className="h-full bg-sky-500 rounded-full transition-all duration-500"
+                        className="h-full bg-accent rounded-full"
                       />
                     </div>
                   </div>
@@ -712,99 +597,69 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
             </div>
           )}
 
-          {/* TAB 4: READING VELOCITY & DEPTH */}
+          {/* Reading */}
           {activeTab === 'reading' && (
             <div className="space-y-6">
-              
-              {/* Reading Duration Buckets */}
-              <div className="p-5 rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 space-y-4">
+
+              <div className={`p-5 ${panel} space-y-4`}>
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-amber-500" />
-                    <h3 className="text-sm font-semibold">Content Depth & Reading Time Breakdown</h3>
-                  </div>
-                  <span className="text-xs text-slate-400">
-                    Total: {analyticsData.totalHours}h {analyticsData.remainingMins}m
+                  <h3 className="text-sm font-medium">Reading time</h3>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 tabular-nums">
+                    Total {analyticsData.totalHours}h {analyticsData.remainingMins}m
                   </span>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div className="p-3.5 rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 space-y-1">
-                    <span className="text-xs text-slate-400 font-medium">Quick Snippets (&lt;3m)</span>
-                    <div className="tabular-nums text-xl font-bold text-slate-900 dark:text-ink">
-                      {analyticsData.quickReads}
+                  {depthBuckets.map((b) => (
+                    <div key={b.label} className={`p-3.5 ${panel} space-y-1`}>
+                      <div className={sectionLabel}>{b.label}</div>
+                      <div className="tabular-nums text-xl font-semibold text-slate-900 dark:text-ink">
+                        {b.count}
+                      </div>
+                      <div className="text-xs text-slate-400">{b.hint}</div>
                     </div>
-                    <span className="text-xs text-slate-400">Shorts, tweets, quick tips</span>
-                  </div>
-
-                  <div className="p-3.5 rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 space-y-1">
-                    <span className="text-xs text-slate-400 font-medium">Standard Reads (3-10m)</span>
-                    <div className="tabular-nums text-xl font-bold text-slate-900 dark:text-ink">
-                      {analyticsData.mediumReads}
-                    </div>
-                    <span className="text-xs text-slate-400">Articles, tutorials, repos</span>
-                  </div>
-
-                  <div className="p-3.5 rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 space-y-1">
-                    <span className="text-xs text-slate-400 font-medium">Deep Dives (10-30m)</span>
-                    <div className="tabular-nums text-xl font-bold text-slate-900 dark:text-ink">
-                      {analyticsData.deepDives}
-                    </div>
-                    <span className="text-xs text-slate-400">RFCs, architectural guides</span>
-                  </div>
-
-                  <div className="p-3.5 rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 space-y-1">
-                    <span className="text-xs text-slate-400 font-medium">Long Form (30m+)</span>
-                    <div className="tabular-nums text-xl font-bold text-slate-900 dark:text-ink">
-                      {analyticsData.longForm}
-                    </div>
-                    <span className="text-xs text-slate-400">ArXiv papers, video courses</span>
-                  </div>
+                  ))}
                 </div>
               </div>
 
-              {/* Knowledge Health Indicators */}
-              <div className="p-5 rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 space-y-4">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-emerald-500" />
-                  <h3 className="text-sm font-semibold">Repository Health & Ingestion Sources</h3>
-                </div>
+              <div className={`p-5 ${panel} space-y-3`}>
+                <h3 className="text-sm font-medium">Other</h3>
 
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 text-xs">
-                    <div className="flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-sky-500" />
+                <div className="divide-y divide-black/[0.06] dark:divide-white/[0.06]">
+                  <div className="flex items-center justify-between py-3 text-sm">
+                    <div className="flex items-center gap-2.5">
+                      <Sparkles className={iconClass} />
                       <div>
-                        <div className="font-medium">AI Extraction Coverage</div>
-                        <div className="text-xs text-slate-400">Bookmarks enriched with Gemini TL;DR summaries</div>
+                        <div>AI summaries</div>
+                        <div className="text-xs text-slate-500 dark:text-slate-400">Links get a short summary when saved</div>
                       </div>
                     </div>
-                    <span className="font-bold text-emerald-500">100% Active</span>
+                    <span className="font-medium text-accent">On</span>
                   </div>
 
-                  <div className="flex items-center justify-between p-3 rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 text-xs">
-                    <div className="flex items-center gap-2">
-                      <Star className="w-4 h-4 text-amber-500" />
+                  <div className="flex items-center justify-between py-3 text-sm">
+                    <div className="flex items-center gap-2.5">
+                      <Star className={iconClass} />
                       <div>
-                        <div className="font-medium">Starred Knowledge Ratio</div>
-                        <div className="text-xs text-slate-400">High-priority reference bookmarks</div>
+                        <div>Starred</div>
+                        <div className="text-xs text-slate-500 dark:text-slate-400">Links you marked as important</div>
                       </div>
                     </div>
-                    <span className="font-bold text-amber-500">
-                      {analyticsData.total > 0 ? Math.round((analyticsData.favorites / analyticsData.total) * 100) : 0}% ({analyticsData.favorites} items)
+                    <span className="font-medium text-slate-900 dark:text-ink tabular-nums">
+                      {analyticsData.favorites} ({analyticsData.total > 0 ? Math.round((analyticsData.favorites / analyticsData.total) * 100) : 0}%)
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between p-3 rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 text-xs">
-                    <div className="flex items-center gap-2">
-                      <Archive className="w-4 h-4 text-slate-400" />
+                  <div className="flex items-center justify-between py-3 text-sm">
+                    <div className="flex items-center gap-2.5">
+                      <Archive className={iconClass} />
                       <div>
-                        <div className="font-medium">Archived Reference Items</div>
-                        <div className="text-xs text-slate-400">Preserved in long-term archive storage</div>
+                        <div>Archived</div>
+                        <div className="text-xs text-slate-500 dark:text-slate-400">Links moved out of the main list</div>
                       </div>
                     </div>
-                    <span className="font-bold text-slate-400">
-                      {analyticsData.archived} items
+                    <span className="font-medium text-slate-900 dark:text-ink tabular-nums">
+                      {analyticsData.archived}
                     </span>
                   </div>
                 </div>
@@ -815,18 +670,13 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
 
         </div>
 
-        {/* Modal Footer */}
-        <div className="flex items-center justify-between px-6 py-3.5 border-t border-black/10 dark:border-white/10 shrink-0 bg-black/5 dark:bg-white/5 text-xs text-slate-500 dark:text-slate-400">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-500" />
-            <span>Synced with live local cache and server repository</span>
-          </div>
-
+        {/* Footer */}
+        <div className="flex items-center justify-end px-6 py-3 border-t border-black/[0.08] dark:border-white/[0.08] shrink-0">
           <button
             onClick={onClose}
-            className="px-4 py-1.5 rounded-md font-medium text-xs bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 hover:opacity-90 transition-opacity"
+            className="px-4 py-2 text-sm font-medium border border-black/10 dark:border-white/10 rounded-md text-slate-700 dark:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
           >
-            Close Insights
+            Close
           </button>
         </div>
 
