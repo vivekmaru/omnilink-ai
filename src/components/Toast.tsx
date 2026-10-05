@@ -65,7 +65,7 @@ const ToastItem: React.FC<{ toast: ToastMessage; onDismiss: (id: string) => void
       case 'error':
         return <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />;
       case 'ai':
-        return <Sparkles className="w-4 h-4 text-[#e08264] shrink-0 animate-pulse" />;
+        return <Sparkles className="w-4 h-4 text-accent shrink-0 animate-pulse" />;
       default:
         return <Info className="w-4 h-4 text-sky-400 shrink-0" />;
     }
@@ -74,7 +74,7 @@ const ToastItem: React.FC<{ toast: ToastMessage; onDismiss: (id: string) => void
   const getBorderGlow = () => {
     switch (toast.type) {
       case 'ai':
-        return 'border-[#e08264]/40 shadow-[0_4px_20px_rgba(224,130,100,0.15)]';
+        return 'border-accent/40 shadow-[0_4px_20px_rgba(224,130,100,0.15)]';
       case 'success':
         return 'border-emerald-500/30';
       case 'error':
@@ -89,7 +89,7 @@ const ToastItem: React.FC<{ toast: ToastMessage; onDismiss: (id: string) => void
       {/* Subtle Progress Bar (only rendered when an undo action is available) */}
       {isActionable && (
         <div
-          className="absolute bottom-0 left-0 h-[2px] bg-[#d97757]/80 dark:bg-[#e08264]/80 transition-all duration-75"
+          className="absolute bottom-0 left-0 h-[2px] bg-accent/80 transition-all duration-75"
           style={{ width: `${progress}%` }}
         />
       )}
@@ -106,7 +106,7 @@ const ToastItem: React.FC<{ toast: ToastMessage; onDismiss: (id: string) => void
               toast.action?.onClick();
               onDismiss(toast.id);
             }}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#d97757]/20 hover:bg-[#d97757]/35 text-[#e08264] hover:text-white font-semibold text-xs transition-all active:scale-95 border border-[#e08264]/30"
+            className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-accent/20 hover:bg-accent/35 text-accent hover:text-white font-semibold text-xs transition-all active:scale-95 border border-accent/30"
           >
             <RotateCcw className="w-3 h-3" />
             <span>{toast.action.label}</span>

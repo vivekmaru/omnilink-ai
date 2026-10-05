@@ -134,7 +134,7 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
               onDrop={(e) => handleDrop(e, col.id)}
               className={`border rounded-2xl p-4 flex flex-col min-h-[550px] transition-all duration-200 ${
                 isDropTarget
-                  ? 'ring-2 ring-[#d97757] dark:ring-[#e08264] border-[#d97757] dark:border-[#e08264] bg-[#d97757]/5 dark:bg-[#e08264]/5 shadow-md scale-[1.005]'
+                  ? 'ring-2 ring-accent border-accent bg-accent/5 shadow-md scale-[1.005]'
                   : ''
               }`}
               style={{
@@ -187,12 +187,12 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
                           }
                           onOpenDetail(link);
                         }}
-                        className={`group bg-white dark:bg-[#1b1b1f] border ${
+                        className={`group bg-white dark:bg-surface border ${
                           isSelected
-                            ? 'ring-2 ring-[#d97757] dark:ring-[#e08264] border-[#d97757] dark:border-[#e08264] bg-[#d97757]/[0.03] dark:bg-[#e08264]/[0.04] shadow-md'
-                            : 'border-slate-200/80 dark:border-white/10 hover:border-[#d97757] dark:hover:border-[#e08264]'
+                            ? 'ring-2 ring-accent border-accent bg-accent/[0.03] dark:bg-accent/[0.04] shadow-md'
+                            : 'border-slate-200/80 dark:border-white/10 hover:border-accent'
                         } rounded-xl p-3.5 shadow-2xs cursor-grab active:cursor-grabbing transition-all hover:-translate-y-0.5 space-y-2.5 animate-card-entrance ${
-                          isDragging ? 'opacity-40 scale-95 border-dashed border-[#d97757]' : ''
+                          isDragging ? 'opacity-40 scale-95 border-dashed border-accent' : ''
                         }`}
                       >
                         <div className="flex items-start justify-between gap-2">
@@ -207,7 +207,7 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
                                 }}
                                 className={`p-0.5 rounded transition-all cursor-pointer ${
                                   isSelected
-                                    ? 'opacity-100 text-[#d97757] dark:text-[#e08264]'
+                                    ? 'opacity-100 text-accent'
                                     : 'opacity-0 group-hover:opacity-100 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
                                 } ${selectedIds.length > 0 ? '!opacity-100' : ''}`}
                                 title={isSelected ? 'Deselect bookmark' : 'Select bookmark'}
@@ -216,8 +216,8 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
                                 <div
                                   className={`w-3.5 h-3.5 rounded border flex items-center justify-center transition-all ${
                                     isSelected
-                                      ? 'bg-[#d97757] dark:bg-[#e08264] border-[#d97757] dark:border-[#e08264] text-white shadow-2xs'
-                                      : 'border-slate-300 dark:border-white/30 bg-black/5 dark:bg-white/5 hover:border-[#d97757]'
+                                      ? 'bg-accent border-accent text-on-accent shadow-2xs'
+                                      : 'border-slate-300 dark:border-white/30 bg-black/5 dark:bg-white/5 hover:border-accent'
                                   }`}
                                 >
                                   {isSelected && <Check className="w-2.5 h-2.5 stroke-[3]" />}
@@ -247,7 +247,7 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
                           </button>
                         </div>
 
-                        <h4 className="font-newsreader text-base font-medium text-slate-900 dark:text-slate-100 line-clamp-2 group-hover:text-[#d97757] dark:group-hover:text-[#e08264] transition-colors leading-snug">
+                        <h4 className="text-base font-semibold text-slate-900 dark:text-slate-100 line-clamp-2 group-hover:text-accent transition-colors leading-snug">
                           {link.title || link.url}
                         </h4>
 
@@ -268,7 +268,7 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
                                 e.stopPropagation();
                                 if (col.nextStatus) onUpdateStatus(link.id, col.nextStatus);
                               }}
-                              className="flex items-center gap-1 text-xs font-medium text-[#d97757] dark:text-[#e08264] hover:text-[#c46243] bg-[#d97757]/10 dark:bg-[#e08264]/10 hover:bg-[#d97757]/20 px-2 py-0.5 rounded transition-all active:scale-95"
+                              className="flex items-center gap-1 text-xs font-medium text-accent hover:text-accent-hover bg-accent/10 hover:bg-accent/20 px-2 py-0.5 rounded transition-all active:scale-95"
                             >
                               <span>{col.nextLabel}</span>
                               <ArrowRight className="w-2.5 h-2.5" />

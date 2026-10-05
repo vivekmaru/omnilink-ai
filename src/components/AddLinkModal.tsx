@@ -421,11 +421,11 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4.5 border-b border-black/10 dark:border-white/10 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-[#d97757]/10 text-[#d97757] dark:text-[#e08264] flex items-center justify-center border border-[#d97757]/20">
+            <div className="w-8 h-8 rounded-lg bg-accent/10 text-accent flex items-center justify-center border border-accent/20">
               <Plus className="w-4 h-4" />
             </div>
             <div>
-              <h3 id="add-link-modal-title" className="text-xl font-semibold text-slate-900 dark:text-[#f7f6f3]">
+              <h3 id="add-link-modal-title" className="text-xl font-semibold text-slate-900 dark:text-ink">
                 Add to Knowledge Vault
               </h3>
               <p className="text-sm text-slate-500 dark:text-slate-400">
@@ -447,7 +447,7 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
             onClick={() => setActiveTab('single')}
             className={`pb-2.5 px-3 text-sm font-medium border-b-2 transition-colors ${
               activeTab === 'single'
-                ? 'border-[#d97757] dark:border-[#e08264] text-[#d97757] dark:text-[#e08264]'
+                ? 'border-accent text-accent'
                 : 'border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
             }`}
           >
@@ -457,7 +457,7 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
             onClick={() => setActiveTab('bulk')}
             className={`pb-2.5 px-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-1.5 ${
               activeTab === 'bulk'
-                ? 'border-[#d97757] dark:border-[#e08264] text-[#d97757] dark:text-[#e08264]'
+                ? 'border-accent text-accent'
                 : 'border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
             }`}
           >
@@ -485,7 +485,7 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
                       Source URL <span className="text-rose-500">*</span>
                     </label>
                     {checkingDuplicate && (
-                      <span className="text-xs text-[#d97757] dark:text-[#e08264] flex items-center gap-1">
+                      <span className="text-xs text-accent flex items-center gap-1">
                         <RefreshCw className="w-2.5 h-2.5 animate-spin" />
                         Checking duplicates...
                       </span>
@@ -497,7 +497,7 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
                       type="button"
                       onClick={() => fetchUrlMetadata(url.trim())}
                       disabled={fetchingMeta}
-                      className="flex items-center gap-1 text-xs text-[#d97757] dark:text-[#e08264] hover:underline font-semibold"
+                      className="flex items-center gap-1 text-xs text-accent hover:underline font-semibold"
                     >
                       <RefreshCw className={`w-3 h-3 ${fetchingMeta ? 'animate-spin' : ''}`} />
                       <span>{fetchingMeta ? 'Inspecting URL...' : 'Inspect & Auto-Fill'}</span>
@@ -517,7 +517,7 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
                       if (allowDuplicateOverride) setAllowDuplicateOverride(false);
                     }}
                     placeholder="https://github.com/..., https://reddit.com/r/..., https://instagram.com/reel/..."
-                    className={`w-full pl-10 pr-10 py-2.5 text-sm bg-black/5 dark:bg-white/5 border rounded-lg focus:outline-none focus:ring-1 focus:ring-[#d97757] text-slate-900 dark:text-[#f7f6f3] transition-colors ${
+                    className={`w-full pl-10 pr-10 py-2.5 text-sm bg-black/5 dark:bg-white/5 border rounded-lg focus:outline-none focus:ring-1 focus:ring-accent text-slate-900 dark:text-ink transition-colors ${
                       duplicateResult?.isDuplicate && !allowDuplicateOverride
                         ? 'border-amber-500/60 dark:border-amber-500/60 bg-amber-500/[0.04]'
                         : 'border-black/10 dark:border-white/10'
@@ -546,7 +546,7 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
                         <AlertTriangle className="w-3.5 h-3.5" />
                       </div>
                       <div>
-                        <div className="text-base font-semibold text-slate-900 dark:text-[#f7f6f3]">
+                        <div className="text-base font-semibold text-slate-900 dark:text-ink">
                           Existing Bookmark Detected
                         </div>
                         <div className="text-xs text-amber-700 dark:text-amber-300">
@@ -565,7 +565,7 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
                   </div>
 
                   {/* Existing Link Card Summary */}
-                  <div className="p-3 rounded-lg bg-white/80 dark:bg-[#191816]/90 border border-amber-500/20 text-xs space-y-2">
+                  <div className="p-3 rounded-lg bg-white/80 dark:bg-surface/90 border border-amber-500/20 text-xs space-y-2">
                     <div className="flex items-start justify-between gap-2">
                       <div className="font-medium text-slate-900 dark:text-slate-100 line-clamp-1">
                         {existing.title || existing.url}
@@ -619,7 +619,7 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
                         type="button"
                         onClick={handleSmartMerge}
                         disabled={mergingLoading}
-                        className="flex items-center justify-center gap-2 px-3 py-2 bg-[#d97757] hover:bg-[#c66a4d] text-white text-xs font-medium rounded-lg shadow-2xs transition-colors"
+                        className="flex items-center justify-center gap-2 px-3 py-2 bg-accent hover:bg-accent-hover text-on-accent text-xs font-medium rounded-lg shadow-2xs transition-colors"
                         title="Unions tags, appends notes, and updates category"
                       >
                         {mergingLoading ? (
@@ -635,10 +635,10 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
                         type="button"
                         onClick={handleUpdateOverwrite}
                         disabled={mergingLoading}
-                        className="flex items-center justify-center gap-2 px-3 py-2 bg-white dark:bg-[#272522] hover:bg-slate-100 dark:hover:bg-[#312e2b] text-slate-800 dark:text-slate-200 border border-black/10 dark:border-white/10 text-xs font-medium rounded-lg shadow-2xs transition-colors"
+                        className="flex items-center justify-center gap-2 px-3 py-2 bg-white dark:bg-raised hover:bg-slate-100 dark:hover:bg-raised-hover text-slate-800 dark:text-slate-200 border border-black/10 dark:border-white/10 text-xs font-medium rounded-lg shadow-2xs transition-colors"
                         title="Replaces title, category, tags and notes with form inputs"
                       >
-                        <RefreshCw className="w-3.5 h-3.5 text-[#d97757] dark:text-[#e08264]" />
+                        <RefreshCw className="w-3.5 h-3.5 text-accent" />
                         <span>Update Existing Entry</span>
                       </button>
                     </div>
@@ -648,7 +648,7 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
                       <button
                         type="button"
                         onClick={handleViewExisting}
-                        className="flex items-center gap-1 text-slate-600 dark:text-slate-300 hover:text-[#d97757] dark:hover:text-[#e08264] hover:underline"
+                        className="flex items-center gap-1 text-slate-600 dark:text-slate-300 hover:text-accent hover:underline"
                       >
                         <Eye className="w-3 h-3" />
                         <span>Inspect Existing Bookmark in Detail View</span>
@@ -676,7 +676,7 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. SQLite WAL Concurrency & High Performance Microservices"
-                  className="w-full px-3.5 py-2.5 text-sm bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#d97757] text-slate-900 dark:text-[#f7f6f3]"
+                  className="w-full px-3.5 py-2.5 text-sm bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent text-slate-900 dark:text-ink"
                 />
               </div>
 
@@ -690,17 +690,17 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Paste or type brief description, article thesis, or key concepts for tag discovery..."
-                  className="w-full px-3.5 py-2.5 text-sm bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#d97757] text-slate-900 dark:text-[#f7f6f3]"
+                  className="w-full px-3.5 py-2.5 text-sm bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent text-slate-900 dark:text-ink"
                 />
               </div>
 
               {/* Real-Time Keyword Auto-Tagging & Category Suggestion Panel */}
               {suggestions && (suggestions.suggestedTags.length > 0 || suggestions.suggestedCategory) && (
-                <div className="p-4 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-[#d97757]/30 space-y-3">
+                <div className="p-4 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-accent/30 space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Wand2 className="w-3.5 h-3.5 text-[#d97757] dark:text-[#e08264]" />
-                      <span className="text-sm font-semibold text-slate-900 dark:text-[#f7f6f3]">
+                      <Wand2 className="w-3.5 h-3.5 text-accent" />
+                      <span className="text-sm font-semibold text-slate-900 dark:text-ink">
                         Auto-Tag & Category Suggestions
                       </span>
                     </div>
@@ -709,7 +709,7 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
                       <button
                         type="button"
                         onClick={handleAcceptAllSuggestions}
-                        className="text-xs font-medium text-[#d97757] dark:text-[#e08264] hover:underline flex items-center gap-1"
+                        className="text-xs font-medium text-accent hover:underline flex items-center gap-1"
                       >
                         <Check className="w-3 h-3" />
                         <span>Accept All ({suggestions.suggestedTags.length})</span>
@@ -719,9 +719,9 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
 
                   {/* Category Suggestion Chip */}
                   {suggestions.suggestedCategory && (
-                    <div className="flex flex-wrap items-center gap-2 text-xs bg-white dark:bg-[#1f1e1c] p-2.5 rounded-lg border border-black/5 dark:border-white/10">
+                    <div className="flex flex-wrap items-center gap-2 text-xs bg-white dark:bg-surface p-2.5 rounded-lg border border-black/5 dark:border-white/10">
                       <span className="text-slate-500 dark:text-slate-400">Recommended Category:</span>
-                      <span className="font-semibold text-[#d97757] dark:text-[#e08264] px-2 py-0.5 rounded bg-[#d97757]/10">
+                      <span className="font-semibold text-accent px-2 py-0.5 rounded bg-accent/10">
                         {suggestions.suggestedCategory.category}
                       </span>
                       <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
@@ -759,14 +759,14 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
                               title={`${sug.reason} (${sug.confidence}% confidence)`}
                               className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs transition-all ${
                                 isSelected
-                                  ? 'bg-[#d97757] text-white dark:bg-[#e08264] dark:text-slate-950 font-medium shadow-2xs'
-                                  : 'bg-black/5 dark:bg-white/5 text-slate-700 dark:text-slate-300 hover:bg-[#d97757]/20 hover:text-[#d97757] dark:hover:text-[#e08264]'
+                                  ? 'bg-accent text-on-accent dark:text-slate-950 font-medium shadow-2xs'
+                                  : 'bg-black/5 dark:bg-white/5 text-slate-700 dark:text-slate-300 hover:bg-accent/20 hover:text-accent'
                               }`}
                             >
                               {isSelected ? (
                                 <Check className="w-3 h-3 shrink-0" />
                               ) : (
-                                <Plus className="w-3 h-3 text-[#d97757] dark:text-[#e08264] shrink-0" />
+                                <Plus className="w-3 h-3 text-accent shrink-0" />
                               )}
                               <span>#{sug.tag}</span>
                             </button>
@@ -802,7 +802,7 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
                       setCategory(e.target.value);
                       setIsCategoryManuallySet(true);
                     }}
-                    className="w-full px-3 py-2.5 text-sm bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#d97757] text-slate-900 dark:text-[#f7f6f3]"
+                    className="w-full px-3 py-2.5 text-sm bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent text-slate-900 dark:text-ink"
                   >
                     <option value="Dev & Tech">Dev & Tech</option>
                     <option value="AI & Machine Learning">AI & Machine Learning</option>
@@ -825,7 +825,7 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
                     value={tagsInput}
                     onChange={(e) => setTagsInput(e.target.value)}
                     placeholder="react, agent, sqlite"
-                    className="w-full px-3.5 py-2.5 text-sm bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#d97757] text-slate-900 dark:text-[#f7f6f3]"
+                    className="w-full px-3.5 py-2.5 text-sm bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent text-slate-900 dark:text-ink"
                   />
                 </div>
               </div>
@@ -840,7 +840,7 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Why are you saving this? Key quotes or remarks..."
-                  className="w-full px-3.5 py-2.5 text-sm bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#d97757] text-slate-900 dark:text-[#f7f6f3]"
+                  className="w-full px-3.5 py-2.5 text-sm bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent text-slate-900 dark:text-ink"
                 />
               </div>
 
@@ -848,7 +848,7 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
               <div className="space-y-2">
                 <div className="flex items-center justify-between p-3 rounded-lg bg-black/[0.02] dark:bg-white/[0.02] border border-black/10 dark:border-white/10">
                   <div className="flex items-center gap-2">
-                    <Tag className="w-3.5 h-3.5 text-[#d97757] dark:text-[#e08264]" />
+                    <Tag className="w-3.5 h-3.5 text-accent" />
                     <span className="text-xs text-slate-700 dark:text-slate-300">
                       Auto-merge high confidence keyword tags on save
                     </span>
@@ -857,15 +857,15 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
                     type="checkbox"
                     checked={autoApplySuggestedTags}
                     onChange={(e) => setAutoApplySuggestedTags(e.target.checked)}
-                    className="w-4 h-4 text-[#d97757] rounded cursor-pointer accent-[#d97757]"
+                    className="w-4 h-4 text-accent rounded cursor-pointer accent-accent"
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-3 rounded-lg bg-[#d97757]/10 border border-[#d97757]/20">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-accent/10 border border-accent/20">
                   <div className="flex items-center gap-2.5">
-                    <Sparkles className="w-4 h-4 text-[#d97757] dark:text-[#e08264]" />
+                    <Sparkles className="w-4 h-4 text-accent" />
                     <div>
-                      <div className="text-sm font-medium text-slate-900 dark:text-[#f7f6f3]">
+                      <div className="text-sm font-medium text-slate-900 dark:text-ink">
                         Deep AI Ingestion (Gemini 3.7 Flash)
                       </div>
                       <div className="text-xs opacity-70">
@@ -877,7 +877,7 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
                     type="checkbox"
                     checked={autoAiExtract}
                     onChange={(e) => setAutoAiExtract(e.target.checked)}
-                    className="w-4 h-4 text-[#d97757] rounded cursor-pointer accent-[#d97757]"
+                    className="w-4 h-4 text-accent rounded cursor-pointer accent-accent"
                   />
                 </div>
               </div>
@@ -897,7 +897,7 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
                   className={`flex items-center gap-2 px-5 py-2.5 text-xs font-medium rounded-lg shadow-2xs transition-colors ${
                     duplicateResult?.isDuplicate && !allowDuplicateOverride
                       ? 'bg-black/10 dark:bg-white/10 text-slate-400 cursor-not-allowed'
-                      : 'bg-[#d97757] text-white hover:bg-[#c66a4d]'
+                      : 'bg-accent text-on-accent hover:bg-accent-hover'
                   }`}
                 >
                   {loading ? (
@@ -925,12 +925,12 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
                   value={bulkUrls}
                   onChange={(e) => setBulkUrls(e.target.value)}
                   placeholder="https://github.com/shadcn-ui/ui&#10;https://www.reddit.com/r/LocalLLaMA/...&#10;https://www.instagram.com/reel/..."
-                  className="w-full px-3.5 py-3 text-sm bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#d97757] text-slate-900 dark:text-[#f7f6f3]"
+                  className="w-full px-3.5 py-3 text-sm bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent text-slate-900 dark:text-ink"
                 />
               </div>
 
               <div className="p-3.5 rounded-lg bg-black/[0.02] dark:bg-white/[0.02] border border-black/10 dark:border-white/10 text-xs text-slate-600 dark:text-slate-400 space-y-1">
-                <div className="font-semibold text-slate-900 dark:text-[#f7f6f3]">Bulk Ingestion Pipeline:</div>
+                <div className="font-semibold text-slate-900 dark:text-ink">Bulk Ingestion Pipeline:</div>
                 <div>• Auto-detects GitHub, Reddit, Instagram, YouTube & research papers</div>
                 <div>• Skips redundant duplicate URLs and deduplicates against vault</div>
                 <div>• Concurrently runs auto-tagging and Gemini 3.7 Flash structured summaries</div>
@@ -947,7 +947,7 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-[#d97757] hover:bg-[#c66a4d] text-white text-xs font-medium rounded-lg shadow-2xs transition-colors disabled:opacity-50"
+                  className="flex items-center gap-2 px-5 py-2.5 bg-accent hover:bg-accent-hover text-on-accent text-xs font-medium rounded-lg shadow-2xs transition-colors disabled:opacity-50"
                 >
                   {loading ? (
                     <>

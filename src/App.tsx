@@ -880,7 +880,7 @@ export default function App() {
               </React.Suspense>
             ) : loading ? (
               <div className="p-16 text-center">
-                <div className="w-8 h-8 border-2 border-[#d97757] border-t-transparent rounded-full animate-spin mx-auto" />
+                <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto" />
               </div>
             ) : (
               <div className="p-16 text-center space-y-3">
@@ -888,7 +888,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => navigate('/')}
-                  className="text-sm text-[#d97757] dark:text-[#e08264] hover:underline cursor-pointer"
+                  className="text-sm text-accent hover:underline cursor-pointer"
                 >
                   Back to all links
                 </button>
@@ -915,9 +915,9 @@ export default function App() {
 
           {/* Batch Actions Bar */}
           {selectedIds.length > 0 && (
-            <div className="bg-[#d97757]/10 dark:bg-[#e08264]/10 border-b border-[#d97757]/20 dark:border-[#e08264]/20 px-4 sm:px-8 py-2.5 flex flex-wrap items-center justify-between gap-2.5 text-xs shrink-0 animate-in fade-in slide-in-from-top-1 duration-150">
+            <div className="bg-accent/10 border-b border-accent/20 px-4 sm:px-8 py-2.5 flex flex-wrap items-center justify-between gap-2.5 text-xs shrink-0 animate-in fade-in slide-in-from-top-1 duration-150">
               <div className="flex items-center gap-3">
-                <span className="text-xs font-bold text-[#d97757] dark:text-[#e08264] flex items-center gap-1.5">
+                <span className="text-xs font-bold text-accent flex items-center gap-1.5">
                   <Check className="w-3.5 h-3.5 stroke-[3]" />
                   <span>{selectedIds.length} {selectedIds.length === 1 ? 'ITEM' : 'ITEMS'} SELECTED</span>
                 </span>
@@ -943,7 +943,7 @@ export default function App() {
                         e.target.value = '';
                       }
                     }}
-                    className="pl-2.5 pr-6 py-1 bg-white dark:bg-[#1f1e1d] rounded-lg font-medium text-xs text-slate-700 dark:text-slate-300 shadow-2xs border border-black/10 dark:border-white/10 cursor-pointer appearance-none"
+                    className="pl-2.5 pr-6 py-1 bg-white dark:bg-surface rounded-lg font-medium text-xs text-slate-700 dark:text-slate-300 shadow-2xs border border-black/10 dark:border-white/10 cursor-pointer appearance-none"
                     aria-label="Move selected bookmarks to category"
                   >
                     <option value="" disabled>Move to Category...</option>
@@ -962,9 +962,9 @@ export default function App() {
                     setExportSingleLink(null);
                     setExportModalOpen(true);
                   }}
-                  className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-[#1f1e1d] rounded-lg font-medium text-slate-800 dark:text-slate-200 shadow-2xs hover:bg-slate-50 dark:hover:bg-white/5 border border-black/10 dark:border-white/10 cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-surface rounded-lg font-medium text-slate-800 dark:text-slate-200 shadow-2xs hover:bg-slate-50 dark:hover:bg-white/5 border border-black/10 dark:border-white/10 cursor-pointer"
                 >
-                  <FileDown className="w-3.5 h-3.5 text-[#d97757] dark:text-[#e08264]" />
+                  <FileDown className="w-3.5 h-3.5 text-accent" />
                   <span className="hidden sm:inline">Export .md ({selectedIds.length})</span>
                   <span className="sm:hidden">Export</span>
                 </button>
@@ -972,7 +972,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={handleBatchMarkRead}
-                  className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-[#1f1e1d] rounded-lg font-medium text-slate-800 dark:text-slate-200 shadow-2xs hover:bg-slate-50 dark:hover:bg-white/5 border border-black/10 dark:border-white/10 cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-surface rounded-lg font-medium text-slate-800 dark:text-slate-200 shadow-2xs hover:bg-slate-50 dark:hover:bg-white/5 border border-black/10 dark:border-white/10 cursor-pointer"
                   title="Mark all selected as Reviewed"
                 >
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
@@ -982,7 +982,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={handleBatchMarkUnread}
-                  className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-[#1f1e1d] rounded-lg font-medium text-slate-800 dark:text-slate-200 shadow-2xs hover:bg-slate-50 dark:hover:bg-white/5 border border-black/10 dark:border-white/10 cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-surface rounded-lg font-medium text-slate-800 dark:text-slate-200 shadow-2xs hover:bg-slate-50 dark:hover:bg-white/5 border border-black/10 dark:border-white/10 cursor-pointer"
                   title="Mark all selected as Unread"
                 >
                   <Circle className="w-3.5 h-3.5 text-amber-500" />
@@ -1014,7 +1014,7 @@ export default function App() {
           <div ref={mainScrollRef} className="flex-1 overflow-y-auto p-3.5 sm:p-8">
             {loading ? (
               <div className="p-16 text-center space-y-3">
-                <div className="w-8 h-8 border-2 border-[#d97757] border-t-transparent rounded-full animate-spin mx-auto" />
+                <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto" />
                 <div className="text-xs text-slate-500 dark:text-slate-400">
                   Loading OmniLink Repository...
                 </div>
@@ -1024,11 +1024,11 @@ export default function App() {
                 className="p-8 sm:p-12 text-center border border-black/10 dark:border-white/10 rounded-2xl space-y-5 max-w-lg mx-auto shadow-sm mt-4 sm:mt-8 animate-card-entrance"
                 style={{ backgroundColor: 'var(--card-bg)' }}
               >
-                <div className="w-14 h-14 rounded-2xl bg-[#d97757]/10 dark:bg-[#e08264]/10 flex items-center justify-center mx-auto text-[#d97757] dark:text-[#e08264]">
+                <div className="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto text-accent">
                   <Search className="w-6 h-6" />
                 </div>
                 <div className="space-y-1.5">
-                  <h3 className="font-newsreader font-medium text-2xl text-slate-900 dark:text-slate-100">
+                  <h3 className="font-semibold text-xl text-slate-900 dark:text-slate-100">
                     {filters.searchQuery || filters.platform !== 'all' || filters.category !== 'all' || filters.tag !== 'all'
                       ? 'No Matching Links'
                       : 'Your Repository is Ready'}
@@ -1065,7 +1065,7 @@ export default function App() {
                           setPrefillData({});
                           setAddModalOpen(true);
                         }}
-                        className="flex items-center gap-1.5 px-4 py-2 bg-[#d97757] hover:bg-[#c46243] dark:bg-[#e08264] dark:hover:bg-[#e9957a] text-white text-xs font-semibold rounded-xl shadow-xs transition-all active:scale-95"
+                        className="flex items-center gap-1.5 px-4 py-2 bg-accent hover:bg-accent-hover text-on-accent text-xs font-semibold rounded-xl shadow-xs transition-all active:scale-95"
                       >
                         <Plus className="w-3.5 h-3.5" />
                         <span>Add New Link (N)</span>

@@ -72,10 +72,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               onClick={() => (isAllSelected ? onClearSelection() : onSelectAllFiltered())}
               className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs transition-all cursor-pointer shadow-xs ${
                 isAllSelected
-                  ? 'bg-[#d97757]/10 dark:bg-[#e08264]/10 border-[#d97757]/30 dark:border-[#e08264]/30 text-[#d97757] dark:text-[#e08264] font-semibold'
+                  ? 'bg-accent/10 border-accent/30 text-accent font-semibold'
                   : selectedCount > 0
                   ? 'bg-black/5 dark:bg-white/5 border-black/15 dark:border-white/15 text-slate-800 dark:text-slate-200 font-semibold'
-                  : 'bg-white dark:bg-[#18181c] border-black/10 dark:border-white/10 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                  : 'bg-white dark:bg-surface border-black/10 dark:border-white/10 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
               title={isAllSelected ? 'Deselect all bookmarks' : 'Select all filtered bookmarks'}
               aria-label={isAllSelected ? 'Deselect all bookmarks' : 'Select all filtered bookmarks'}
@@ -83,16 +83,16 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               <div
                 className={`w-3.5 h-3.5 rounded border flex items-center justify-center transition-all ${
                   isAllSelected
-                    ? 'bg-[#d97757] dark:bg-[#e08264] border-[#d97757] dark:border-[#e08264] text-white shadow-2xs'
+                    ? 'bg-accent border-accent text-on-accent shadow-2xs'
                     : selectedCount > 0
-                    ? 'bg-[#d97757]/20 border-[#d97757] text-[#d97757]'
+                    ? 'bg-accent/20 border-accent text-accent'
                     : 'border-slate-300 dark:border-white/30 bg-black/5 dark:bg-white/5'
                 }`}
               >
                 {isAllSelected ? (
                   <Check className="w-2.5 h-2.5 stroke-[3]" />
                 ) : selectedCount > 0 ? (
-                  <div className="w-1.5 h-1.5 rounded-xs bg-[#d97757] dark:bg-[#e08264]" />
+                  <div className="w-1.5 h-1.5 rounded-xs bg-accent" />
                 ) : null}
               </div>
               <span>{isAllSelected ? 'All Selected' : selectedCount > 0 ? `${selectedCount} Selected` : 'Select All'}</span>
@@ -104,7 +104,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           <select
             value={filters.category}
             onChange={(e) => onFilterChange({ category: e.target.value })}
-            className="pl-3 pr-7 py-1.5 rounded-lg text-xs font-medium border transition-all cursor-pointer text-slate-800 dark:text-slate-200 bg-white dark:bg-[#18181c] border-black/10 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20 focus:outline-none focus:ring-1 focus:ring-[#d97757] appearance-none shadow-xs"
+            className="pl-3 pr-7 py-1.5 rounded-lg text-xs font-medium border transition-all cursor-pointer text-slate-800 dark:text-slate-200 bg-white dark:bg-surface border-black/10 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20 focus:outline-none focus:ring-1 focus:ring-accent appearance-none shadow-xs"
             aria-label="Filter by category"
           >
             <option value="all">All Categories</option>
@@ -123,7 +123,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             <select
               value={filters.tag}
               onChange={(e) => onFilterChange({ tag: e.target.value })}
-              className="pl-3 pr-7 py-1.5 rounded-lg text-xs font-medium border transition-all cursor-pointer text-slate-800 dark:text-slate-200 bg-white dark:bg-[#18181c] border-black/10 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20 focus:outline-none focus:ring-1 focus:ring-[#d97757] appearance-none shadow-xs"
+              className="pl-3 pr-7 py-1.5 rounded-lg text-xs font-medium border transition-all cursor-pointer text-slate-800 dark:text-slate-200 bg-white dark:bg-surface border-black/10 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20 focus:outline-none focus:ring-1 focus:ring-accent appearance-none shadow-xs"
               aria-label="Filter by tag"
             >
               <option value="all">All Tags</option>
@@ -168,14 +168,14 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                 sortBy: e.target.value as FilterState['sortBy'],
               })
             }
-            className="bg-transparent border-none text-xs font-semibold text-slate-800 dark:text-slate-200 outline-none cursor-pointer hover:text-[#d97757] dark:hover:text-[#e08264] transition-colors"
+            className="bg-transparent border-none text-xs font-semibold text-slate-800 dark:text-slate-200 outline-none cursor-pointer hover:text-accent transition-colors"
             aria-label="Sort bookmarks by"
           >
-            <option value="newest" className="bg-white dark:bg-[#1f1e1c]">Newest</option>
-            <option value="oldest" className="bg-white dark:bg-[#1f1e1c]">Oldest</option>
-            <option value="title" className="bg-white dark:bg-[#1f1e1c]">Title (A-Z)</option>
-            <option value="readingTime" className="bg-white dark:bg-[#1f1e1c]">Read Time</option>
-            <option value="aiScore" className="bg-white dark:bg-[#1f1e1c]">AI Relevance</option>
+            <option value="newest" className="bg-white dark:bg-surface">Newest</option>
+            <option value="oldest" className="bg-white dark:bg-surface">Oldest</option>
+            <option value="title" className="bg-white dark:bg-surface">Title (A-Z)</option>
+            <option value="readingTime" className="bg-white dark:bg-surface">Read Time</option>
+            <option value="aiScore" className="bg-white dark:bg-surface">AI Relevance</option>
           </select>
         </div>
       </div>

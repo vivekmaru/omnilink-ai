@@ -64,7 +64,7 @@ export const LinkListView: React.FC<LinkListViewProps> = ({
       case 'paper':
         return <FileText className="w-3.5 h-3.5 text-emerald-500" />;
       default:
-        return <FileText className="w-3.5 h-3.5 text-[#d97757] dark:text-[#e08264]" />;
+        return <FileText className="w-3.5 h-3.5 text-accent" />;
     }
   };
 
@@ -87,7 +87,7 @@ export const LinkListView: React.FC<LinkListViewProps> = ({
                   type="checkbox"
                   checked={isAllSelected}
                   onChange={() => (isAllSelected ? onClearSelection() : onSelectAll())}
-                  className="rounded border-slate-300 dark:border-white/20 text-[#d97757] focus:ring-0 cursor-pointer accent-[#d97757]"
+                  className="rounded border-slate-300 dark:border-white/20 text-accent focus:ring-0 cursor-pointer accent-accent"
                 />
               </th>
               <th className="p-3.5 w-8"></th>
@@ -106,7 +106,7 @@ export const LinkListView: React.FC<LinkListViewProps> = ({
                   key={link.id}
                   onClick={() => onOpenDetail(link)}
                   className={`group hover:bg-slate-50 dark:hover:bg-white/[0.03] cursor-pointer transition-colors ${
-                    isSelected ? 'bg-[#d97757]/10 dark:bg-[#e08264]/10' : ''
+                    isSelected ? 'bg-accent/10' : ''
                   }`}
                 >
                   <td className="p-3.5 text-center" onClick={(e) => e.stopPropagation()}>
@@ -114,7 +114,7 @@ export const LinkListView: React.FC<LinkListViewProps> = ({
                       type="checkbox"
                       checked={isSelected}
                       onChange={() => onToggleSelectId(link.id)}
-                      className="rounded border-slate-300 dark:border-white/20 text-[#d97757] focus:ring-0 cursor-pointer accent-[#d97757]"
+                      className="rounded border-slate-300 dark:border-white/20 text-accent focus:ring-0 cursor-pointer accent-accent"
                     />
                   </td>
 
@@ -135,7 +135,7 @@ export const LinkListView: React.FC<LinkListViewProps> = ({
                     <div className="flex items-start gap-2.5">
                       <div className="mt-0.5 shrink-0">{getPlatformIcon(link.platform)}</div>
                       <div className="space-y-1 min-w-0">
-                        <div className="font-newsreader text-base font-medium text-slate-900 dark:text-slate-100 group-hover:text-[#d97757] dark:group-hover:text-[#e08264] transition-colors truncate">
+                        <div className="text-base font-semibold text-slate-900 dark:text-slate-100 group-hover:text-accent transition-colors truncate">
                           {link.title || link.url}
                         </div>
                         <div className="text-xs text-slate-600 dark:text-slate-300 line-clamp-1">
@@ -162,7 +162,7 @@ export const LinkListView: React.FC<LinkListViewProps> = ({
                           )}
                           {((link.summary?.keyTakeaways && link.summary.keyTakeaways.length > 0) ||
                             (link.aiSummary?.takeaways && link.aiSummary.takeaways.length > 0)) && (
-                            <span className="inline-flex items-center gap-1 text-xs text-[#c25e3e] dark:text-[#e08264] bg-[#d97757]/10 border border-[#d97757]/20 px-1.5 py-0.2 rounded font-semibold">
+                            <span className="inline-flex items-center gap-1 text-xs text-accent-hover dark:text-accent bg-accent/10 border border-accent/20 px-1.5 py-0.2 rounded font-semibold">
                               <Sparkles className="w-2.5 h-2.5" /> insights
                             </span>
                           )}
@@ -205,8 +205,8 @@ export const LinkListView: React.FC<LinkListViewProps> = ({
                         <CheckCircle2 className="w-2.5 h-2.5" /> Reviewed
                       </span>
                     ) : link.readStatus === 'reading' ? (
-                      <span className="inline-flex items-center gap-1 text-xs font-medium text-[#c25e3e] dark:text-[#e08264] bg-[#d97757]/10 border border-[#d97757]/20 px-2 py-0.5 rounded-md">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#d97757] dark:bg-[#e08264]" /> Reading
+                      <span className="inline-flex items-center gap-1 text-xs font-medium text-accent-hover dark:text-accent bg-accent/10 border border-accent/20 px-2 py-0.5 rounded-md">
+                        <span className="w-1.5 h-1.5 rounded-full bg-accent" /> Reading
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 px-2 py-0.5 rounded-md">
@@ -232,7 +232,7 @@ export const LinkListView: React.FC<LinkListViewProps> = ({
                         href={link.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-1.5 rounded-md text-slate-400 hover:text-[#d97757] dark:hover:text-[#e08264] hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                        className="p-1.5 rounded-md text-slate-400 hover:text-accent hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
                         title="Open Link"
                       >
                         <ExternalLink className="w-3.5 h-3.5" />

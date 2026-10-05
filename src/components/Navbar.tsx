@@ -94,7 +94,7 @@ export const Navbar: React.FC<HeaderProps> = ({
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Search repository..."
-            className="w-full pl-6 sm:pl-7 pr-8 sm:pr-16 py-1 bg-transparent border-b border-transparent focus:border-[#d97757] dark:focus:border-[#e08264] font-newsreader text-sm sm:text-lg text-slate-900 dark:text-[#f7f6f3] placeholder:text-slate-400/80 dark:placeholder:text-slate-500 outline-none transition-all"
+            className="w-full pl-6 sm:pl-7 pr-8 sm:pr-16 py-1 bg-transparent border-b border-transparent focus:border-accent text-sm sm:text-[15px] text-slate-900 dark:text-ink placeholder:text-slate-400/80 dark:placeholder:text-slate-500 outline-none transition-all"
           />
 
           <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1">
@@ -125,7 +125,7 @@ export const Navbar: React.FC<HeaderProps> = ({
           title="Card Grid View (1)"
           className={`px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-all ${
             currentView === 'grid'
-              ? 'bg-white dark:bg-[#1f1e1c] text-slate-900 dark:text-[#f7f6f3] shadow-xs font-semibold'
+              ? 'bg-white dark:bg-surface text-slate-900 dark:text-ink shadow-xs font-semibold'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
           }`}
         >
@@ -137,7 +137,7 @@ export const Navbar: React.FC<HeaderProps> = ({
           title="High-Density Compact List (2)"
           className={`px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-all ${
             currentView === 'list'
-              ? 'bg-white dark:bg-[#1f1e1c] text-slate-900 dark:text-[#f7f6f3] shadow-xs font-semibold'
+              ? 'bg-white dark:bg-surface text-slate-900 dark:text-ink shadow-xs font-semibold'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
           }`}
         >
@@ -155,7 +155,7 @@ export const Navbar: React.FC<HeaderProps> = ({
           className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3.5 sm:py-1.5 rounded-md text-xs font-medium transition-all bg-transparent hover:bg-black/5 dark:hover:bg-white/5 text-slate-800 dark:text-slate-200 border border-black/10 dark:border-white/10 group shrink-0"
           title="Search your knowledge base with conversational AI (⌘J)"
         >
-          <Sparkles className="w-3.5 h-3.5 text-[#d97757] dark:text-[#e08264] group-hover:scale-110 transition-transform" />
+          <Sparkles className="w-3.5 h-3.5 text-accent group-hover:scale-110 transition-transform" />
           <span className="font-medium whitespace-nowrap">Ask AI</span>
           <span className="hidden sm:inline-flex text-xs opacity-60">
             ⌘J
@@ -166,7 +166,7 @@ export const Navbar: React.FC<HeaderProps> = ({
         <button
           id="btn-add-new-link"
           onClick={onOpenAddModal}
-          className="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-1.5 rounded-md text-xs font-semibold transition-all bg-[#d97757] hover:bg-[#c46243] dark:bg-[#e08264] dark:hover:bg-[#e9957a] text-white shadow-2xs hover:scale-[1.01] active:scale-[0.99] shrink-0"
+          className="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-1.5 rounded-md text-xs font-semibold transition-all bg-accent hover:bg-accent-hover text-on-accent shadow-2xs hover:scale-[1.01] active:scale-[0.99] shrink-0"
           title="Add a link to the knowledge repository (N)"
         >
           <Plus className="w-3.5 h-3.5" />
