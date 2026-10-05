@@ -97,16 +97,6 @@
   font-weight: 600;
 }
 
-.badge-ai {
-  background-color: var(--accent);
-  color: var(--on-accent);
-  padding: 0.12rem 0.45rem;
-  border-radius: 4px;
-  font-weight: 700;
-  font-size: 0.68rem;
-  letter-spacing: 0.05em;
-}
-
 /* Micro-animations & Transitions */
 @keyframes cardEntrance {
   from {

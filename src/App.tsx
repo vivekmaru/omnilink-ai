@@ -8,7 +8,6 @@ import {
   Bookmark,
   ExternalLink,
   FileDown,
-  Check,
   Circle,
   Folder,
 } from 'lucide-react';
@@ -371,7 +370,7 @@ export default function App() {
           notes: shareData.notes || '',
         });
         setAddModalOpen(true);
-        addToast('ai', `Captured link from mobile share: ${shareData.url.slice(0, 35)}...`);
+        addToast('ai', `Saved from your phone: ${shareData.url.slice(0, 35)}…`);
         window.history.replaceState({}, document.title, window.location.pathname);
       }
     }
@@ -515,7 +514,7 @@ export default function App() {
       addToast('info', 'Saved locally only; it will not sync automatically. Save again when connected.');
       return;
     }
-    addToast('success', 'Link saved to repository');
+    addToast('success', 'Link saved');
     ApiService.fetchStats().then(setStats).catch(() => {});
   };
 
@@ -593,7 +592,7 @@ export default function App() {
 
     pendingDeletionsRef.current.set(id, { timer, link: linkToDelete });
 
-    addToast('info', 'Bookmark deleted', {
+    addToast('info', 'Link deleted', {
       duration: 6000,
       action: {
         label: 'Undo',
@@ -603,7 +602,7 @@ export default function App() {
             clearTimeout(pending.timer);
             pendingDeletionsRef.current.delete(id);
             setLinks((prev) => [pending.link, ...prev]);
-            addToast('success', 'Bookmark restored');
+            addToast('success', 'Link restored');
           }
         },
       },
@@ -636,7 +635,7 @@ export default function App() {
     const link = links.find((l) => l.id === id);
     if (!link) return;
     setSyncStatus('syncing');
-    addToast('ai', 'Extracting metadata with Gemini 3.7 Flash...');
+    addToast('ai', 'Re-reading the page…');
     try {
       const extraction = await ApiService.extractAI(link.url, link.title, link.notes, link.id);
       const tldr = extraction.summary?.tldr || extraction.tldr || link.summary?.tldr || 'Saved in repository';
@@ -670,11 +669,11 @@ export default function App() {
       });
       handleLinkUpdated(updated);
       setSyncStatus('synced');
-      addToast('ai', 'AI extraction complete');
+      addToast('ai', 'Summary and tags updated');
     } catch (e) {
       console.error('AI Re-extraction notice:', e);
       setSyncStatus('synced');
-      addToast('info', 'AI extraction updated');
+      addToast('info', "Couldn't refresh the summary");
     }
   };
 
@@ -694,14 +693,14 @@ export default function App() {
       ApiService.fetchStats().then(setStats).catch(() => {});
     }, 6000);
 
-    addToast('info', `Deleted ${batchIds.length} bookmarks`, {
+    addToast('info', `Deleted ${batchIds.length} ${batchIds.length === 1 ? 'link' : 'links'}`, {
       duration: 6000,
       action: {
         label: 'Undo',
         onClick: () => {
           clearTimeout(batchTimer);
           setLinks((prev) => [...linksToDelete, ...prev.filter((l) => !batchIds.includes(l.id))]);
-          addToast('success', `Restored ${batchIds.length} bookmarks`);
+          addToast('success', `Restored ${batchIds.length} ${batchIds.length === 1 ? 'link' : 'links'}`);
         },
       },
     });
@@ -714,7 +713,7 @@ export default function App() {
     setLinks((prev) =>
       prev.map((l) => (batchIds.includes(l.id) ? { ...l, readStatus: 'read' } : l))
     );
-    addToast('success', `Marked ${batchIds.length} bookmarks as Reviewed`);
+    addToast('success', `Marked ${batchIds.length} ${batchIds.length === 1 ? 'link' : 'links'} as read`);
     setSelectedIds([]);
     ApiService.fetchStats().then(setStats).catch(() => {});
   };
@@ -726,7 +725,7 @@ export default function App() {
     setLinks((prev) =>
       prev.map((l) => (batchIds.includes(l.id) ? { ...l, readStatus: 'unread' } : l))
     );
-    addToast('success', `Marked ${batchIds.length} bookmarks as Unread`);
+    addToast('success', `Marked ${batchIds.length} ${batchIds.length === 1 ? 'link' : 'links'} as unread`);
     setSelectedIds([]);
     ApiService.fetchStats().then(setStats).catch(() => {});
   };
@@ -738,7 +737,7 @@ export default function App() {
     setLinks((prev) =>
       prev.map((l) => (batchIds.includes(l.id) ? { ...l, category: newCategory } : l))
     );
-    addToast('success', `Assigned ${batchIds.length} bookmarks to "${newCategory}"`);
+    addToast('success', `Moved ${batchIds.length} ${batchIds.length === 1 ? 'link' : 'links'} to ${newCategory}`);
     setSelectedIds([]);
     ApiService.fetchStats().then(setStats).catch(() => {});
   };
@@ -906,28 +905,23 @@ export default function App() {
               availableTags={availableTags}
               activeCount={filteredLinks.length}
               totalCount={links.length}
-              selectedCount={selectedIds.length}
-              onSelectAllFiltered={() => setSelectedIds(filteredLinks.map((l) => l.id))}
-              onClearSelection={() => setSelectedIds([])}
-              isAllSelected={filteredLinks.length > 0 && filteredLinks.every((l) => selectedIds.includes(l.id))}
             />
           )}
 
           {/* Batch Actions Bar */}
           {selectedIds.length > 0 && (
-            <div className="bg-accent/10 border-b border-accent/20 px-4 sm:px-8 py-2.5 flex flex-wrap items-center justify-between gap-2.5 text-xs shrink-0 animate-in fade-in slide-in-from-top-1 duration-150">
+            <div className="border-b px-3 sm:px-8 py-2 flex flex-wrap items-center justify-between gap-2.5 text-xs shrink-0" style={{ backgroundColor: 'var(--sidebar-bg)', borderColor: 'var(--card-border)' }}>
               <div className="flex items-center gap-3">
-                <span className="text-xs font-bold text-accent flex items-center gap-1.5">
-                  <Check className="w-3.5 h-3.5 stroke-[3]" />
-                  <span>{selectedIds.length} {selectedIds.length === 1 ? 'ITEM' : 'ITEMS'} SELECTED</span>
+                <span className="font-medium text-slate-900 dark:text-ink tabular-nums">
+                  {selectedIds.length} selected
                 </span>
                 {filteredLinks.length > selectedIds.length && (
                   <button
                     type="button"
                     onClick={() => setSelectedIds(filteredLinks.map((l) => l.id))}
-                    className="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 underline underline-offset-2 cursor-pointer"
+                    className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 underline-offset-2 hover:underline cursor-pointer"
                   >
-                    Select all {filteredLinks.length} filtered
+                    Select all {filteredLinks.length}
                   </button>
                 )}
               </div>
@@ -943,10 +937,10 @@ export default function App() {
                         e.target.value = '';
                       }
                     }}
-                    className="pl-2.5 pr-6 py-1 bg-white dark:bg-surface rounded-lg font-medium text-xs text-slate-700 dark:text-slate-300 shadow-2xs border border-black/10 dark:border-white/10 cursor-pointer appearance-none"
+                    className="pl-2.5 pr-6 py-1 bg-white dark:bg-surface rounded-md font-medium text-xs text-slate-700 dark:text-slate-300 border border-black/10 dark:border-white/10 cursor-pointer appearance-none"
                     aria-label="Move selected bookmarks to category"
                   >
-                    <option value="" disabled>Move to Category...</option>
+                    <option value="" disabled>Move to…</option>
                     {availableCategories.map((cat) => (
                       <option key={cat} value={cat}>
                         {cat}
@@ -962,49 +956,46 @@ export default function App() {
                     setExportSingleLink(null);
                     setExportModalOpen(true);
                   }}
-                  className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-surface rounded-lg font-medium text-slate-800 dark:text-slate-200 shadow-2xs hover:bg-slate-50 dark:hover:bg-white/5 border border-black/10 dark:border-white/10 cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-surface rounded-md font-medium text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/5 border border-black/10 dark:border-white/10 cursor-pointer"
                 >
-                  <FileDown className="w-3.5 h-3.5 text-accent" />
-                  <span className="hidden sm:inline">Export .md ({selectedIds.length})</span>
-                  <span className="sm:hidden">Export</span>
+                  <FileDown className="w-3.5 h-3.5" />
+                  <span>Export</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={handleBatchMarkRead}
-                  className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-surface rounded-lg font-medium text-slate-800 dark:text-slate-200 shadow-2xs hover:bg-slate-50 dark:hover:bg-white/5 border border-black/10 dark:border-white/10 cursor-pointer"
-                  title="Mark all selected as Reviewed"
+                  className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-surface rounded-md font-medium text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/5 border border-black/10 dark:border-white/10 cursor-pointer"
                 >
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                  <span>Mark Reviewed</span>
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Mark read</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={handleBatchMarkUnread}
-                  className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-surface rounded-lg font-medium text-slate-800 dark:text-slate-200 shadow-2xs hover:bg-slate-50 dark:hover:bg-white/5 border border-black/10 dark:border-white/10 cursor-pointer"
-                  title="Mark all selected as Unread"
+                  className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-surface rounded-md font-medium text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/5 border border-black/10 dark:border-white/10 cursor-pointer"
                 >
-                  <Circle className="w-3.5 h-3.5 text-amber-500" />
-                  <span>Mark Unread</span>
+                  <Circle className="w-3.5 h-3.5" />
+                  <span>Mark unread</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={handleBatchDelete}
-                  className="flex items-center gap-1.5 px-3 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded-lg font-medium shadow-2xs cursor-pointer transition-colors"
-                  title="Delete all selected bookmarks (with 6s Undo)"
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-md font-medium text-rose-600 dark:text-rose-400 border border-rose-500/30 hover:bg-rose-500/10 cursor-pointer transition-colors"
+                  title="Delete selected links (you can undo)"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
-                  <span>Delete ({selectedIds.length})</span>
+                  <span>Delete</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setSelectedIds([])}
-                  className="px-2.5 py-1 text-xs font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 rounded-md border border-black/5 dark:border-white/5 hover:bg-black/5 dark:hover:bg-white/5 transition-all cursor-pointer"
+                  className="px-2 py-1 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors cursor-pointer"
                 >
-                  Clear
+                  Done
                 </button>
               </div>
             </div>
@@ -1056,7 +1047,7 @@ export default function App() {
                       }
                       className="px-4 py-2 bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-200 transition-colors"
                     >
-                      Reset All Filters
+                      Clear filters
                     </button>
                   ) : (
                     <>
@@ -1068,7 +1059,7 @@ export default function App() {
                         className="flex items-center gap-1.5 px-4 py-2 bg-accent hover:bg-accent-hover text-on-accent text-xs font-semibold rounded-xl shadow-xs transition-all active:scale-95"
                       >
                         <Plus className="w-3.5 h-3.5" />
-                        <span>Add New Link (N)</span>
+                        <span>Add link</span>
                       </button>
                       <button
                         onClick={() => {

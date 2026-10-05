@@ -202,7 +202,7 @@ export const LinkListView: React.FC<LinkListViewProps> = ({
                   <td className="p-3.5">
                     {link.readStatus === 'read' ? (
                       <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md">
-                        <CheckCircle2 className="w-2.5 h-2.5" /> Reviewed
+                        <CheckCircle2 className="w-2.5 h-2.5" /> Read
                       </span>
                     ) : link.readStatus === 'reading' ? (
                       <span className="inline-flex items-center gap-1 text-xs font-medium text-accent-hover dark:text-accent bg-accent/10 border border-accent/20 px-2 py-0.5 rounded-md">

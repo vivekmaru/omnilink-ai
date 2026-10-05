@@ -200,9 +200,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <span className="text-xl font-semibold tracking-tight text-slate-900 dark:text-ink">
               OmniLink
             </span>
-            <span className="badge-ai">
-              AI
-            </span>
           </div>
           {onCloseMobile && (
             <button

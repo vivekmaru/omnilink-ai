@@ -43,28 +43,28 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
   const statusColumns: ColumnConfig[] = [
     {
       id: 'unread',
-      title: 'Unread Queue',
+      title: 'To read',
       icon: <Circle className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />,
       badgeClass: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
-      emptyHint: 'Inbox clear — all new items triaged',
+      emptyHint: 'Nothing waiting to be read',
       nextStatus: 'reading',
-      nextLabel: 'Start Reading',
+      nextLabel: 'Start reading',
     },
     {
       id: 'reading',
-      title: 'In Progress',
+      title: 'Reading',
       icon: <Circle className="w-2.5 h-2.5 fill-cyan-500 text-cyan-500" />,
       badgeClass: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20',
-      emptyHint: 'No active reading sessions in progress',
+      emptyHint: 'Nothing in progress',
       nextStatus: 'read',
-      nextLabel: 'Mark Reviewed',
+      nextLabel: 'Mark read',
     },
     {
       id: 'read',
-      title: 'Reviewed Vault',
+      title: 'Read',
       icon: <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />,
       badgeClass: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
-      emptyHint: 'Completed readings will archive here',
+      emptyHint: 'Finished links show up here',
     },
   ];
 
