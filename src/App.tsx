@@ -1091,7 +1091,7 @@ export default function App() {
               <>
                 {/* View 1: 3-Column Card Grid */}
                 {currentView === 'grid' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-10 px-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
                     {filteredLinks.map((link) => (
                       <LinkCard
                         key={link.id}

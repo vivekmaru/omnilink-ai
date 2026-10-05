@@ -157,10 +157,10 @@ export const LinkCard: React.FC<LinkCardProps> = ({
         }
         onSelect(link);
       }}
-      className={`group relative flex flex-col -mx-3 px-3 py-4 rounded-lg transition-colors duration-150 cursor-pointer before:absolute before:inset-x-3 before:top-0 before:h-px before:bg-black/[0.07] dark:before:bg-white/[0.07] ${
+      className={`group relative flex flex-col p-4 rounded-lg border transition-colors duration-150 cursor-pointer ${
         isSelected
-          ? 'bg-accent/[0.07] before:opacity-0'
-          : 'hover:bg-black/[0.03] dark:hover:bg-white/[0.03] hover:before:opacity-0'
+          ? 'border-accent/50 bg-accent/[0.06]'
+          : 'border-black/[0.08] dark:border-white/[0.08] hover:border-black/[0.16] dark:hover:border-white/[0.16] hover:bg-black/[0.015] dark:hover:bg-white/[0.02]'
       } ${menuOpen ? 'z-30' : ''} animate-card-entrance ${link.isArchived ? 'opacity-60' : ''}`}
     >
       <div className="space-y-1.5">
