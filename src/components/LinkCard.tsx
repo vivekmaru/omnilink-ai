@@ -187,7 +187,7 @@ export const LinkCard: React.FC<LinkCardProps> = ({
             )}
 
             <h3
-              className={`text-[0.95rem] font-semibold leading-snug line-clamp-2 ${
+              className={`min-w-0 text-[0.95rem] font-semibold leading-snug line-clamp-2 [overflow-wrap:anywhere] ${
                 link.readStatus === 'read'
                   ? 'text-slate-500 dark:text-slate-400'
                   : 'text-slate-900 dark:text-ink'
@@ -325,7 +325,7 @@ export const LinkCard: React.FC<LinkCardProps> = ({
         </p>
 
         {/* Source, read time and progress in one quiet line */}
-        <p className="flex items-center gap-1.5 pt-0.5 text-xs text-slate-500 min-w-0">
+        <p className="flex items-center gap-1.5 pt-0.5 text-xs text-slate-500 dark:text-slate-400 min-w-0">
           <span className="truncate">{link.feedTitle || platformMeta.name}</span>
           {link.aiSummary?.estimatedReadTimeMinutes && (
             <span className="shrink-0">· {link.aiSummary.estimatedReadTimeMinutes} min read</span>
