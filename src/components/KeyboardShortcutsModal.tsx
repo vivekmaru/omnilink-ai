@@ -51,11 +51,11 @@ interface KeyboardShortcutsModalProps {
 }
 
 const SHORTCUT_CATEGORIES = [
-  { id: 'all', label: 'All Shortcuts' },
-  { id: 'navigation', label: 'Navigation & Search' },
-  { id: 'actions', label: 'Actions & Modals' },
-  { id: 'views', label: 'Views & Layout' },
-  { id: 'filters', label: 'Triage & Filters' },
+  { id: 'all', label: 'All' },
+  { id: 'navigation', label: 'Search' },
+  { id: 'actions', label: 'Actions' },
+  { id: 'views', label: 'Views' },
+  { id: 'filters', label: 'Filters' },
 ] as const;
 
 const SHORTCUTS_DATA: ShortcutItem[] = [
@@ -63,32 +63,32 @@ const SHORTCUTS_DATA: ShortcutItem[] = [
   {
     id: 'search',
     category: 'navigation',
-    title: 'Search Repository',
-    description: 'Instantly focus the global search bar across titles, tags, and AI insights',
+    title: 'Search links',
+    description: 'Jump to the search box',
     keys: [['⌘', 'K'], ['/']],
     actionId: 'focus-search',
   },
   {
     id: 'ask-ai',
     category: 'navigation',
-    title: 'Ask Repo AI Assistant',
-    description: 'Open conversational RAG search over your saved knowledge base',
+    title: 'Ask AI',
+    description: 'Ask a question about your saved links',
     keys: [['⌘', 'J']],
     actionId: 'open-ask-ai',
   },
   {
     id: 'help',
     category: 'navigation',
-    title: 'Keyboard Shortcuts Help',
-    description: 'Open this searchable keyboard navigation and actions reference',
+    title: 'Keyboard shortcuts',
+    description: 'Show this list',
     keys: [['?'], ['⌘', '/']],
     actionId: 'open-help',
   },
   {
     id: 'dismiss',
     category: 'navigation',
-    title: 'Dismiss / Clear Search',
-    description: 'Close the active modal or clear search query input',
+    title: 'Close or clear',
+    description: 'Close the open window or clear the search',
     keys: [['Esc']],
     actionId: 'dismiss',
   },
@@ -97,72 +97,72 @@ const SHORTCUTS_DATA: ShortcutItem[] = [
   {
     id: 'add-link',
     category: 'actions',
-    title: 'Add New Link',
-    description: 'Open the link ingestion modal with real-time keyword auto-tagging',
+    title: 'Add link',
+    description: 'Save a new link',
     keys: [['N'], ['⌘', 'N']],
     actionId: 'open-add-link',
   },
   {
     id: 'extension',
     category: 'actions',
-    title: 'Chrome Extension & Bookmarklet',
-    description: 'Open extension generator package and 1-click drag-to-bookmarks setup',
+    title: 'Browser extension',
+    description: 'Set up the Chrome extension or bookmarklet',
     keys: [['⌘', 'E']],
     actionId: 'open-extension',
   },
   {
     id: 'mobile-share',
     category: 'actions',
-    title: 'Mobile Quick Share & QR Connect',
-    description: 'Connect mobile device or simulate Web Share Target payload ingestion',
+    title: 'Save from your phone',
+    description: 'Connect your phone with a QR code',
     keys: [['⌘', 'M']],
     actionId: 'open-mobile-share',
   },
   {
     id: 'backup',
     category: 'actions',
-    title: 'AES-256 Encrypted Vault Backup',
-    description: 'Export or restore zero-knowledge encrypted backups and JSON datasets',
+    title: 'Backup',
+    description: 'Export or restore an encrypted backup',
     keys: [['⌘', 'B']],
     actionId: 'open-backup',
   },
   {
     id: 'export-markdown',
     category: 'actions',
-    title: 'Export Markdown (Obsidian / Notion)',
-    description: 'Generate Markdown with YAML frontmatter, Obsidian callouts, and code blocks',
+    title: 'Export Markdown',
+    description: 'Export links as Markdown for Obsidian or Notion',
     keys: [['⌘', '⇧', 'E']],
     actionId: 'open-export-markdown',
   },
   {
     id: 'rss-feeds',
     category: 'actions',
-    title: 'RSS Feeds & Dev Blogs Subscriptions',
-    description: 'Manage RSS feed subscriptions, discover feeds, and run instant background sync',
+    title: 'RSS feeds',
+    description: 'Manage and sync your feeds',
     keys: [['⌘', 'R']],
     actionId: 'open-rss-feeds',
   },
   {
     id: 'model-orchestrator',
     category: 'actions',
-    title: 'Gemini Model Orchestrator & Router',
-    description: 'Inspect multi-tier model routing matrix, latency telemetry, and failover chains',
+    title: 'AI models',
+    description: 'See which models are used and how they perform',
     keys: [['⌘', 'O']],
     actionId: 'open-model-orchestrator',
   },
   {
     id: 'analytics',
     category: 'actions',
-    title: 'Knowledge Analytics & Usage Insights',
-    description: 'Inspect reading velocity, platform breakdown, tag frequencies, and completion ratios',
+    title: 'Analytics',
+    description: 'Reading stats, sources and tags',
     keys: [['⌘', '⇧', 'A'], ['⌘', 'A']],
     actionId: 'open-analytics',
   },
   {
     id: 'toggle-theme',
     category: 'actions',
-    title: 'Toggle Dark / Light Mode',
-    description: 'Switch between near-black technical canvas and crisp light theme',
+    title: 'Dark or light theme',
+    description: 'Switch between dark and light',
     keys: [['⌘', 'D'], ['T']],
     actionId: 'toggle-theme',
   },
@@ -171,32 +171,32 @@ const SHORTCUTS_DATA: ShortcutItem[] = [
   {
     id: 'view-grid',
     category: 'views',
-    title: 'Card Grid View',
-    description: 'Switch to spacious 3-column desktop card grid with full insight badges',
+    title: 'Grid',
+    description: 'Show links as cards',
     keys: [['1']],
     actionId: 'view-grid',
   },
   {
     id: 'view-list',
     category: 'views',
-    title: 'Compact List View',
-    description: 'Switch to high-density tabular view for rapid triage and keyboard scanning',
+    title: 'List',
+    description: 'Show links as a compact list',
     keys: [['2']],
     actionId: 'view-list',
   },
   {
     id: 'view-kanban',
     category: 'views',
-    title: 'Kanban Workflow Board',
-    description: 'Switch to drag-and-drop lanes for Unread, Reading, and Reviewed links',
+    title: 'Board',
+    description: 'Drag links between To read, Reading and Read',
     keys: [['3']],
     actionId: 'view-kanban',
   },
   {
     id: 'view-cluster',
     category: 'views',
-    title: 'AI Semantic Topic Clusters',
-    description: 'Switch to neural knowledge graph grouping links by high-dimensional topics',
+    title: 'Topics',
+    description: 'Group links by topic',
     keys: [['4']],
     actionId: 'view-cluster',
   },
@@ -205,48 +205,48 @@ const SHORTCUTS_DATA: ShortcutItem[] = [
   {
     id: 'filter-all',
     category: 'filters',
-    title: 'Filter: All Bookmarks',
-    description: 'Show all unarchived bookmarks in repository',
+    title: 'All links',
+    description: 'Show everything except archived links',
     keys: [['G', 'A']],
     actionId: 'filter-all',
   },
   {
     id: 'filter-unread',
     category: 'filters',
-    title: 'Filter: Unread Inbox',
-    description: 'Show links waiting for triage and deep reading',
+    title: 'To read',
+    description: 'Show links you have not read yet',
     keys: [['G', 'U']],
     actionId: 'filter-unread',
   },
   {
     id: 'filter-reading',
     category: 'filters',
-    title: 'Filter: Currently Reading',
-    description: 'Show active in-progress study materials',
+    title: 'Reading',
+    description: 'Show links you are partway through',
     keys: [['G', 'R']],
     actionId: 'filter-reading',
   },
   {
     id: 'filter-read',
     category: 'filters',
-    title: 'Filter: Reviewed & Done',
-    description: 'Show finished and processed knowledge assets',
+    title: 'Read',
+    description: 'Show links you have finished',
     keys: [['G', 'D']],
     actionId: 'filter-read',
   },
   {
     id: 'filter-starred',
     category: 'filters',
-    title: 'Filter: Starred / Favorites',
-    description: 'Show pinned and favorite bookmarks',
+    title: 'Starred',
+    description: 'Show starred links',
     keys: [['G', 'S']],
     actionId: 'filter-starred',
   },
   {
     id: 'filter-archived',
     category: 'filters',
-    title: 'Filter: Archive Vault',
-    description: 'View archived items removed from main library',
+    title: 'Archived',
+    description: 'Show archived links',
     keys: [['G', 'X']],
     actionId: 'filter-archived',
   },
@@ -420,13 +420,13 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
               </div>
               <div>
                 <h3 id="shortcuts-modal-title" className="text-base font-semibold text-slate-900 dark:text-ink flex items-center gap-2">
-                  Keyboard Shortcuts
+                  Keyboard shortcuts
                   <span className="font-mono text-[11px] font-normal px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/5 text-slate-500 dark:text-slate-400">
                     {filteredShortcuts.length} of {SHORTCUTS_DATA.length}
                   </span>
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Navigate, triage, and trigger actions with rapid desktop hotkeys
+                  Press a key, or click a row to run it
                 </p>
               </div>
             </div>
@@ -450,7 +450,7 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
               id="shortcuts-search-input"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search shortcuts by action, description, or key..."
+              placeholder="Search shortcuts"
               className="w-full pl-9.5 pr-8 py-2 rounded-xl text-xs outline-none transition-all border text-slate-900 dark:text-ink placeholder:text-slate-400 dark:placeholder:text-slate-500 bg-black/5 dark:bg-white/[0.04] border-transparent focus:border-accent focus:bg-white dark:focus:bg-surface"
             />
             {searchQuery && (
@@ -499,7 +499,7 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
                 onClick={() => setSearchQuery('')}
                 className="mt-2 text-xs font-medium text-accent hover:underline"
               >
-                Clear Search Query
+                Clear search
               </button>
             </div>
           ) : (
@@ -519,9 +519,6 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
                         <h4 className="text-xs font-semibold text-slate-900 dark:text-ink group-hover:text-accent transition-colors">
                           {item.title}
                         </h4>
-                        <span className="hidden sm:inline-block font-mono text-[10px] uppercase tracking-wider text-slate-400">
-                          {item.category}
-                        </span>
                       </div>
                       <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1">
                         {item.description}
@@ -565,17 +562,17 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
         </div>
 
         {/* Modal Footer Tip */}
-        <div className="p-3.5 px-5 border-t border-black/10 dark:border-white/10 bg-black/[0.02] dark:bg-white/[0.02] flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+        <div className="p-3.5 px-5 border-t border-black/10 dark:border-white/10 bg-black/[0.02] dark:bg-white/[0.02] flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
           <div className="flex items-center gap-2">
             <span>Press</span>
             <kbd className="px-1.5 py-0.5 rounded font-mono text-[10px] bg-white dark:bg-white/10 border border-black/10 dark:border-white/10 font-medium">
               ?
             </kbd>
-            <span>anywhere to toggle this guide</span>
+            <span>to open or close this list</span>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="hidden sm:inline">Click any item to execute</span>
+            <span className="hidden sm:inline">Click a row to run it</span>
             <span>•</span>
             <kbd className="px-1.5 py-0.5 rounded font-mono text-[10px] bg-white dark:bg-white/10 border border-black/10 dark:border-white/10 font-medium">
               Esc

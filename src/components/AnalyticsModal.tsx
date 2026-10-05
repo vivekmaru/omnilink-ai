@@ -476,7 +476,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                     <div>
                       <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
                         <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                        <span>Reviewed & Done</span>
+                        <span>Read</span>
                       </div>
                       <div className="tabular-nums text-lg font-bold text-slate-900 dark:text-ink mt-0.5">
                         {analyticsData.read} <span className="text-xs font-normal text-slate-400">({analyticsData.completionRate}%)</span>

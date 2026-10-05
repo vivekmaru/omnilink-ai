@@ -93,7 +93,7 @@ export const Navbar: React.FC<HeaderProps> = ({
             type="text"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search repository..."
+            placeholder="Search links"
             className="w-full pl-6 sm:pl-7 pr-8 sm:pr-16 py-1 bg-transparent border-b border-transparent focus:border-accent text-sm sm:text-[15px] text-slate-900 dark:text-ink placeholder:text-slate-400/80 dark:placeholder:text-slate-500 outline-none transition-all"
           />
 
@@ -122,7 +122,7 @@ export const Navbar: React.FC<HeaderProps> = ({
       <div className="hidden lg:flex items-center p-0.5 rounded-lg bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5">
         <button
           onClick={() => onViewChange('grid')}
-          title="Card Grid View (1)"
+          title="Grid (1)"
           className={`px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-all ${
             currentView === 'grid'
               ? 'bg-white dark:bg-surface text-slate-900 dark:text-ink shadow-xs font-semibold'
@@ -134,7 +134,7 @@ export const Navbar: React.FC<HeaderProps> = ({
         </button>
         <button
           onClick={() => onViewChange('list')}
-          title="High-Density Compact List (2)"
+          title="List (2)"
           className={`px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-all ${
             currentView === 'list'
               ? 'bg-white dark:bg-surface text-slate-900 dark:text-ink shadow-xs font-semibold'
@@ -148,30 +148,29 @@ export const Navbar: React.FC<HeaderProps> = ({
 
       {/* Right: Distilled Tools Menu & Primary Actions */}
       <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-        {/* Primary AI Button: Ask Repo AI */}
+        {/* Ask AI */}
         <button
           id="btn-ask-repo-ai"
           onClick={onOpenAskRepo}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3.5 sm:py-1.5 rounded-md text-xs font-medium transition-all bg-transparent hover:bg-black/5 dark:hover:bg-white/5 text-slate-800 dark:text-slate-200 border border-black/10 dark:border-white/10 group shrink-0"
-          title="Search your knowledge base with conversational AI (⌘J)"
+          className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3.5 sm:py-1.5 rounded-md text-xs font-medium transition-colors bg-transparent hover:bg-black/5 dark:hover:bg-white/5 text-slate-800 dark:text-slate-200 border border-black/10 dark:border-white/10 shrink-0"
+          title="Ask a question about your links (⌘J)"
         >
-          <Sparkles className="w-3.5 h-3.5 text-accent group-hover:scale-110 transition-transform" />
+          <Sparkles className="w-3.5 h-3.5 text-accent" />
           <span className="font-medium whitespace-nowrap">Ask AI</span>
-          <span className="hidden sm:inline-flex text-xs opacity-60">
+          <span className="hidden sm:inline-flex text-xs text-slate-400 dark:text-slate-500">
             ⌘J
           </span>
         </button>
 
-        {/* Primary Action: + Add New Link */}
+        {/* Add link */}
         <button
           id="btn-add-new-link"
           onClick={onOpenAddModal}
-          className="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-1.5 rounded-md text-xs font-semibold transition-all bg-accent hover:bg-accent-hover text-on-accent shadow-2xs hover:scale-[1.01] active:scale-[0.99] shrink-0"
-          title="Add a link to the knowledge repository (N)"
+          className="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-1.5 rounded-md text-xs font-semibold transition-all bg-accent hover:bg-accent-hover text-on-accent shrink-0"
+          title="Add link (N)"
         >
           <Plus className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline whitespace-nowrap">Add New Link</span>
-          <span className="sm:hidden whitespace-nowrap">Add</span>
+          <span className="whitespace-nowrap">Add link</span>
         </button>
       </div>
     </header>

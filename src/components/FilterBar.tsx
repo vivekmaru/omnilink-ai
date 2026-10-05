@@ -1,11 +1,5 @@
-import React from 'react';
-import {
-  ArrowUpDown,
-  Tag,
-  Folder,
-  X,
-  Check,
-} from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { ArrowUpDown, SlidersHorizontal, X } from 'lucide-react';
 import { FilterState } from '../types';
 
 interface FilterBarProps {
@@ -15,11 +9,10 @@ interface FilterBarProps {
   availableTags: string[];
   activeCount?: number;
   totalCount?: number;
-  selectedCount?: number;
-  onSelectAllFiltered?: () => void;
-  onClearSelection?: () => void;
-  isAllSelected?: boolean;
 }
+
+const selectClass =
+  'w-full px-2.5 py-1.5 rounded-md text-xs border cursor-pointer text-slate-800 dark:text-slate-200 bg-white dark:bg-surface border-black/10 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20 focus:outline-none focus:ring-1 focus:ring-accent';
 
 export const FilterBar: React.FC<FilterBarProps> = ({
   filters,
@@ -28,11 +21,27 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   availableTags,
   activeCount,
   totalCount,
-  selectedCount = 0,
-  onSelectAllFiltered,
-  onClearSelection,
-  isAllSelected = false,
 }) => {
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close the filter pop-over on an outside click or Escape
+  useEffect(() => {
+    if (!open) return;
+    const handleMouseDown = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', handleMouseDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleMouseDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [open]);
+
   const isFiltered =
     filters.readStatus !== 'all' ||
     filters.category !== 'all' ||
@@ -41,6 +50,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
     filters.onlyFavorites ||
     filters.includeArchived ||
     filters.searchQuery.trim().length > 0;
+
+  const chips: { key: 'category' | 'tag'; label: string }[] = [];
+  if (filters.category !== 'all') chips.push({ key: 'category', label: filters.category });
+  if (filters.tag !== 'all') chips.push({ key: 'tag', label: `#${filters.tag}` });
 
   const handleClearFilters = () => {
     onFilterChange({
@@ -56,111 +69,112 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
   return (
     <div
-      className="px-3 sm:px-8 py-2 border-b flex items-center justify-between gap-2.5 text-xs transition-colors overflow-x-auto no-scrollbar"
+      className="px-3 sm:px-8 py-2 border-b flex items-center justify-between gap-3 text-xs transition-colors"
       style={{
-        backgroundColor: 'var(--sidebar-bg)',
+        backgroundColor: 'var(--bg)',
         borderColor: 'var(--card-border)',
       }}
     >
-      {/* Left: Consolidated Filter Controls with horizontal scroll on mobile */}
-      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-        {/* Multi-Select Quick Toggle */}
-        {onSelectAllFiltered && onClearSelection && activeCount !== undefined && activeCount > 0 && (
-          <div className="flex items-center gap-1.5 pr-2 border-r border-black/10 dark:border-white/10 shrink-0">
-            <button
-              type="button"
-              onClick={() => (isAllSelected ? onClearSelection() : onSelectAllFiltered())}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs transition-all cursor-pointer shadow-xs ${
-                isAllSelected
-                  ? 'bg-accent/10 border-accent/30 text-accent font-semibold'
-                  : selectedCount > 0
-                  ? 'bg-black/5 dark:bg-white/5 border-black/15 dark:border-white/15 text-slate-800 dark:text-slate-200 font-semibold'
-                  : 'bg-white dark:bg-surface border-black/10 dark:border-white/10 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-              }`}
-              title={isAllSelected ? 'Deselect all bookmarks' : 'Select all filtered bookmarks'}
-              aria-label={isAllSelected ? 'Deselect all bookmarks' : 'Select all filtered bookmarks'}
-            >
-              <div
-                className={`w-3.5 h-3.5 rounded border flex items-center justify-center transition-all ${
-                  isAllSelected
-                    ? 'bg-accent border-accent text-on-accent shadow-2xs'
-                    : selectedCount > 0
-                    ? 'bg-accent/20 border-accent text-accent'
-                    : 'border-slate-300 dark:border-white/30 bg-black/5 dark:bg-white/5'
-                }`}
-              >
-                {isAllSelected ? (
-                  <Check className="w-2.5 h-2.5 stroke-[3]" />
-                ) : selectedCount > 0 ? (
-                  <div className="w-1.5 h-1.5 rounded-xs bg-accent" />
-                ) : null}
-              </div>
-              <span>{isAllSelected ? 'All Selected' : selectedCount > 0 ? `${selectedCount} Selected` : 'Select All'}</span>
-            </button>
-          </div>
-        )}
-        {/* Category Dropdown */}
-        <div className="relative">
-          <select
-            value={filters.category}
-            onChange={(e) => onFilterChange({ category: e.target.value })}
-            className="pl-3 pr-7 py-1.5 rounded-lg text-xs font-medium border transition-all cursor-pointer text-slate-800 dark:text-slate-200 bg-white dark:bg-surface border-black/10 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20 focus:outline-none focus:ring-1 focus:ring-accent appearance-none shadow-xs"
-            aria-label="Filter by category"
+      {/* Left: one Filter button, the active filters, and Clear */}
+      <div className="flex items-center gap-2 min-w-0">
+        <div className="relative shrink-0" ref={menuRef}>
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border transition-colors ${
+              open || chips.length > 0
+                ? 'border-black/20 dark:border-white/20 text-slate-900 dark:text-ink'
+                : 'border-black/10 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-black/20 dark:hover:border-white/20'
+            }`}
+            aria-haspopup="dialog"
+            aria-expanded={open}
           >
-            <option value="all">All Categories</option>
-            {availableCategories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
-          <Folder className="w-3 h-3 absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            <SlidersHorizontal className="w-3.5 h-3.5" />
+            <span>Filter</span>
+            {chips.length > 0 && <span className="tabular-nums text-accent font-medium">{chips.length}</span>}
+          </button>
+
+          {open && (
+            <div
+              role="dialog"
+              aria-label="Filter links"
+              className="absolute left-0 top-full mt-1.5 z-30 w-60 p-3 space-y-3 rounded-lg bg-white dark:bg-surface border border-black/10 dark:border-white/10 shadow-lg"
+            >
+              <label className="block space-y-1">
+                <span className="text-slate-500 dark:text-slate-400">Category</span>
+                <select
+                  value={filters.category}
+                  onChange={(e) => onFilterChange({ category: e.target.value })}
+                  className={selectClass}
+                >
+                  <option value="all">Any category</option>
+                  {availableCategories.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {availableTags.length > 0 && (
+                <label className="block space-y-1">
+                  <span className="text-slate-500 dark:text-slate-400">Tag</span>
+                  <select
+                    value={filters.tag}
+                    onChange={(e) => onFilterChange({ tag: e.target.value })}
+                    className={selectClass}
+                  >
+                    <option value="all">Any tag</option>
+                    {availableTags.map((tag) => (
+                      <option key={tag} value={tag}>
+                        #{tag}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* Tag Dropdown */}
-        {availableTags.length > 0 && (
-          <div className="relative">
-            <select
-              value={filters.tag}
-              onChange={(e) => onFilterChange({ tag: e.target.value })}
-              className="pl-3 pr-7 py-1.5 rounded-lg text-xs font-medium border transition-all cursor-pointer text-slate-800 dark:text-slate-200 bg-white dark:bg-surface border-black/10 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20 focus:outline-none focus:ring-1 focus:ring-accent appearance-none shadow-xs"
-              aria-label="Filter by tag"
+        {chips.map((chip) => (
+          <span
+            key={chip.key}
+            className="hidden sm:inline-flex items-center gap-1 max-w-[12rem] pl-2 pr-1 py-1 rounded-md bg-black/[0.05] dark:bg-white/[0.08] text-slate-700 dark:text-slate-200"
+          >
+            <span className="truncate">{chip.label}</span>
+            <button
+              type="button"
+              onClick={() => onFilterChange({ [chip.key]: 'all' })}
+              className="p-0.5 rounded text-slate-400 hover:text-slate-700 dark:hover:text-slate-100"
+              aria-label={`Remove ${chip.label} filter`}
             >
-              <option value="all">All Tags</option>
-              {availableTags.map((tag) => (
-                <option key={tag} value={tag}>
-                  #{tag}
-                </option>
-              ))}
-            </select>
-            <Tag className="w-3 h-3 absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-          </div>
-        )}
+              <X className="w-3 h-3" />
+            </button>
+          </span>
+        ))}
 
-        {/* Active Filters Clear Button */}
         {isFiltered && (
           <button
+            type="button"
             onClick={handleClearFilters}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-rose-500 dark:text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 transition-colors"
-            aria-label="Clear active filters"
+            className="shrink-0 px-1.5 py-1 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 underline-offset-2 hover:underline"
           >
-            <X className="w-3 h-3" />
-            <span>Clear filters</span>
+            Clear
           </button>
         )}
       </div>
 
-      {/* Right: Sorters & Result Count */}
-      <div className="flex items-center gap-3 shrink-0">
+      {/* Right: result count and sort */}
+      <div className="flex items-center gap-3 shrink-0 text-slate-500 dark:text-slate-400">
         {activeCount !== undefined && totalCount !== undefined && (
-          <span className="text-xs text-slate-400 dark:text-slate-500">
-            {activeCount} of {totalCount}
+          <span className="hidden sm:inline tabular-nums">
+            {activeCount === totalCount ? `${totalCount} links` : `${activeCount} of ${totalCount}`}
           </span>
         )}
 
-        <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-          <ArrowUpDown className="w-3 h-3 opacity-60" />
-          <span className="opacity-70">Sort:</span>
+        <label className="flex items-center gap-1.5">
+          <ArrowUpDown className="w-3 h-3" />
+          <span className="sr-only">Sort by</span>
           <select
             value={filters.sortBy}
             onChange={(e) =>
@@ -168,16 +182,15 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                 sortBy: e.target.value as FilterState['sortBy'],
               })
             }
-            className="bg-transparent border-none text-xs font-semibold text-slate-800 dark:text-slate-200 outline-none cursor-pointer hover:text-accent transition-colors"
-            aria-label="Sort bookmarks by"
+            className="bg-transparent border-none text-xs font-medium text-slate-800 dark:text-slate-200 outline-none cursor-pointer"
           >
             <option value="newest" className="bg-white dark:bg-surface">Newest</option>
             <option value="oldest" className="bg-white dark:bg-surface">Oldest</option>
-            <option value="title" className="bg-white dark:bg-surface">Title (A-Z)</option>
-            <option value="readingTime" className="bg-white dark:bg-surface">Read Time</option>
-            <option value="aiScore" className="bg-white dark:bg-surface">AI Relevance</option>
+            <option value="title" className="bg-white dark:bg-surface">Title</option>
+            <option value="readingTime" className="bg-white dark:bg-surface">Reading time</option>
+            <option value="aiScore" className="bg-white dark:bg-surface">Relevance</option>
           </select>
-        </div>
+        </label>
       </div>
     </div>
   );
