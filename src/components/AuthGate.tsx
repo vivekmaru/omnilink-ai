@@ -124,7 +124,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
             {state === 'error' && <p className="mt-4 text-sm text-rose-600 dark:text-rose-400">The authentication service is unavailable. Try again shortly.</p>}
             <a
               href="/auth/login"
-              className="mt-7 inline-flex w-full items-center justify-center rounded-lg bg-[var(--accent)] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[var(--accent-hover)]"
+              className="mt-7 inline-flex w-full items-center justify-center rounded-lg bg-[var(--accent)] px-4 py-3 text-sm font-semibold text-on-accent transition-colors hover:bg-[var(--accent-hover)]"
             >
               Sign in
             </a>
@@ -215,7 +215,7 @@ function PasswordForm({ signupOpen, needsSetup, unavailable, onAuthenticated }: 
       <button
         type="submit"
         disabled={submitting}
-        className="mt-7 inline-flex w-full items-center justify-center rounded-lg bg-[var(--accent)] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[var(--accent-hover)] disabled:opacity-60"
+        className="mt-7 inline-flex w-full items-center justify-center rounded-lg bg-[var(--accent)] px-4 py-3 text-sm font-semibold text-on-accent transition-colors hover:bg-[var(--accent-hover)] disabled:opacity-60"
       >
         {submitting ? 'Please wait…' : isSignup ? 'Create account' : 'Sign in'}
       </button>
