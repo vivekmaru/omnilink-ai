@@ -15,7 +15,6 @@ import {
   Trash2,
   Archive,
   RotateCw,
-  Rss,
 } from 'lucide-react';
 import { LinkItem, PlatformType } from '../types';
 
@@ -154,15 +153,15 @@ export const LinkCard: React.FC<LinkCardProps> = ({
         }
         onSelect(link);
       }}
-      className={`group relative flex flex-col justify-between p-4 sm:p-5 rounded-2xl border transition-colors duration-200 cursor-pointer bg-white dark:bg-surface ${
+      className={`group relative flex flex-col -mx-3 px-3 py-4 rounded-lg transition-colors duration-150 cursor-pointer before:absolute before:inset-x-3 before:top-0 before:h-px before:bg-black/[0.07] dark:before:bg-white/[0.07] ${
         isSelected
-          ? 'ring-2 ring-accent border-accent bg-accent/[0.03] dark:bg-accent/[0.04]'
-          : 'border-slate-200/80 dark:border-white/[0.07] hover:border-slate-300 dark:hover:border-white/[0.16]'
-      } min-h-[170px] animate-card-entrance ${link.isArchived ? 'opacity-60' : ''}`}
+          ? 'bg-accent/[0.07] before:opacity-0'
+          : 'hover:bg-black/[0.03] dark:hover:bg-white/[0.03] hover:before:opacity-0'
+      } ${menuOpen ? 'z-30' : ''} animate-card-entrance ${link.isArchived ? 'opacity-60' : ''}`}
     >
-      <div className="space-y-2.5 sm:space-y-3">
-        {/* Header: source line on the left, star and menu in a fixed spot on the right */}
-        <div className="flex items-center justify-between gap-2">
+      <div className="space-y-1.5">
+        {/* Title on the left, star and menu in a fixed spot on the right */}
+        <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0 flex-1">
             {showCheckbox && (
               <button
@@ -187,30 +186,15 @@ export const LinkCard: React.FC<LinkCardProps> = ({
               </button>
             )}
 
-            <span className="inline-flex items-center gap-1.5 text-[0.8rem] text-slate-500 dark:text-slate-400 min-w-0">
-              {link.isRssFeedItem || link.feedTitle ? (
-                <Rss className="w-3 h-3 shrink-0 text-slate-400" />
-              ) : (
-                platformMeta.icon
-              )}
-              <span className="truncate">{link.feedTitle || platformMeta.name}</span>
-              {link.aiSummary?.estimatedReadTimeMinutes && (
-                <span className="shrink-0 text-slate-400 dark:text-slate-500">
-                  · {link.aiSummary.estimatedReadTimeMinutes} min read
-                </span>
-              )}
-              {statusLabel && (
-                <span
-                  className={`shrink-0 ${
-                    link.readStatus === 'reading'
-                      ? 'text-accent-hover dark:text-accent'
-                      : 'text-slate-400 dark:text-slate-500'
-                  }`}
-                >
-                  · {statusLabel}
-                </span>
-              )}
-            </span>
+            <h3
+              className={`text-[0.95rem] font-semibold leading-snug line-clamp-2 ${
+                link.readStatus === 'read'
+                  ? 'text-slate-500 dark:text-slate-400'
+                  : 'text-slate-900 dark:text-ink'
+              }`}
+            >
+              {link.title || link.url}
+            </h3>
           </div>
 
           <div className="flex items-center gap-0.5 shrink-0" onClick={(e) => e.stopPropagation()}>
@@ -336,20 +320,21 @@ export const LinkCard: React.FC<LinkCardProps> = ({
           </div>
         </div>
 
-        {/* Serif Editorial Title */}
-        <h3
-          className={`text-base font-semibold leading-snug line-clamp-2 ${
-            link.readStatus === 'read'
-              ? 'text-slate-500 dark:text-slate-400'
-              : 'text-slate-900 dark:text-ink'
-          }`}
-        >
-          {link.title || link.url}
-        </h3>
-
-        {/* Editorial Description */}
-        <p className="text-[0.88rem] leading-relaxed text-slate-600 dark:text-slate-300 line-clamp-3">
+        <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-400 line-clamp-2">
           {link.summary?.tldr || link.aiSummary?.tldr || link.description || 'No description available.'}
+        </p>
+
+        {/* Source, read time and progress in one quiet line */}
+        <p className="flex items-center gap-1.5 pt-0.5 text-xs text-slate-500 min-w-0">
+          <span className="truncate">{link.feedTitle || platformMeta.name}</span>
+          {link.aiSummary?.estimatedReadTimeMinutes && (
+            <span className="shrink-0">· {link.aiSummary.estimatedReadTimeMinutes} min read</span>
+          )}
+          {statusLabel && (
+            <span className={`shrink-0 ${link.readStatus === 'reading' ? 'text-accent' : ''}`}>
+              · {statusLabel}
+            </span>
+          )}
         </p>
       </div>
     </div>
