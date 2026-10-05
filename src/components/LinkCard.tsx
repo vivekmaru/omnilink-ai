@@ -143,6 +143,10 @@ export const LinkCard: React.FC<LinkCardProps> = ({
   return (
     <div
       id={`link-card-${link.id}`}
+      // Shift-click selects cards; stop the browser from also selecting the text between them
+      onMouseDown={(e) => {
+        if (e.shiftKey) e.preventDefault();
+      }}
       onClick={(e) => {
         if (e.shiftKey || e.metaKey || e.ctrlKey || selectionMode) {
           e.preventDefault();

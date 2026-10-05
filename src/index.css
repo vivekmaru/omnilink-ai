@@ -26,17 +26,17 @@
 
 @layer base {
   :root {
-    --bg: #f7f7f8;
-    --sidebar-bg: #f1f1f3;
+    --bg: #f5f6f2;
+    --sidebar-bg: #eceee7;
     --card-bg: #ffffff;
     --card-border: #e6e6ea;
     --card-hover-border: #c9c9d0;
     --ink: #18181b;
     --ink-muted: #52525b;
     --ink-faint: #a1a1aa;
-    --accent: #18181b;
-    --accent-hover: #3f3f46;
-    --accent-subtle: rgba(24, 24, 27, 0.08);
+    --accent: #2f6b4f;
+    --accent-hover: #255a41;
+    --accent-subtle: rgba(47, 107, 79, 0.12);
     --on-accent: #ffffff;
     --raised: #f4f4f5;
     --raised-hover: #e9e9ec;
@@ -49,18 +49,18 @@
   }
 
   .dark {
-    --bg: #0f0f11;
-    --sidebar-bg: #141416;
-    --card-bg: #18181b;
+    --bg: #0e1110;
+    --sidebar-bg: #121614;
+    --card-bg: #161b18;
     --card-border: rgba(255, 255, 255, 0.08);
     --card-hover-border: rgba(255, 255, 255, 0.18);
     --ink: #f4f4f5;
     --ink-muted: #a1a1aa;
     --ink-faint: #71717a;
-    --accent: #f4f4f5;
-    --accent-hover: #d4d4d8;
-    --accent-subtle: rgba(244, 244, 245, 0.14);
-    --on-accent: #18181b;
+    --accent: #7fc29b;
+    --accent-hover: #97d1ae;
+    --accent-subtle: rgba(127, 194, 155, 0.16);
+    --on-accent: #0e1110;
     --raised: #232327;
     --raised-hover: #2c2c31;
     --code-bg: #111113;
