@@ -180,7 +180,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Brand Header */}
         <div className="flex items-center justify-between px-1 pt-1">
           <div className="flex items-baseline gap-2">
-            <span className="font-newsreader text-2xl font-medium tracking-tight text-slate-900 dark:text-[#f7f6f3]">
+            <span className="text-xl font-semibold tracking-tight text-slate-900 dark:text-ink">
               OmniLink
             </span>
             <span className="badge-ai">
@@ -215,7 +215,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onClick={() => handleLibrarySelect('all', false, false)}
                   className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] transition-colors ${
                     isLibraryActive('all', false, false)
-                      ? 'bg-[#d97757]/10 text-[#d97757] dark:bg-[#e08264]/15 dark:text-[#e08264] font-semibold'
+                      ? 'bg-black/[0.06] dark:bg-white/10 text-slate-900 dark:text-ink font-semibold'
                       : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
                   }`}
                 >
@@ -232,7 +232,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onClick={() => handleLibrarySelect('unread', false, false)}
                   className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] transition-colors ${
                     isLibraryActive('unread', false, false)
-                      ? 'bg-[#d97757]/10 text-[#d97757] dark:bg-[#e08264]/15 dark:text-[#e08264] font-semibold'
+                      ? 'bg-black/[0.06] dark:bg-white/10 text-slate-900 dark:text-ink font-semibold'
                       : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
                   }`}
                 >
@@ -249,7 +249,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onClick={() => handleLibrarySelect('reading', false, false)}
                   className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] transition-colors ${
                     isLibraryActive('reading', false, false)
-                      ? 'bg-[#d97757]/10 text-[#d97757] dark:bg-[#e08264]/15 dark:text-[#e08264] font-semibold'
+                      ? 'bg-black/[0.06] dark:bg-white/10 text-slate-900 dark:text-ink font-semibold'
                       : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
                   }`}
                 >
@@ -266,7 +266,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onClick={() => handleLibrarySelect('read', false, false)}
                   className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] transition-colors ${
                     isLibraryActive('read', false, false)
-                      ? 'bg-[#d97757]/10 text-[#d97757] dark:bg-[#e08264]/15 dark:text-[#e08264] font-semibold'
+                      ? 'bg-black/[0.06] dark:bg-white/10 text-slate-900 dark:text-ink font-semibold'
                       : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
                   }`}
                 >
@@ -283,7 +283,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onClick={() => handleLibrarySelect('all', true, false)}
                   className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] transition-colors ${
                     isLibraryActive('all', true, false)
-                      ? 'bg-[#d97757]/10 text-[#d97757] dark:bg-[#e08264]/15 dark:text-[#e08264] font-semibold'
+                      ? 'bg-black/[0.06] dark:bg-white/10 text-slate-900 dark:text-ink font-semibold'
                       : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
                   }`}
                 >
@@ -300,7 +300,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onClick={() => handleLibrarySelect('all', false, true)}
                   className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] transition-colors ${
                     isLibraryActive('all', false, true)
-                      ? 'bg-[#d97757]/10 text-[#d97757] dark:bg-[#e08264]/15 dark:text-[#e08264] font-semibold'
+                      ? 'bg-black/[0.06] dark:bg-white/10 text-slate-900 dark:text-ink font-semibold'
                       : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
                   }`}
                 >
@@ -349,7 +349,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       }}
                       className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] transition-colors ${
                         isSelected
-                          ? 'bg-[#d97757]/10 text-[#d97757] dark:bg-[#e08264]/15 dark:text-[#e08264] font-semibold'
+                          ? 'bg-black/[0.06] dark:bg-white/10 text-slate-900 dark:text-ink font-semibold'
                           : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
                       }`}
                     >
@@ -396,7 +396,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         }}
                         className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[0.85rem] transition-colors ${
                           isSelected
-                            ? 'bg-[#d97757]/10 text-[#d97757] dark:bg-[#e08264]/15 dark:text-[#e08264] font-semibold'
+                            ? 'bg-black/[0.06] dark:bg-white/10 text-slate-900 dark:text-ink font-semibold'
                             : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
                         }`}
                       >
@@ -457,7 +457,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 syncStatus === 'synced'
                   ? 'bg-emerald-500'
                   : syncStatus === 'syncing'
-                  ? 'bg-[#d97757] animate-ping'
+                  ? 'bg-accent animate-ping'
                   : 'bg-rose-500'
               }`}
             />

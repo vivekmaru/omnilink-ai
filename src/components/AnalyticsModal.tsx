@@ -244,7 +244,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby="analytics-modal-title"
-        className="w-full max-w-4xl max-h-[90vh] flex flex-col rounded-xl border shadow-2xl overflow-hidden transition-all text-slate-900 dark:text-[#f7f6f3]"
+        className="w-full max-w-4xl max-h-[90vh] flex flex-col rounded-xl border shadow-2xl overflow-hidden transition-all text-slate-900 dark:text-ink"
         style={{
           backgroundColor: 'var(--bg)',
           borderColor: 'var(--card-border)',
@@ -253,7 +253,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-black/10 dark:border-white/10 shrink-0 bg-black/5 dark:bg-white/5">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-[#d97757]/10 dark:bg-[#e08264]/15 text-[#d97757] dark:text-[#e08264] border border-[#d97757]/20">
+            <div className="p-2 rounded-lg bg-accent/10 dark:bg-accent/15 text-accent border border-accent/20">
               <BarChart3 className="w-5 h-5" />
             </div>
             <div>
@@ -286,7 +286,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
             onClick={() => setActiveTab('overview')}
             className={`px-3.5 py-2 text-sm font-medium border-b-2 transition-all flex items-center gap-2 whitespace-nowrap ${
               activeTab === 'overview'
-                ? 'border-[#d97757] text-[#d97757] dark:text-[#e08264] font-semibold'
+                ? 'border-accent text-accent font-semibold'
                 : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
             }`}
           >
@@ -298,7 +298,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
             onClick={() => setActiveTab('platforms')}
             className={`px-3.5 py-2 text-sm font-medium border-b-2 transition-all flex items-center gap-2 whitespace-nowrap ${
               activeTab === 'platforms'
-                ? 'border-[#d97757] text-[#d97757] dark:text-[#e08264] font-semibold'
+                ? 'border-accent text-accent font-semibold'
                 : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
             }`}
           >
@@ -310,7 +310,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
             onClick={() => setActiveTab('tags')}
             className={`px-3.5 py-2 text-sm font-medium border-b-2 transition-all flex items-center gap-2 whitespace-nowrap ${
               activeTab === 'tags'
-                ? 'border-[#d97757] text-[#d97757] dark:text-[#e08264] font-semibold'
+                ? 'border-accent text-accent font-semibold'
                 : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
             }`}
           >
@@ -322,7 +322,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
             onClick={() => setActiveTab('reading')}
             className={`px-3.5 py-2 text-sm font-medium border-b-2 transition-all flex items-center gap-2 whitespace-nowrap ${
               activeTab === 'reading'
-                ? 'border-[#d97757] text-[#d97757] dark:text-[#e08264] font-semibold'
+                ? 'border-accent text-accent font-semibold'
                 : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
             }`}
           >
@@ -345,7 +345,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                     <span>Total Vault Links</span>
                     <Layers className="w-3.5 h-3.5 opacity-60" />
                   </div>
-                  <div className="tabular-nums text-2xl font-bold tracking-tight text-slate-900 dark:text-[#f7f6f3]">
+                  <div className="tabular-nums text-2xl font-bold tracking-tight text-slate-900 dark:text-ink">
                     {analyticsData.total}
                   </div>
                   <div className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1">
@@ -373,7 +373,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                     <span>Est. Reading Time</span>
                     <Clock className="w-3.5 h-3.5 text-amber-500" />
                   </div>
-                  <div className="tabular-nums text-2xl font-bold tracking-tight text-slate-900 dark:text-[#f7f6f3]">
+                  <div className="tabular-nums text-2xl font-bold tracking-tight text-slate-900 dark:text-ink">
                     {analyticsData.totalHours > 0 ? `${analyticsData.totalHours}h ` : ''}{analyticsData.remainingMins}m
                   </div>
                   <div className="text-xs text-slate-400 dark:text-slate-500">
@@ -384,9 +384,9 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                 <div className="p-4 rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 space-y-1">
                   <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
                     <span>AI Knowledge Density</span>
-                    <Sparkles className="w-3.5 h-3.5 text-[#d97757] dark:text-[#e08264]" />
+                    <Sparkles className="w-3.5 h-3.5 text-accent" />
                   </div>
-                  <div className="tabular-nums text-2xl font-bold tracking-tight text-[#d97757] dark:text-[#e08264]">
+                  <div className="tabular-nums text-2xl font-bold tracking-tight text-accent">
                     {analyticsData.avgAiScore}<span className="text-sm font-normal text-slate-400">/100</span>
                   </div>
                   <div className="text-xs text-slate-400 dark:text-slate-500">
@@ -399,7 +399,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
               <div className="p-5 rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <BookOpen className="w-4 h-4 text-[#d97757] dark:text-[#e08264]" />
+                    <BookOpen className="w-4 h-4 text-accent" />
                     <h3 className="text-sm font-semibold tracking-tight">Read vs. Unread Ratio</h3>
                   </div>
                   <span className="text-xs text-slate-400">
@@ -446,7 +446,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                         <div className="w-2 h-2 rounded-full bg-amber-500" />
                         <span>Unread Inbox</span>
                       </div>
-                      <div className="tabular-nums text-lg font-bold text-slate-900 dark:text-[#f7f6f3] mt-0.5">
+                      <div className="tabular-nums text-lg font-bold text-slate-900 dark:text-ink mt-0.5">
                         {analyticsData.unread} <span className="text-xs font-normal text-slate-400">({analyticsData.unreadRate}%)</span>
                       </div>
                     </div>
@@ -462,7 +462,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                         <div className="w-2 h-2 rounded-full bg-cyan-500" />
                         <span>In Progress</span>
                       </div>
-                      <div className="tabular-nums text-lg font-bold text-slate-900 dark:text-[#f7f6f3] mt-0.5">
+                      <div className="tabular-nums text-lg font-bold text-slate-900 dark:text-ink mt-0.5">
                         {analyticsData.reading} <span className="text-xs font-normal text-slate-400">({analyticsData.readingRate}%)</span>
                       </div>
                     </div>
@@ -478,7 +478,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                         <div className="w-2 h-2 rounded-full bg-emerald-500" />
                         <span>Reviewed & Done</span>
                       </div>
-                      <div className="tabular-nums text-lg font-bold text-slate-900 dark:text-[#f7f6f3] mt-0.5">
+                      <div className="tabular-nums text-lg font-bold text-slate-900 dark:text-ink mt-0.5">
                         {analyticsData.read} <span className="text-xs font-normal text-slate-400">({analyticsData.completionRate}%)</span>
                       </div>
                     </div>
@@ -499,7 +499,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                     </div>
                     <button
                       onClick={() => setActiveTab('platforms')}
-                      className="text-xs text-[#d97757] dark:text-[#e08264] hover:underline"
+                      className="text-xs text-accent hover:underline"
                     >
                       View all ({analyticsData.platformsSorted.length})
                     </button>
@@ -526,7 +526,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                           <div className="w-full h-1.5 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden">
                             <div
                               style={{ width: `${Math.max(p.percentage, 4)}%` }}
-                              className="h-full bg-[#d97757] dark:bg-[#e08264] rounded-full transition-all duration-500"
+                              className="h-full bg-accent rounded-full transition-all duration-500"
                             />
                           </div>
                         </div>
@@ -599,7 +599,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                     <div
                       key={item.platform}
                       onClick={() => handleSelectPlatform(item.platform)}
-                      className="p-3.5 rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 hover:border-[#d97757]/40 dark:hover:border-[#e08264]/40 transition-all cursor-pointer group"
+                      className="p-3.5 rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 hover:border-accent/40 transition-all cursor-pointer group"
                     >
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2.5">
@@ -615,10 +615,10 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                         </div>
 
                         <div className="flex items-center gap-3">
-                          <span className="text-xs font-bold text-slate-900 dark:text-[#f7f6f3]">
+                          <span className="text-xs font-bold text-slate-900 dark:text-ink">
                             {item.count} <span className="text-xs font-normal text-slate-400">({item.percentage}%)</span>
                           </span>
-                          <span className="text-xs text-[#d97757] dark:text-[#e08264] opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                          <span className="text-xs text-accent opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
                             Filter <ArrowRight className="w-3 h-3" />
                           </span>
                         </div>
@@ -628,7 +628,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                       <div className="w-full h-2.5 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden">
                         <div
                           style={{ width: `${Math.max(item.percentage, 2)}%` }}
-                          className="h-full bg-gradient-to-r from-[#d97757] to-[#c46243] dark:from-[#e08264] dark:to-[#d97757] rounded-full transition-all duration-500"
+                          className="h-full bg-gradient-to-r from-accent to-accent-hover dark:to-accent rounded-full transition-all duration-500"
                         />
                       </div>
                     </div>
@@ -663,8 +663,8 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                       onClick={() => handleSelectTag(t.tag)}
                       className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-2 ${
                         idx < 3
-                          ? 'bg-[#d97757]/15 text-[#d97757] dark:bg-[#e08264]/20 dark:text-[#e08264] border border-[#d97757]/30 font-semibold'
-                          : 'bg-black/5 dark:bg-white/5 text-slate-700 dark:text-slate-300 border border-black/10 dark:border-white/10 hover:border-[#d97757]/40'
+                          ? 'bg-accent/15 text-accent dark:bg-accent/20 border border-accent/30 font-semibold'
+                          : 'bg-black/5 dark:bg-white/5 text-slate-700 dark:text-slate-300 border border-black/10 dark:border-white/10 hover:border-accent/40'
                       }`}
                     >
                       <span>#{t.tag}</span>
@@ -683,7 +683,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                   <div
                     key={t.tag}
                     onClick={() => handleSelectTag(t.tag)}
-                    className="p-3 rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 hover:border-[#d97757]/40 dark:hover:border-[#e08264]/40 transition-all cursor-pointer group"
+                    className="p-3 rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 hover:border-accent/40 transition-all cursor-pointer group"
                   >
                     <div className="flex items-center justify-between text-xs mb-1.5">
                       <div className="flex items-center gap-2">
@@ -731,7 +731,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <div className="p-3.5 rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 space-y-1">
                     <span className="text-xs text-slate-400 font-medium">Quick Snippets (&lt;3m)</span>
-                    <div className="tabular-nums text-xl font-bold text-slate-900 dark:text-[#f7f6f3]">
+                    <div className="tabular-nums text-xl font-bold text-slate-900 dark:text-ink">
                       {analyticsData.quickReads}
                     </div>
                     <span className="text-xs text-slate-400">Shorts, tweets, quick tips</span>
@@ -739,7 +739,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
 
                   <div className="p-3.5 rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 space-y-1">
                     <span className="text-xs text-slate-400 font-medium">Standard Reads (3-10m)</span>
-                    <div className="tabular-nums text-xl font-bold text-slate-900 dark:text-[#f7f6f3]">
+                    <div className="tabular-nums text-xl font-bold text-slate-900 dark:text-ink">
                       {analyticsData.mediumReads}
                     </div>
                     <span className="text-xs text-slate-400">Articles, tutorials, repos</span>
@@ -747,7 +747,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
 
                   <div className="p-3.5 rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 space-y-1">
                     <span className="text-xs text-slate-400 font-medium">Deep Dives (10-30m)</span>
-                    <div className="tabular-nums text-xl font-bold text-slate-900 dark:text-[#f7f6f3]">
+                    <div className="tabular-nums text-xl font-bold text-slate-900 dark:text-ink">
                       {analyticsData.deepDives}
                     </div>
                     <span className="text-xs text-slate-400">RFCs, architectural guides</span>
@@ -755,7 +755,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
 
                   <div className="p-3.5 rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 space-y-1">
                     <span className="text-xs text-slate-400 font-medium">Long Form (30m+)</span>
-                    <div className="tabular-nums text-xl font-bold text-slate-900 dark:text-[#f7f6f3]">
+                    <div className="tabular-nums text-xl font-bold text-slate-900 dark:text-ink">
                       {analyticsData.longForm}
                     </div>
                     <span className="text-xs text-slate-400">ArXiv papers, video courses</span>

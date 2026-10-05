@@ -54,7 +54,7 @@ export const StatsBar: React.FC<StatsBarProps> = ({
               onClick={() => onSelectPlatform('all')}
               className={`px-2.5 py-1 rounded-md font-medium transition-all ${
                 selectedPlatform === 'all'
-                  ? 'bg-[#d97757] text-white dark:bg-[#e08264] dark:text-slate-950 shadow-xs font-semibold'
+                  ? 'bg-accent text-on-accent dark:text-slate-950 shadow-xs font-semibold'
                   : 'bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white'
               }`}
             >
@@ -71,7 +71,7 @@ export const StatsBar: React.FC<StatsBarProps> = ({
                   onClick={() => onSelectPlatform(isActive ? 'all' : p.id)}
                   className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md font-medium transition-all ${
                     isActive
-                      ? 'bg-[#d97757] text-white dark:bg-[#e08264] dark:text-slate-950 shadow-xs font-semibold'
+                      ? 'bg-accent text-on-accent dark:text-slate-950 shadow-xs font-semibold'
                       : 'bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white'
                   }`}
                 >
@@ -102,7 +102,7 @@ export const StatsBar: React.FC<StatsBarProps> = ({
             </div>
             <span className="opacity-40">•</span>
             <div className="flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-[#d97757] dark:text-[#e08264]" />
+              <Sparkles className="w-3.5 h-3.5 text-accent" />
               <span className="text-xs">Insights &rarr;</span>
             </div>
           </div>

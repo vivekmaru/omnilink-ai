@@ -26,13 +26,13 @@ const CodeBlock: React.FC<{ language: string; code: string; variant?: 'compact' 
 
   return (
     <div
-      className={`my-4 rounded-xl border border-black/10 dark:border-white/10 overflow-hidden bg-[#18181b] text-slate-200 font-mono shadow-xs ${
+      className={`my-4 rounded-xl border border-black/10 dark:border-white/10 overflow-hidden bg-surface text-slate-200 font-mono shadow-xs ${
         variant === 'article' ? 'text-xs sm:text-[0.85rem] my-6' : 'text-xs my-3'
       }`}
     >
       <div className="flex items-center justify-between px-3.5 py-1.5 bg-black/40 border-b border-white/5 text-[11px] text-slate-400">
         <div className="flex items-center gap-1.5">
-          <Code2 className="w-3.5 h-3.5 text-[#d97757]" />
+          <Code2 className="w-3.5 h-3.5 text-accent" />
           <span className="font-semibold text-slate-300 uppercase">{language || 'code'}</span>
         </div>
         <button
@@ -66,7 +66,7 @@ const CitationPill: React.FC<{
         type="button"
         onClick={() => onOpenLinkDetail(targetLink)}
         title={`View Source: "${targetLink.title}"`}
-        className="inline-flex items-center gap-1 mx-1 px-2 py-0.5 rounded-md text-[11px] font-mono font-semibold bg-[#d97757]/10 text-[#d97757] dark:text-[#e08264] hover:bg-[#d97757]/20 border border-[#d97757]/30 transition-all cursor-pointer align-baseline shadow-2xs group"
+        className="inline-flex items-center gap-1 mx-1 px-2 py-0.5 rounded-md text-[11px] font-mono font-semibold bg-accent/10 text-accent hover:bg-accent/20 border border-accent/30 transition-all cursor-pointer align-baseline shadow-2xs group"
       >
         <Bookmark className="w-2.5 h-2.5 opacity-70 group-hover:opacity-100" />
         <span className="truncate max-w-[150px]">{targetLink.title}</span>
@@ -203,7 +203,7 @@ export const renderInlineMarkdown = (
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[#d97757] dark:text-[#e08264] underline underline-offset-3 hover:opacity-80 transition-opacity font-medium"
+          className="text-accent underline underline-offset-3 hover:opacity-80 transition-opacity font-medium"
         >
           {renderInlineMarkdown(label, links, onOpenLinkDetail, `${key}-lbl`)}
         </a>
@@ -215,7 +215,7 @@ export const renderInlineMarkdown = (
       result.push(
         <code
           key={key}
-          className="px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10 text-[#d97757] dark:text-[#e08264] font-mono text-[0.88em] border border-black/5 dark:border-white/10 font-medium"
+          className="px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10 text-accent font-mono text-[0.88em] border border-black/5 dark:border-white/10 font-medium"
         >
           {code}
         </code>
@@ -240,7 +240,7 @@ export const renderInlineMarkdown = (
     ) {
       const inner = token.slice(2, -2);
       result.push(
-        <strong key={key} className="font-bold text-slate-900 dark:text-[#f7f6f3]">
+        <strong key={key} className="font-bold text-slate-900 dark:text-ink">
           {renderInlineMarkdown(inner, links, onOpenLinkDetail, `${key}-b`)}
         </strong>
       );
@@ -342,7 +342,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
         elements.push(
           <h1
             key={`h1-${blockKey++}`}
-            className={`font-newsreader font-bold text-slate-900 dark:text-[#f7f6f3] border-b border-black/5 dark:border-white/5 ${
+            className={`font-bold text-slate-900 dark:text-ink border-b border-black/5 dark:border-white/5 ${
               isArticle ? 'text-2xl sm:text-3xl mt-8 mb-4 pb-2' : 'text-lg sm:text-xl mt-4 mb-2 pb-1'
             }`}
           >
@@ -353,7 +353,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
         elements.push(
           <h2
             key={`h2-${blockKey++}`}
-            className={`font-newsreader font-semibold text-slate-900 dark:text-[#f7f6f3] ${
+            className={`font-semibold text-slate-900 dark:text-ink ${
               isArticle ? 'text-xl sm:text-2xl mt-7 mb-3' : 'text-base sm:text-lg mt-3.5 mb-1.5'
             }`}
           >
@@ -364,7 +364,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
         elements.push(
           <h3
             key={`h3-${blockKey++}`}
-            className={`font-newsreader font-semibold text-[#d97757] dark:text-[#e08264] ${
+            className={`font-semibold text-accent ${
               isArticle ? 'text-lg sm:text-xl mt-6 mb-2.5' : 'text-sm sm:text-base mt-3 mb-1'
             }`}
           >
@@ -375,7 +375,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
         elements.push(
           <h4
             key={`h4-${blockKey++}`}
-            className={`font-newsreader font-semibold text-slate-800 dark:text-slate-200 ${
+            className={`font-semibold text-slate-800 dark:text-slate-200 ${
               isArticle ? 'text-base sm:text-lg mt-5 mb-2' : 'text-xs sm:text-sm mt-2 mb-1'
             }`}
           >
@@ -459,7 +459,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
         elements.push(
           <div key={`table-${blockKey++}`} className="overflow-x-auto my-5 rounded-xl border border-black/10 dark:border-white/10 shadow-2xs">
             <table className="w-full text-xs sm:text-sm text-left border-collapse">
-              <thead className="bg-black/5 dark:bg-white/5 border-b border-black/10 dark:border-white/10 text-slate-900 dark:text-[#f7f6f3] font-semibold">
+              <thead className="bg-black/5 dark:bg-white/5 border-b border-black/10 dark:border-white/10 text-slate-900 dark:text-ink font-semibold">
                 <tr>
                   {headerRow.map((cell, cIdx) => (
                     <th key={cIdx} className="px-4 py-2.5 font-mono">
@@ -553,7 +553,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                     isArticle ? 'font-newsreader text-base sm:text-lg' : 'text-xs sm:text-sm'
                   }`}
                 >
-                  <span className="font-mono font-bold text-[#d97757] dark:text-[#e08264] shrink-0 text-xs mt-1">
+                  <span className="font-mono font-bold text-accent shrink-0 text-xs mt-1">
                     {item.num || itIdx + 1}.
                   </span>
                   <div className="flex-1">
@@ -570,7 +570,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                           isArticle ? 'font-newsreader text-sm sm:text-base' : 'text-xs'
                         }`}
                       >
-                        <span className="text-[#d97757]/70 dark:text-[#e08264]/70 shrink-0 text-[10px] mt-1.5">•</span>
+                        <span className="text-accent/70 shrink-0 text-[10px] mt-1.5">•</span>
                         <div className="flex-1">
                           {renderInlineMarkdown(sub, links, onOpenLinkDetail, `sub-${blockKey}-${itIdx}-${sIdx}`)}
                         </div>
@@ -595,7 +595,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                     isArticle ? 'font-newsreader text-base sm:text-lg' : 'text-xs sm:text-sm'
                   }`}
                 >
-                  <span className="text-[#d97757] dark:text-[#e08264] shrink-0 text-sm mt-0.5">•</span>
+                  <span className="text-accent shrink-0 text-sm mt-0.5">•</span>
                   <div className="flex-1">
                     {renderInlineMarkdown(item.text, links, onOpenLinkDetail, `ul-${blockKey}-${itIdx}`)}
                   </div>

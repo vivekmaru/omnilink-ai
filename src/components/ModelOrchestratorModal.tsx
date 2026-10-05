@@ -122,7 +122,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
         role={isPage ? 'region' : 'dialog'}
         aria-modal={isPage ? undefined : true}
         aria-labelledby="model-orchestrator-modal-title"
-        className={isPage ? 'h-full flex flex-col overflow-hidden text-slate-900 dark:text-[#f7f6f3]' : 'border rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden bg-white dark:bg-[#18181b] text-slate-900 dark:text-[#f7f6f3]'}
+        className={isPage ? 'h-full flex flex-col overflow-hidden text-slate-900 dark:text-ink' : 'border rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden bg-white dark:bg-surface text-slate-900 dark:text-ink'}
         style={{
           backgroundColor: 'var(--card-bg)',
           borderColor: 'var(--card-border)',
@@ -131,12 +131,12 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-black/10 dark:border-white/10 bg-black/[0.02] dark:bg-white/[0.02]">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 flex items-center justify-center text-[#d97757] dark:text-[#e08264]">
+            <div className="w-8 h-8 rounded-xl bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 flex items-center justify-center text-accent">
               <Cpu className="w-4 h-4" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 id="model-orchestrator-modal-title" className="text-lg font-semibold tracking-tight text-slate-900 dark:text-[#f7f6f3]">
+                <h2 id="model-orchestrator-modal-title" className="text-lg font-semibold tracking-tight text-slate-900 dark:text-ink">
                   AI models
                 </h2>
                 <span className="px-2 py-0.5 text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-full flex items-center gap-1">
@@ -181,7 +181,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
         {/* Global Summary Metrics Strip */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 px-6 py-4 border-b border-black/10 dark:border-white/10 bg-black/[0.01] dark:bg-white/[0.01]">
           {aiUsage && (
-            <div className="col-span-2 sm:col-span-4 p-3 rounded-xl bg-[#d97757]/10 border border-[#d97757]/20">
+            <div className="col-span-2 sm:col-span-4 p-3 rounded-xl bg-accent/10 border border-accent/20">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-slate-500 dark:text-slate-400">AI quota</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200">
@@ -193,14 +193,14 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
           )}
           <div className="p-3 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-black/5 dark:border-white/5">
             <span className="text-xs text-slate-400 block mb-0.5">Total AI Calls</span>
-            <span className="text-base font-bold tabular-nums text-slate-900 dark:text-[#f7f6f3]">
+            <span className="text-base font-bold tabular-nums text-slate-900 dark:text-ink">
               {stats?.totalRequests || 0}
             </span>
           </div>
 
           <div className="p-3 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-black/5 dark:border-white/5">
             <span className="text-xs text-slate-400 block mb-0.5">Est. API Cost</span>
-            <span className="text-base font-bold tabular-nums text-[#d97757] dark:text-[#e08264]">
+            <span className="text-base font-bold tabular-nums text-accent">
               {formatCost(stats?.totalEstimatedCostUsd || 0)}
             </span>
           </div>
@@ -214,7 +214,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
 
           <div className="p-3 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-black/5 dark:border-white/5">
             <span className="text-xs text-slate-400 block mb-0.5">Success Rate</span>
-            <span className="text-base font-bold tabular-nums text-slate-900 dark:text-[#f7f6f3]">
+            <span className="text-base font-bold tabular-nums text-slate-900 dark:text-ink">
               {stats && stats.totalRequests > 0
                 ? Math.round((stats.successCount / stats.totalRequests) * 100)
                 : 100}
@@ -230,7 +230,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
             onClick={() => setActiveTab('models')}
             className={`pb-2.5 px-3 font-medium border-b-2 transition-all flex items-center gap-1.5 ${
               activeTab === 'models'
-                ? 'border-[#d97757] text-[#d97757] dark:text-[#e08264] font-semibold'
+                ? 'border-accent text-accent font-semibold'
                 : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
@@ -243,7 +243,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
             onClick={() => setActiveTab('logs')}
             className={`pb-2.5 px-3 font-medium border-b-2 transition-all flex items-center gap-1.5 ${
               activeTab === 'logs'
-                ? 'border-[#d97757] text-[#d97757] dark:text-[#e08264] font-semibold'
+                ? 'border-accent text-accent font-semibold'
                 : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
@@ -263,7 +263,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
               onClick={() => setActiveTab('simulator')}
               className={`pb-2.5 px-3 font-medium border-b-2 transition-all flex items-center gap-1.5 ${
                 activeTab === 'simulator'
-                  ? 'border-[#d97757] text-[#d97757] dark:text-[#e08264] font-semibold'
+                  ? 'border-accent text-accent font-semibold'
                   : 'border-transparent text-amber-600/80 dark:text-amber-400/80 hover:text-amber-600'
               }`}
             >
@@ -281,7 +281,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
               {/* Active Model Cards */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-base font-semibold text-slate-900 dark:text-[#f7f6f3]">
+                  <h3 className="text-base font-semibold text-slate-900 dark:text-ink">
                     Models in use
                   </h3>
                   <span className="text-xs text-slate-400">
@@ -304,7 +304,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
                           {/* Top row: Model Name & Tier */}
                           <div className="flex items-center justify-between gap-2 mb-1.5">
                             <div className="flex items-center gap-2 min-w-0">
-                              <span className="text-xs font-bold text-slate-900 dark:text-[#f7f6f3] truncate">
+                              <span className="text-xs font-bold text-slate-900 dark:text-ink truncate">
                                 {model.id}
                               </span>
                             </div>
@@ -314,8 +314,8 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
                           </div>
 
                           {/* When this model is used */}
-                          <div className="p-2.5 rounded-lg bg-white dark:bg-[#18181b] border border-black/5 dark:border-white/5 text-xs text-slate-700 dark:text-slate-300 leading-relaxed mb-2.5">
-                            <div className="text-xs font-semibold text-[#d97757] dark:text-[#e08264] mb-0.5 flex items-center gap-1">
+                          <div className="p-2.5 rounded-lg bg-white dark:bg-surface border border-black/5 dark:border-white/5 text-xs text-slate-700 dark:text-slate-300 leading-relaxed mb-2.5">
+                            <div className="text-xs font-semibold text-accent mb-0.5 flex items-center gap-1">
                               <Sparkles className="w-2.5 h-2.5" />
                               <span>Used for</span>
                             </div>
@@ -334,7 +334,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
 
                           <div>
                             <span className="text-slate-400 text-xs block">Est. Cost</span>
-                            <span className="font-semibold text-[#d97757] dark:text-[#e08264]">
+                            <span className="font-semibold text-accent">
                               {formatCost(model.estimatedCostUsd || 0)}
                             </span>
                           </div>
@@ -355,7 +355,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
               {/* Task Routing Matrix Guide */}
               <div className="bg-black/[0.02] dark:bg-white/[0.02] border border-black/10 dark:border-white/10 rounded-xl overflow-hidden">
                 <div className="px-4 py-3 bg-black/[0.02] dark:bg-white/[0.02] border-b border-black/10 dark:border-white/10 flex items-center justify-between">
-                  <span className="text-xs font-semibold text-slate-900 dark:text-[#f7f6f3]">
+                  <span className="text-xs font-semibold text-slate-900 dark:text-ink">
                     Task Routing Rules & Failover Matrix
                   </span>
                   <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
@@ -366,7 +366,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
 
                 <div className="divide-y divide-black/5 dark:divide-white/5 text-xs">
                   <div className="p-3.5 grid grid-cols-12 gap-3 items-center hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors">
-                    <div className="col-span-4 font-medium text-slate-900 dark:text-[#f7f6f3] flex items-center gap-2">
+                    <div className="col-span-4 font-medium text-slate-900 dark:text-ink flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                       Quick Metadata & Tags
                     </div>
@@ -379,11 +379,11 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
                   </div>
 
                   <div className="p-3.5 grid grid-cols-12 gap-3 items-center hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors">
-                    <div className="col-span-4 font-medium text-slate-900 dark:text-[#f7f6f3] flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-[#d97757]"></span>
+                    <div className="col-span-4 font-medium text-slate-900 dark:text-ink flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-accent"></span>
                       Single Link Summaries
                     </div>
-                    <div className="col-span-4 text-[#d97757] dark:text-[#e08264] text-xs">
+                    <div className="col-span-4 text-accent text-xs">
                       gemini-3.7-flash
                     </div>
                     <div className="col-span-4 text-xs text-slate-400 text-right">
@@ -392,7 +392,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
                   </div>
 
                   <div className="p-3.5 grid grid-cols-12 gap-3 items-center hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors">
-                    <div className="col-span-4 font-medium text-slate-900 dark:text-[#f7f6f3] flex items-center gap-2">
+                    <div className="col-span-4 font-medium text-slate-900 dark:text-ink flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full bg-amber-500"></span>
                       Ask Repo AI & Clustering
                     </div>
@@ -405,7 +405,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
                   </div>
 
                   <div className="p-3.5 grid grid-cols-12 gap-3 items-center hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors">
-                    <div className="col-span-4 font-medium text-slate-900 dark:text-[#f7f6f3] flex items-center gap-2">
+                    <div className="col-span-4 font-medium text-slate-900 dark:text-ink flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                       RSS Batch Feed Ingestion
                     </div>
@@ -426,7 +426,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
             <div className="space-y-4">
               <div className="bg-black/[0.02] dark:bg-white/[0.02] border border-black/10 dark:border-white/10 rounded-xl overflow-hidden">
                 <div className="px-4 py-3 bg-black/[0.02] dark:bg-white/[0.02] border-b border-black/10 dark:border-white/10 flex items-center justify-between">
-                  <span className="text-xs font-semibold text-slate-900 dark:text-[#f7f6f3]">
+                  <span className="text-xs font-semibold text-slate-900 dark:text-ink">
                     Live AI Operation Trace
                   </span>
                   <span className="text-xs text-slate-500 dark:text-slate-400">
@@ -462,7 +462,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
                         <div className="col-span-2 text-right text-slate-500 dark:text-slate-400 text-xs">
                           {log.latencyMs} ms
                         </div>
-                        <div className="col-span-2 text-right text-xs text-[#d97757] dark:text-[#e08264]">
+                        <div className="col-span-2 text-right text-xs text-accent">
                           {formatCost(log.estimatedCostUsd || 0)}
                         </div>
                       </div>
@@ -495,7 +495,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
                     <select
                       value={testTask}
                       onChange={(e) => setTestTask(e.target.value as ModelTaskType)}
-                      className="w-full bg-white dark:bg-[#18181b] border border-black/10 dark:border-white/10 text-slate-900 dark:text-[#f7f6f3] rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#d97757]"
+                      className="w-full bg-white dark:bg-surface border border-black/10 dark:border-white/10 text-slate-900 dark:text-ink rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-accent"
                     >
                       <option value="quick_metadata">Quick Metadata / Title Preview</option>
                       <option value="auto_tagging">Smart Auto-Tagging & Suggestions</option>
@@ -514,7 +514,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
                       value={testUrl}
                       onChange={(e) => setTestUrl(e.target.value)}
                       placeholder="https://..."
-                      className="w-full bg-white dark:bg-[#18181b] border border-black/10 dark:border-white/10 text-slate-900 dark:text-[#f7f6f3] rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#d97757]"
+                      className="w-full bg-white dark:bg-surface border border-black/10 dark:border-white/10 text-slate-900 dark:text-ink rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-accent"
                     />
                   </div>
                 </div>
@@ -528,7 +528,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
                     value={testSnippet}
                     onChange={(e) => setTestSnippet(e.target.value)}
                     placeholder="Enter context, code snippets, or user prompt..."
-                    className="w-full bg-white dark:bg-[#18181b] border border-black/10 dark:border-white/10 text-slate-900 dark:text-[#f7f6f3] rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#d97757]"
+                    className="w-full bg-white dark:bg-surface border border-black/10 dark:border-white/10 text-slate-900 dark:text-ink rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-accent"
                   />
                 </div>
 
@@ -536,7 +536,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
                   id="orchestrator-eval-btn"
                   onClick={runSimulator}
                   disabled={simulating}
-                  className="w-full py-2 bg-[#d97757] hover:bg-[#c46243] text-white rounded-xl text-xs font-semibold shadow-xs transition-colors flex items-center justify-center gap-2"
+                  className="w-full py-2 bg-accent hover:bg-accent-hover text-on-accent rounded-xl text-xs font-semibold shadow-xs transition-colors flex items-center justify-center gap-2"
                 >
                   {simulating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
                   Evaluate Model Selection
@@ -544,11 +544,11 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
               </div>
 
               {simulatedDecision && (
-                <div className="bg-black/[0.03] dark:bg-white/[0.03] border border-[#d97757]/30 rounded-xl p-5 space-y-4">
+                <div className="bg-black/[0.03] dark:bg-white/[0.03] border border-accent/30 rounded-xl p-5 space-y-4">
                   <div className="flex items-center justify-between border-b border-black/10 dark:border-white/10 pb-3">
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-slate-500 dark:text-slate-400">Selected Model:</span>
-                      <span className="px-2.5 py-0.5 bg-[#d97757]/10 border border-[#d97757]/20 text-[#d97757] dark:text-[#e08264] rounded-md text-xs font-semibold">
+                      <span className="px-2.5 py-0.5 bg-accent/10 border border-accent/20 text-accent rounded-md text-xs font-semibold">
                         {simulatedDecision.selectedModel}
                       </span>
                       {simulatedDecision.thinkingLevel && (
@@ -569,7 +569,7 @@ export const ModelOrchestratorModal: React.FC<ModelOrchestratorModalProps> = ({
                     <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 block mb-1">
                       Routing Rationale:
                     </span>
-                    <p className="text-xs text-slate-600 dark:text-slate-400 bg-white dark:bg-[#18181b] p-3 rounded-lg border border-black/10 dark:border-white/10 leading-relaxed">
+                    <p className="text-xs text-slate-600 dark:text-slate-400 bg-white dark:bg-surface p-3 rounded-lg border border-black/10 dark:border-white/10 leading-relaxed">
                       {simulatedDecision.reason}
                     </p>
                   </div>

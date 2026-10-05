@@ -184,7 +184,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
         role={isPage ? 'region' : 'dialog'}
         aria-modal={isPage ? undefined : true}
         aria-labelledby="backup-modal-title"
-        className={isPage ? 'h-full flex flex-col overflow-hidden text-slate-900 dark:text-[#f7f6f3]' : 'w-full max-w-2xl max-h-[90vh] rounded-2xl border shadow-2xl flex flex-col overflow-hidden text-slate-900 dark:text-[#f7f6f3] transition-all'}
+        className={isPage ? 'h-full flex flex-col overflow-hidden text-slate-900 dark:text-ink' : 'w-full max-w-2xl max-h-[90vh] rounded-2xl border shadow-2xl flex flex-col overflow-hidden text-slate-900 dark:text-ink transition-all'}
         style={{
           backgroundColor: 'var(--card-bg)',
           borderColor: 'var(--card-border)',
@@ -198,7 +198,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
-              <h3 id="backup-modal-title" className="text-lg font-semibold tracking-tight text-slate-900 dark:text-[#f7f6f3]">
+              <h3 id="backup-modal-title" className="text-lg font-semibold tracking-tight text-slate-900 dark:text-ink">
                 Backup and restore
               </h3>
               <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
@@ -234,10 +234,10 @@ export const BackupModal: React.FC<BackupModalProps> = ({
         {/* Modal Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* Encrypted Export Form */}
-          <div className="p-5 rounded-xl bg-[#d97757]/5 dark:bg-[#e08264]/10 border border-[#d97757]/20 space-y-4">
+          <div className="p-5 rounded-xl bg-accent/5 dark:bg-accent/10 border border-accent/20 space-y-4">
             <div className="flex items-center gap-2">
-              <Lock className="w-4 h-4 text-[#d97757] dark:text-[#e08264]" />
-              <h4 className="font-semibold text-sm text-slate-900 dark:text-[#f7f6f3]">
+              <Lock className="w-4 h-4 text-accent" />
+              <h4 className="font-semibold text-sm text-slate-900 dark:text-ink">
                 Encrypted backup
               </h4>
             </div>
@@ -253,7 +253,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
                   placeholder="Master Passphrase (min 6 chars)"
                   value={passphrase}
                   onChange={(e) => setPassphrase(e.target.value)}
-                  className="px-4 py-2 text-xs bg-white dark:bg-[#1f1e1c] border border-black/10 dark:border-white/10 rounded-lg text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-[#d97757] dark:focus:border-[#e08264]"
+                  className="px-4 py-2 text-xs bg-white dark:bg-surface border border-black/10 dark:border-white/10 rounded-lg text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-accent"
                 />
                 <input
                   type="password"
@@ -261,14 +261,14 @@ export const BackupModal: React.FC<BackupModalProps> = ({
                   placeholder="Confirm Master Passphrase"
                   value={confirmPassphrase}
                   onChange={(e) => setConfirmPassphrase(e.target.value)}
-                  className="px-4 py-2 text-xs bg-white dark:bg-[#1f1e1c] border border-black/10 dark:border-white/10 rounded-lg text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-[#d97757] dark:focus:border-[#e08264]"
+                  className="px-4 py-2 text-xs bg-white dark:bg-surface border border-black/10 dark:border-white/10 rounded-lg text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-accent"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={encrypting}
-                className="flex items-center justify-center gap-2 w-full py-2.5 bg-[#d97757] hover:bg-[#c46243] text-white text-xs font-semibold rounded-xl shadow-xs transition-all disabled:opacity-50 active:scale-[0.99]"
+                className="flex items-center justify-center gap-2 w-full py-2.5 bg-accent hover:bg-accent-hover text-on-accent text-xs font-semibold rounded-xl shadow-xs transition-all disabled:opacity-50 active:scale-[0.99]"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span>{encrypting ? 'Encrypting…' : `Download backup (${links.length} ${links.length === 1 ? 'link' : 'links'})`}</span>
@@ -280,7 +280,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
           <div className="p-5 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-black/10 dark:border-white/10 space-y-4">
             <div className="flex items-center gap-2">
               <Unlock className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              <h4 className="font-semibold text-sm text-slate-900 dark:text-[#f7f6f3]">
+              <h4 className="font-semibold text-sm text-slate-900 dark:text-ink">
                 Restore
               </h4>
             </div>
@@ -291,7 +291,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
                 placeholder="Passphrase (Required if uploading .enc file)"
                 value={decryptPassphrase}
                 onChange={(e) => setDecryptPassphrase(e.target.value)}
-                className="w-full px-4 py-2 text-xs bg-white dark:bg-[#1f1e1c] border border-black/10 dark:border-white/10 rounded-lg text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-[#d97757] dark:focus:border-[#e08264]"
+                className="w-full px-4 py-2 text-xs bg-white dark:bg-surface border border-black/10 dark:border-white/10 rounded-lg text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-accent"
               />
 
               <label className="flex items-center justify-center gap-2 w-full py-2.5 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-semibold cursor-pointer transition-colors border border-black/10 dark:border-white/10">
@@ -315,14 +315,14 @@ export const BackupModal: React.FC<BackupModalProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <button
                 onClick={handleExportPlainJson}
-                className="flex items-center justify-center gap-2 p-3.5 rounded-xl bg-white dark:bg-[#1f1e1c] border border-black/10 dark:border-white/10 hover:border-[#d97757] dark:hover:border-[#e08264] text-xs font-semibold text-slate-800 dark:text-slate-200 transition-all shadow-2xs"
+                className="flex items-center justify-center gap-2 p-3.5 rounded-xl bg-white dark:bg-surface border border-black/10 dark:border-white/10 hover:border-accent text-xs font-semibold text-slate-800 dark:text-slate-200 transition-all shadow-2xs"
               >
-                <FileJson className="w-4 h-4 text-[#d97757] dark:text-[#e08264]" />
+                <FileJson className="w-4 h-4 text-accent" />
                 <span>Export Standard JSON</span>
               </button>
               <button
                 onClick={handleExportMarkdown}
-                className="flex items-center justify-center gap-2 p-3.5 rounded-xl bg-white dark:bg-[#1f1e1c] border border-black/10 dark:border-white/10 hover:border-[#d97757] dark:hover:border-[#e08264] text-xs font-semibold text-slate-800 dark:text-slate-200 transition-all shadow-2xs"
+                className="flex items-center justify-center gap-2 p-3.5 rounded-xl bg-white dark:bg-surface border border-black/10 dark:border-white/10 hover:border-accent text-xs font-semibold text-slate-800 dark:text-slate-200 transition-all shadow-2xs"
               >
                 <FileText className="w-4 h-4 text-amber-500" />
                 <span>Export Markdown Notes</span>

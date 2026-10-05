@@ -61,7 +61,7 @@ export const ExtensionModal: React.FC<ExtensionModalProps> = ({ isOpen, onClose,
         role={isPage ? 'region' : 'dialog'}
         aria-modal={isPage ? undefined : true}
         aria-labelledby="extension-modal-title"
-        className={isPage ? 'h-full flex flex-col overflow-hidden text-slate-900 dark:text-[#f7f6f3]' : 'w-full max-w-2xl rounded-2xl border shadow-2xl overflow-hidden flex flex-col text-slate-900 dark:text-[#f7f6f3] transition-all'}
+        className={isPage ? 'h-full flex flex-col overflow-hidden text-slate-900 dark:text-ink' : 'w-full max-w-2xl rounded-2xl border shadow-2xl overflow-hidden flex flex-col text-slate-900 dark:text-ink transition-all'}
         style={{
           backgroundColor: 'var(--card-bg)',
           borderColor: 'var(--card-border)',
@@ -71,11 +71,11 @@ export const ExtensionModal: React.FC<ExtensionModalProps> = ({ isOpen, onClose,
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-black/10 dark:border-white/10 bg-black/[0.02] dark:bg-white/[0.02]">
           <div className="flex items-center gap-3.5">
-            <div className="w-9 h-9 rounded-xl bg-[#d97757]/10 text-[#d97757] dark:text-[#e08264] border border-[#d97757]/20 flex items-center justify-center shrink-0">
+            <div className="w-9 h-9 rounded-xl bg-accent/10 text-accent border border-accent/20 flex items-center justify-center shrink-0">
               <Chrome className="w-5 h-5" />
             </div>
             <div>
-              <h3 id="extension-modal-title" className="text-lg font-semibold tracking-tight text-slate-900 dark:text-[#f7f6f3]">
+              <h3 id="extension-modal-title" className="text-lg font-semibold tracking-tight text-slate-900 dark:text-ink">
                 Chrome extension
               </h3>
               <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
@@ -97,16 +97,16 @@ export const ExtensionModal: React.FC<ExtensionModalProps> = ({ isOpen, onClose,
         {/* Modal Body */}
         <div className={`p-6 space-y-5 overflow-y-auto ${isPage ? 'flex-1' : 'max-h-[80vh]'}`}>
           {/* Main Download Card */}
-          <div className="p-5 rounded-xl bg-[#d97757]/5 dark:bg-[#e08264]/10 border border-[#d97757]/25 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="p-5 rounded-xl bg-accent/5 dark:bg-accent/10 border border-accent/25 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="space-y-1.5">
               <div className="flex items-center gap-2">
-                <h4 className="font-semibold text-sm text-slate-900 dark:text-[#f7f6f3]">
+                <h4 className="font-semibold text-sm text-slate-900 dark:text-ink">
                   OmniLink for Chrome
                 </h4>
               </div>
               <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed max-w-md">
                 Comes set up to save to{' '}
-                <code className="px-2 py-0.5 rounded bg-black/5 dark:bg-black/40 border border-black/10 dark:border-white/10 font-mono text-xs text-[#d97757] dark:text-[#e08264] font-medium break-all inline-block my-0.5">
+                <code className="px-2 py-0.5 rounded bg-black/5 dark:bg-black/40 border border-black/10 dark:border-white/10 font-mono text-xs text-accent font-medium break-all inline-block my-0.5">
                   {currentOrigin}
                 </code>
                 .
@@ -117,7 +117,7 @@ export const ExtensionModal: React.FC<ExtensionModalProps> = ({ isOpen, onClose,
               id="btn-download-extension-zip"
               onClick={handleDownloadZip}
               disabled={downloading}
-              className="flex items-center justify-center gap-2 px-5 py-2.5 bg-[#d97757] hover:bg-[#c46243] text-white text-xs font-semibold rounded-xl shadow-xs transition-all shrink-0 disabled:opacity-50 active:scale-[0.98]"
+              className="flex items-center justify-center gap-2 px-5 py-2.5 bg-accent hover:bg-accent-hover text-on-accent text-xs font-semibold rounded-xl shadow-xs transition-all shrink-0 disabled:opacity-50 active:scale-[0.98]"
             >
               <FolderDown className="w-4 h-4" />
               <span>{downloading ? 'Bundling Extension...' : 'Download Extension (.ZIP)'}</span>
@@ -132,7 +132,7 @@ export const ExtensionModal: React.FC<ExtensionModalProps> = ({ isOpen, onClose,
 
             <div className="space-y-2 text-xs">
               <div className="flex items-center gap-3.5 p-3.5 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-black/5 dark:border-white/[0.06]">
-                <span className="w-6 h-6 rounded-full bg-[#d97757]/10 border border-[#d97757]/30 text-[#d97757] dark:text-[#e08264] flex items-center justify-center text-xs font-bold shrink-0">
+                <span className="w-6 h-6 rounded-full bg-accent/10 border border-accent/30 text-accent flex items-center justify-center text-xs font-bold shrink-0">
                   1
                 </span>
                 <div className="text-slate-700 dark:text-slate-300">
@@ -141,7 +141,7 @@ export const ExtensionModal: React.FC<ExtensionModalProps> = ({ isOpen, onClose,
               </div>
 
               <div className="flex items-center gap-3.5 p-3.5 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-black/5 dark:border-white/[0.06]">
-                <span className="w-6 h-6 rounded-full bg-[#d97757]/10 border border-[#d97757]/30 text-[#d97757] dark:text-[#e08264] flex items-center justify-center text-xs font-bold shrink-0">
+                <span className="w-6 h-6 rounded-full bg-accent/10 border border-accent/30 text-accent flex items-center justify-center text-xs font-bold shrink-0">
                   2
                 </span>
                 <div className="text-slate-700 dark:text-slate-300">
@@ -150,7 +150,7 @@ export const ExtensionModal: React.FC<ExtensionModalProps> = ({ isOpen, onClose,
               </div>
 
               <div className="flex items-center gap-3.5 p-3.5 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-black/5 dark:border-white/[0.06]">
-                <span className="w-6 h-6 rounded-full bg-[#d97757]/10 border border-[#d97757]/30 text-[#d97757] dark:text-[#e08264] flex items-center justify-center text-xs font-bold shrink-0">
+                <span className="w-6 h-6 rounded-full bg-accent/10 border border-accent/30 text-accent flex items-center justify-center text-xs font-bold shrink-0">
                   3
                 </span>
                 <div className="text-slate-700 dark:text-slate-300">
@@ -159,7 +159,7 @@ export const ExtensionModal: React.FC<ExtensionModalProps> = ({ isOpen, onClose,
               </div>
 
               <div className="flex items-center gap-3.5 p-3.5 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-black/5 dark:border-white/[0.06]">
-                <span className="w-6 h-6 rounded-full bg-[#d97757]/10 border border-[#d97757]/30 text-[#d97757] dark:text-[#e08264] flex items-center justify-center text-xs font-bold shrink-0">
+                <span className="w-6 h-6 rounded-full bg-accent/10 border border-accent/30 text-accent flex items-center justify-center text-xs font-bold shrink-0">
                   4
                 </span>
                 <div className="text-slate-700 dark:text-slate-300">

@@ -85,7 +85,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
           <ArrowLeft className="w-4 h-4" />
           <span>Back</span>
         </button>
-        <h1 className="font-medium text-slate-900 dark:text-[#f7f6f3]">Settings</h1>
+        <h1 className="font-medium text-slate-900 dark:text-ink">Settings</h1>
       </div>
 
       <div className="flex-1 min-h-0 flex flex-col md:flex-row">
@@ -115,7 +115,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
           <React.Suspense
             fallback={
               <div className="p-16">
-                <div className="w-6 h-6 border-2 border-[#d97757] border-t-transparent rounded-full animate-spin mx-auto" />
+                <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto" />
               </div>
             }
           >

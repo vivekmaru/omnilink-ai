@@ -87,18 +87,18 @@ export const AskRepoModal: React.FC<AskRepoModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-black/10 dark:border-white/10 shrink-0 bg-black/[0.02] dark:bg-white/[0.02]">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-[#d97757]/10 text-[#d97757] dark:text-[#e08264] flex items-center justify-center border border-[#d97757]/20">
+            <div className="w-8 h-8 rounded-lg bg-accent/10 text-accent flex items-center justify-center border border-accent/20">
               <Sparkles className="w-4 h-4" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 id="ask-repo-modal-title" className="font-newsreader text-lg font-medium text-slate-900 dark:text-[#f7f6f3]">
+                <h3 id="ask-repo-modal-title" className="text-base font-semibold text-slate-900 dark:text-ink">
                   Ask Your Saved Repository
                 </h3>
                 {onOpenModelOrchestrator && (
                   <button
                     onClick={onOpenModelOrchestrator}
-                    className="flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded bg-[#d97757]/10 text-[#d97757] dark:text-[#e08264] hover:bg-[#d97757]/20 transition-colors border border-[#d97757]/20"
+                    className="flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded bg-accent/10 text-accent hover:bg-accent/20 transition-colors border border-accent/20"
                     title="View Model Orchestration Architecture & Telemetry"
                   >
                     <Cpu className="w-3 h-3" />
@@ -133,10 +133,10 @@ export const AskRepoModal: React.FC<AskRepoModalProps> = ({
                   <button
                     key={i}
                     onClick={() => handleAsk(prompt)}
-                    className="text-left p-3.5 rounded-xl border border-black/10 dark:border-white/10 hover:border-[#d97757]/40 bg-black/[0.02] dark:bg-white/[0.02] hover:bg-[#d97757]/5 text-xs text-slate-800 dark:text-slate-200 transition-all flex items-start justify-between gap-3 group"
+                    className="text-left p-3.5 rounded-xl border border-black/10 dark:border-white/10 hover:border-accent/40 bg-black/[0.02] dark:bg-white/[0.02] hover:bg-accent/5 text-xs text-slate-800 dark:text-slate-200 transition-all flex items-start justify-between gap-3 group"
                   >
                     <span className="leading-relaxed">{prompt}</span>
-                    <ArrowRight className="w-4 h-4 shrink-0 text-[#d97757] dark:text-[#e08264] opacity-50 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all mt-0.5" />
+                    <ArrowRight className="w-4 h-4 shrink-0 text-accent opacity-50 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all mt-0.5" />
                   </button>
                 ))}
               </div>
@@ -146,7 +146,7 @@ export const AskRepoModal: React.FC<AskRepoModalProps> = ({
           {/* Current Active Response */}
           {response && (
             <div className="space-y-4 bg-black/[0.02] dark:bg-white/[0.02] border border-black/10 dark:border-white/10 rounded-xl p-5">
-              <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-semibold text-[#d97757] dark:text-[#e08264] ">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-semibold text-accent ">
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4" />
                   <span>AI Repository Synthesis</span>
@@ -190,10 +190,10 @@ export const AskRepoModal: React.FC<AskRepoModalProps> = ({
                         <div
                           key={refLink.id}
                           onClick={() => onOpenLinkDetail(refLink)}
-                          className="p-3 bg-white dark:bg-[#18181b] border border-black/10 dark:border-white/10 rounded-xl hover:border-[#d97757]/40 transition-colors cursor-pointer flex items-center justify-between gap-2 group"
+                          className="p-3 bg-white dark:bg-surface border border-black/10 dark:border-white/10 rounded-xl hover:border-accent/40 transition-colors cursor-pointer flex items-center justify-between gap-2 group"
                         >
                           <div className="truncate">
-                            <div className="font-semibold text-xs text-slate-900 dark:text-slate-100 truncate font-newsreader group-hover:text-[#d97757] dark:group-hover:text-[#e08264] transition-colors">
+                            <div className="font-semibold text-xs text-slate-900 dark:text-slate-100 truncate group-hover:text-accent transition-colors">
                               {refLink.title}
                             </div>
                             <div className="text-xs text-slate-500 dark:text-slate-400 truncate flex items-center gap-1.5 mt-0.5">
@@ -210,7 +210,7 @@ export const AskRepoModal: React.FC<AskRepoModalProps> = ({
                               )}
                             </div>
                           </div>
-                          <ExternalLink className="w-3.5 h-3.5 text-[#d97757] dark:text-[#e08264] shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
+                          <ExternalLink className="w-3.5 h-3.5 text-accent shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
                         </div>
                       );
                     })}
@@ -229,7 +229,7 @@ export const AskRepoModal: React.FC<AskRepoModalProps> = ({
                       <button
                         key={idx}
                         onClick={() => handleAsk(sug)}
-                        className="text-left text-xs px-2.5 py-1 rounded-lg bg-black/5 dark:bg-white/5 hover:bg-[#d97757]/10 text-slate-700 dark:text-slate-300 hover:text-[#d97757] dark:hover:text-[#e08264] border border-black/5 dark:border-white/5 transition-colors"
+                        className="text-left text-xs px-2.5 py-1 rounded-lg bg-black/5 dark:bg-white/5 hover:bg-accent/10 text-slate-700 dark:text-slate-300 hover:text-accent border border-black/5 dark:border-white/5 transition-colors"
                       >
                         {sug} &rarr;
                       </button>
@@ -250,11 +250,11 @@ export const AskRepoModal: React.FC<AskRepoModalProps> = ({
                 <div
                   key={idx}
                   onClick={() => setResponse(item.a as any)}
-                  className="p-3.5 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-black/10 dark:border-white/10 hover:border-[#d97757]/30 space-y-1.5 text-xs cursor-pointer transition-colors"
+                  className="p-3.5 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-black/10 dark:border-white/10 hover:border-accent/30 space-y-1.5 text-xs cursor-pointer transition-colors"
                 >
                   <div className="font-semibold text-slate-900 dark:text-slate-100 flex items-center justify-between">
                     <span>Q: {item.q}</span>
-                    <span className="text-xs text-[#d97757] dark:text-[#e08264] ">View response &rarr;</span>
+                    <span className="text-xs text-accent ">View response &rarr;</span>
                   </div>
                   <div className="text-slate-600 dark:text-slate-400 line-clamp-2">{item.a.answer}</div>
                 </div>
@@ -277,12 +277,12 @@ export const AskRepoModal: React.FC<AskRepoModalProps> = ({
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
               placeholder="Ask anything about your saved links, code snippets, or notes..."
-              className="flex-1 px-4 py-2.5 text-xs bg-white dark:bg-[#18181b] border border-black/10 dark:border-white/10 rounded-xl focus:outline-none focus:border-[#d97757] text-slate-900 dark:text-slate-100 placeholder:text-slate-400 transition-colors"
+              className="flex-1 px-4 py-2.5 text-xs bg-white dark:bg-surface border border-black/10 dark:border-white/10 rounded-xl focus:outline-none focus:border-accent text-slate-900 dark:text-slate-100 placeholder:text-slate-400 transition-colors"
             />
             <button
               type="submit"
               disabled={loading || !question.trim()}
-              className="px-5 py-2.5 bg-[#d97757] hover:bg-[#c46243] dark:bg-[#e08264] dark:hover:bg-[#e9957a] text-white text-xs font-semibold rounded-xl shadow-xs disabled:opacity-50 transition-all flex items-center gap-1.5 shrink-0 active:scale-[0.98]"
+              className="px-5 py-2.5 bg-accent hover:bg-accent-hover text-on-accent text-xs font-semibold rounded-xl shadow-xs disabled:opacity-50 transition-all flex items-center gap-1.5 shrink-0 active:scale-[0.98]"
             >
               {loading ? (
                 <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />

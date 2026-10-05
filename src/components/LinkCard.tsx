@@ -154,9 +154,9 @@ export const LinkCard: React.FC<LinkCardProps> = ({
         }
         onSelect(link);
       }}
-      className={`group relative flex flex-col justify-between p-4 sm:p-5 rounded-2xl border transition-colors duration-200 cursor-pointer bg-white dark:bg-[#18181b] ${
+      className={`group relative flex flex-col justify-between p-4 sm:p-5 rounded-2xl border transition-colors duration-200 cursor-pointer bg-white dark:bg-surface ${
         isSelected
-          ? 'ring-2 ring-[#d97757] dark:ring-[#e08264] border-[#d97757] dark:border-[#e08264] bg-[#d97757]/[0.03] dark:bg-[#e08264]/[0.04]'
+          ? 'ring-2 ring-accent border-accent bg-accent/[0.03] dark:bg-accent/[0.04]'
           : 'border-slate-200/80 dark:border-white/[0.07] hover:border-slate-300 dark:hover:border-white/[0.16]'
       } min-h-[170px] animate-card-entrance ${link.isArchived ? 'opacity-60' : ''}`}
     >
@@ -178,7 +178,7 @@ export const LinkCard: React.FC<LinkCardProps> = ({
                 <div
                   className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${
                     isSelected
-                      ? 'bg-[#d97757] dark:bg-[#e08264] border-[#d97757] dark:border-[#e08264] text-white'
+                      ? 'bg-accent border-accent text-on-accent'
                       : 'border-slate-300 dark:border-white/30 bg-black/5 dark:bg-white/5'
                   }`}
                 >
@@ -203,7 +203,7 @@ export const LinkCard: React.FC<LinkCardProps> = ({
                 <span
                   className={`shrink-0 ${
                     link.readStatus === 'reading'
-                      ? 'text-[#c25e3e] dark:text-[#e08264]'
+                      ? 'text-accent-hover dark:text-accent'
                       : 'text-slate-400 dark:text-slate-500'
                   }`}
                 >
@@ -246,7 +246,7 @@ export const LinkCard: React.FC<LinkCardProps> = ({
               {menuOpen && (
                 <div
                   role="menu"
-                  className="absolute right-0 top-8 z-20 w-48 py-1.5 rounded-xl bg-white dark:bg-[#1e1e24] border border-slate-200 dark:border-white/10 shadow-xl text-xs"
+                  className="absolute right-0 top-8 z-20 w-48 py-1.5 rounded-xl bg-white dark:bg-surface border border-slate-200 dark:border-white/10 shadow-xl text-xs"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <a
@@ -338,10 +338,10 @@ export const LinkCard: React.FC<LinkCardProps> = ({
 
         {/* Serif Editorial Title */}
         <h3
-          className={`font-newsreader text-xl font-medium leading-snug line-clamp-2 ${
+          className={`text-base font-semibold leading-snug line-clamp-2 ${
             link.readStatus === 'read'
               ? 'text-slate-500 dark:text-slate-400'
-              : 'text-slate-900 dark:text-[#f7f6f3]'
+              : 'text-slate-900 dark:text-ink'
           }`}
         >
           {link.title || link.url}
