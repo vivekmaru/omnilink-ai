@@ -22,6 +22,7 @@ export const AskRepoModal: React.FC<AskRepoModalProps> = ({
   onClose,
   links,
   onOpenLinkDetail,
+  onOpenModelOrchestrator,
 }) => {
   const [question, setQuestion] = useState('');
   const [loading, setLoading] = useState(false);
@@ -83,16 +84,26 @@ export const AskRepoModal: React.FC<AskRepoModalProps> = ({
               Ask AI
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Answers come from your {links.length} saved links
+              Answers come from your {links.length} saved {links.length === 1 ? 'link' : 'links'}
             </p>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-            aria-label="Close"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-1">
+            {onOpenModelOrchestrator && (
+              <button
+                onClick={onOpenModelOrchestrator}
+                className="px-2 py-1 rounded-md text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+              >
+                AI models
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+              aria-label="Close"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Chat / Results Body */}
