@@ -3,14 +3,7 @@ import {
   X,
   Sparkles,
   Send,
-  BookOpen,
   ArrowRight,
-  ExternalLink,
-  MessageSquare,
-  Bookmark,
-  Lightbulb,
-  Cpu,
-  Zap,
 } from 'lucide-react';
 import { ApiService } from '../services/api';
 import { AskRepoResponse, LinkItem, GeminiModelId } from '../types';
@@ -40,10 +33,10 @@ export const AskRepoModal: React.FC<AskRepoModalProps> = ({
   if (!isOpen) return null;
 
   const samplePrompts = [
-    'What GitHub projects do I have for UI components & LLM agents?',
-    'Summarize all Reddit database tips and SQLite best practices saved',
-    'What Instagram shorts or desk setup productivity tricks do I have?',
-    'Synthesize key takeaways across all my AI & machine learning bookmarks',
+    'Which of my saved links should I read first?',
+    'Summarize the main ideas across my saved links',
+    'What have I saved about databases?',
+    'What are the key takeaways from my AI links?',
   ];
 
   const handleAsk = async (queryText: string) => {
@@ -58,9 +51,9 @@ export const AskRepoModal: React.FC<AskRepoModalProps> = ({
       setQuestion('');
     } catch (e: any) {
       setResponse({
-        answer: 'Failed to process inquiry: ' + (e.message || 'Unknown error'),
+        answer: 'Something went wrong: ' + (e.message || 'Unknown error'),
         referencedLinkIds: [],
-        suggestions: ['Try rephrasing your search query'],
+        suggestions: ['Try asking in a different way'],
       });
     } finally {
       setLoading(false);
@@ -72,51 +65,45 @@ export const AskRepoModal: React.FC<AskRepoModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
       <div
         id="ask-repo-modal-card"
         role="dialog"
         aria-modal="true"
         aria-labelledby="ask-repo-modal-title"
-        className="w-full max-w-3xl max-h-[85vh] border rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+        className="w-full max-w-3xl max-h-[85vh] border rounded-xl shadow-xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150"
         style={{
           backgroundColor: 'var(--card-bg)',
           borderColor: 'var(--card-border)',
         }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-black/10 dark:border-white/10 shrink-0 bg-black/[0.02] dark:bg-white/[0.02]">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-accent/10 text-accent flex items-center justify-center border border-accent/20">
-              <Sparkles className="w-4 h-4" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 id="ask-repo-modal-title" className="text-base font-semibold text-slate-900 dark:text-ink">
-                  Ask Your Saved Repository
-                </h3>
-                {onOpenModelOrchestrator && (
-                  <button
-                    onClick={onOpenModelOrchestrator}
-                    className="flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded bg-accent/10 text-accent hover:bg-accent/20 transition-colors border border-accent/20"
-                    title="View Model Orchestration Architecture & Telemetry"
-                  >
-                    <Cpu className="w-3 h-3" />
-                    <span>Gemini 3.7 Flash • Thinking HIGH</span>
-                  </button>
-                )}
-              </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Grounded conversational synthesis across {links.length} bookmarks & notes
-              </p>
-            </div>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-black/[0.08] dark:border-white/[0.08] shrink-0">
+          <div>
+            <h3 id="ask-repo-modal-title" className="text-base font-semibold text-slate-900 dark:text-ink">
+              Ask AI
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Answers come from your {links.length} saved {links.length === 1 ? 'link' : 'links'}
+            </p>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-1">
+            {onOpenModelOrchestrator && (
+              <button
+                onClick={onOpenModelOrchestrator}
+                className="px-2 py-1 rounded-md text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+              >
+                AI models
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+              aria-label="Close"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Chat / Results Body */}
@@ -124,19 +111,16 @@ export const AskRepoModal: React.FC<AskRepoModalProps> = ({
           {/* Quick Starter Suggestions */}
           {!response && history.length === 0 && (
             <div className="space-y-3">
-              <div className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1.5 font-semibold">
-                <Lightbulb className="w-3.5 h-3.5 text-amber-500" />
-                <span>Suggested Knowledge Queries</span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="text-xs font-medium text-slate-500 dark:text-slate-400">Try asking</div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {samplePrompts.map((prompt, i) => (
                   <button
                     key={i}
                     onClick={() => handleAsk(prompt)}
-                    className="text-left p-3.5 rounded-xl border border-black/10 dark:border-white/10 hover:border-accent/40 bg-black/[0.02] dark:bg-white/[0.02] hover:bg-accent/5 text-xs text-slate-800 dark:text-slate-200 transition-all flex items-start justify-between gap-3 group"
+                    className="text-left px-3.5 py-3 rounded-lg border border-black/[0.08] dark:border-white/[0.08] hover:border-black/20 dark:hover:border-white/20 text-sm text-slate-800 dark:text-slate-200 transition-colors flex items-start justify-between gap-3"
                   >
                     <span className="leading-relaxed">{prompt}</span>
-                    <ArrowRight className="w-4 h-4 shrink-0 text-accent opacity-50 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all mt-0.5" />
+                    <ArrowRight className="w-4 h-4 shrink-0 text-slate-400 mt-0.5" />
                   </button>
                 ))}
               </div>
@@ -145,25 +129,17 @@ export const AskRepoModal: React.FC<AskRepoModalProps> = ({
 
           {/* Current Active Response */}
           {response && (
-            <div className="space-y-4 bg-black/[0.02] dark:bg-white/[0.02] border border-black/10 dark:border-white/10 rounded-xl p-5">
-              <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-semibold text-accent ">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4" />
-                  <span>AI Repository Synthesis</span>
+            <div className="space-y-4 border border-black/[0.08] dark:border-white/[0.08] rounded-lg p-5">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                <div className="flex items-center gap-1.5 font-medium text-slate-700 dark:text-slate-200">
+                  <Sparkles className="w-3.5 h-3.5 text-accent" />
+                  <span>Answer</span>
                 </div>
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  {(response as any).retrieval && (
-                    <span className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                      <span>Hybrid RAG (FTS5 + gemini-embedding-001)</span>
-                    </span>
-                  )}
-                  {response.orchestration && (
-                    <span className="text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-1 bg-black/5 dark:bg-white/5 px-2 py-0.5 rounded border border-black/5 dark:border-white/5">
-                      <Zap className="w-3 h-3 text-amber-500" />
-                      {response.orchestration.model} ({response.orchestration.latencyMs}ms)
-                    </span>
-                  )}
-                </div>
+                {response.orchestration && (
+                  <span className="text-slate-400 dark:text-slate-500">
+                    {response.orchestration.model} · {(response.orchestration.latencyMs / 1000).toFixed(1)}s
+                  </span>
+                )}
               </div>
 
               <MarkdownRenderer
@@ -176,11 +152,11 @@ export const AskRepoModal: React.FC<AskRepoModalProps> = ({
               {response.referencedLinkIds && response.referencedLinkIds.length > 0 && (
                 <div className="pt-4 border-t border-black/10 dark:border-white/10 space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-slate-400 dark:text-slate-500 font-semibold">
-                      Referenced Knowledge Sources:
+                    <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                      Sources
                     </span>
                     <span className="text-xs text-slate-400">
-                      {response.referencedLinkIds.length} items cited
+                      {response.referencedLinkIds.length} {response.referencedLinkIds.length === 1 ? 'link' : 'links'}
                     </span>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -190,10 +166,10 @@ export const AskRepoModal: React.FC<AskRepoModalProps> = ({
                         <div
                           key={refLink.id}
                           onClick={() => onOpenLinkDetail(refLink)}
-                          className="p-3 bg-white dark:bg-surface border border-black/10 dark:border-white/10 rounded-xl hover:border-accent/40 transition-colors cursor-pointer flex items-center justify-between gap-2 group"
+                          className="p-3 border border-black/[0.08] dark:border-white/[0.08] rounded-lg hover:border-black/20 dark:hover:border-white/20 transition-colors cursor-pointer flex items-center justify-between gap-2 group"
                         >
                           <div className="truncate">
-                            <div className="font-semibold text-xs text-slate-900 dark:text-slate-100 truncate group-hover:text-accent transition-colors">
+                            <div className="font-medium text-sm text-slate-900 dark:text-slate-100 truncate">
                               {refLink.title}
                             </div>
                             <div className="text-xs text-slate-500 dark:text-slate-400 truncate flex items-center gap-1.5 mt-0.5">
@@ -203,14 +179,14 @@ export const AskRepoModal: React.FC<AskRepoModalProps> = ({
                               {matchInfo?.vectorSimilarity && (
                                 <>
                                   <span>•</span>
-                                  <span className="text-emerald-500">
+                                  <span>
                                     {Math.round(matchInfo.vectorSimilarity * 100)}% match
                                   </span>
                                 </>
                               )}
                             </div>
                           </div>
-                          <ExternalLink className="w-3.5 h-3.5 text-accent shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
+                          <ArrowRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                         </div>
                       );
                     })}
@@ -221,17 +197,17 @@ export const AskRepoModal: React.FC<AskRepoModalProps> = ({
               {/* Exploration Suggestions */}
               {response.suggestions && response.suggestions.length > 0 && (
                 <div className="pt-3 border-t border-black/10 dark:border-white/10 space-y-2">
-                  <span className="text-xs text-slate-400 font-semibold ">
-                    Follow-Up Deep Dives:
+                  <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                    Ask next
                   </span>
                   <div className="flex flex-wrap gap-1.5">
                     {response.suggestions.map((sug, idx) => (
                       <button
                         key={idx}
                         onClick={() => handleAsk(sug)}
-                        className="text-left text-xs px-2.5 py-1 rounded-lg bg-black/5 dark:bg-white/5 hover:bg-accent/10 text-slate-700 dark:text-slate-300 hover:text-accent border border-black/5 dark:border-white/5 transition-colors"
+                        className="text-left text-xs px-2.5 py-1 rounded-md border border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 text-slate-700 dark:text-slate-300 transition-colors"
                       >
-                        {sug} &rarr;
+                        {sug}
                       </button>
                     ))}
                   </div>
@@ -243,20 +219,17 @@ export const AskRepoModal: React.FC<AskRepoModalProps> = ({
           {/* Past Query History */}
           {history.length > 0 && (
             <div className="space-y-3 pt-2">
-              <div className="text-xs text-slate-400 dark:text-slate-500 font-semibold">
-                Previous Inquiries
+              <div className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                Earlier questions
               </div>
               {history.slice(1).map((item, idx) => (
                 <div
                   key={idx}
                   onClick={() => setResponse(item.a as any)}
-                  className="p-3.5 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-black/10 dark:border-white/10 hover:border-accent/30 space-y-1.5 text-xs cursor-pointer transition-colors"
+                  className="p-3.5 rounded-lg border border-black/[0.08] dark:border-white/[0.08] hover:border-black/20 dark:hover:border-white/20 space-y-1 text-sm cursor-pointer transition-colors"
                 >
-                  <div className="font-semibold text-slate-900 dark:text-slate-100 flex items-center justify-between">
-                    <span>Q: {item.q}</span>
-                    <span className="text-xs text-accent ">View response &rarr;</span>
-                  </div>
-                  <div className="text-slate-600 dark:text-slate-400 line-clamp-2">{item.a.answer}</div>
+                  <div className="font-medium text-slate-900 dark:text-slate-100">{item.q}</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">{item.a.answer}</div>
                 </div>
               ))}
             </div>
@@ -264,7 +237,7 @@ export const AskRepoModal: React.FC<AskRepoModalProps> = ({
         </div>
 
         {/* Input Bar */}
-        <div className="p-4 border-t border-black/10 dark:border-white/10 bg-black/[0.02] dark:bg-white/[0.02] shrink-0">
+        <div className="p-4 border-t border-black/[0.08] dark:border-white/[0.08] shrink-0">
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -276,20 +249,20 @@ export const AskRepoModal: React.FC<AskRepoModalProps> = ({
               type="text"
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
-              placeholder="Ask anything about your saved links, code snippets, or notes..."
-              className="flex-1 px-4 py-2.5 text-xs bg-white dark:bg-surface border border-black/10 dark:border-white/10 rounded-xl focus:outline-none focus:border-accent text-slate-900 dark:text-slate-100 placeholder:text-slate-400 transition-colors"
+              placeholder="Ask a question about your saved links"
+              className="flex-1 px-3 py-2 text-sm bg-white dark:bg-surface border border-black/10 dark:border-white/10 rounded-md focus:outline-none focus:border-accent text-slate-900 dark:text-slate-100 placeholder:text-slate-400 transition-colors"
             />
             <button
               type="submit"
               disabled={loading || !question.trim()}
-              className="px-5 py-2.5 bg-accent hover:bg-accent-hover text-on-accent text-xs font-semibold rounded-xl shadow-xs disabled:opacity-50 transition-all flex items-center gap-1.5 shrink-0 active:scale-[0.98]"
+              className="px-4 py-2 bg-accent hover:bg-accent-hover text-on-accent text-sm font-medium rounded-md disabled:opacity-50 transition-colors flex items-center gap-1.5 shrink-0"
             >
               {loading ? (
-                <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
                   <Send className="w-3.5 h-3.5" />
-                  <span>Synthesize</span>
+                  <span>Ask</span>
                 </>
               )}
             </button>

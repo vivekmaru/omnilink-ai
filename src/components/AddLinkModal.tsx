@@ -2,26 +2,14 @@ import React, { useState, useEffect, useId, useRef } from 'react';
 import {
   X,
   Plus,
-  Sparkles,
-  Layers,
   Link as LinkIcon,
   Check,
   AlertCircle,
   AlertTriangle,
-  Tag,
-  Folder,
-  CheckCircle2,
-  Wand2,
   RefreshCw,
-  FileText,
-  Lightbulb,
   GitMerge,
-  ExternalLink,
   Eye,
   Calendar,
-  Bookmark,
-  Clock,
-  ArrowRight,
 } from 'lucide-react';
 import { ApiService } from '../services/api';
 import { AutoTaggingResult, LinkItem, DuplicateCheckResult } from '../types';
@@ -245,13 +233,13 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
   const handleSingleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!url.trim()) {
-      setError('Please provide a valid URL.');
+      setError('Enter a URL.');
       return;
     }
 
     // If duplicate detected and override not enabled, prevent accidental double-entry
     if (duplicateResult?.isDuplicate && duplicateResult.existingLink && !allowDuplicateOverride) {
-      setError('This URL already exists in your vault. Use "Merge Content" or "Update Existing" below.');
+      setError('This link is already saved. Merge into it or replace its details below.');
       return;
     }
 
@@ -308,7 +296,7 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
       onClose();
       resetForm();
     } catch (err: any) {
-      setError(err.message || 'Failed to merge bookmark.');
+      setError(err.message || 'Could not merge the link.');
     } finally {
       setMergingLoading(false);
     }
@@ -342,7 +330,7 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
       onClose();
       resetForm();
     } catch (err: any) {
-      setError(err.message || 'Failed to update bookmark.');
+      setError(err.message || 'Could not update the link.');
     } finally {
       setMergingLoading(false);
     }
@@ -379,7 +367,7 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
       .filter((u) => u.startsWith('http://') || u.startsWith('https://'));
 
     if (urls.length === 0) {
-      setError('Please paste at least one valid http/https URL.');
+      setError('Paste at least one link starting with http:// or https://.');
       return;
     }
 
@@ -397,77 +385,76 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
       onClose();
       setBulkUrls('');
     } catch (err: any) {
-      setError('Some links could not be processed: ' + err.message);
+      setError('Some links could not be saved: ' + err.message);
     } finally {
       setLoading(false);
     }
   };
 
   const existing = duplicateResult?.existingLink;
+  const isBlockedDuplicate = Boolean(duplicateResult?.isDuplicate && !allowDuplicateOverride);
+
+  const labelClass = 'block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5';
+  const inputClass =
+    'w-full rounded-md border border-black/10 dark:border-white/10 bg-white dark:bg-surface px-3 py-2 text-sm text-slate-900 dark:text-ink placeholder:text-slate-400 focus:outline-none focus:border-accent';
+  const primaryButtonClass =
+    'flex items-center justify-center gap-2 bg-accent hover:bg-accent-hover text-on-accent rounded-md px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+  const secondaryButtonClass =
+    'flex items-center justify-center gap-2 border border-black/10 dark:border-white/10 rounded-md px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition-colors disabled:opacity-50';
+  const panelClass = 'rounded-lg border border-black/[0.08] dark:border-white/[0.08]';
+  const spinner = <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />;
+
+  const tabClass = (tab: 'single' | 'bulk') =>
+    `-mb-px pb-2.5 text-sm border-b-2 transition-colors ${
+      activeTab === tab
+        ? 'border-accent text-slate-900 dark:text-ink font-medium'
+        : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+    }`;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-xs">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
       <div
         id="add-link-modal-card"
         role="dialog"
         aria-modal="true"
         aria-labelledby="add-link-modal-title"
-        className="w-full max-w-xl border border-black/10 dark:border-white/10 rounded-2xl shadow-2xl overflow-hidden max-h-[92vh] flex flex-col"
+        className="w-full max-w-xl rounded-xl border shadow-xl overflow-hidden max-h-[92vh] flex flex-col"
         style={{
           backgroundColor: 'var(--card-bg)',
           borderColor: 'var(--card-border)',
         }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4.5 border-b border-black/10 dark:border-white/10 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-accent/10 text-accent flex items-center justify-center border border-accent/20">
-              <Plus className="w-4 h-4" />
-            </div>
-            <div>
-              <h3 id="add-link-modal-title" className="text-xl font-semibold text-slate-900 dark:text-ink">
-                Add to Knowledge Vault
-              </h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                Instagram reels, Reddit threads, GitHub repos, articles & papers
-              </p>
-            </div>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-black/[0.08] dark:border-white/[0.08] shrink-0">
+          <div>
+            <h3 id="add-link-modal-title" className="text-base font-semibold text-slate-900 dark:text-ink">
+              Add link
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Articles, threads, repos, videos and papers
+            </p>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+            aria-label="Close"
+            className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Tab switch */}
-        <div className="flex border-b border-black/10 dark:border-white/10 px-6 pt-3 gap-2 shrink-0">
-          <button
-            onClick={() => setActiveTab('single')}
-            className={`pb-2.5 px-3 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'single'
-                ? 'border-accent text-accent'
-                : 'border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
-            }`}
-          >
-            Single Link & Auto-Tagging
+        <div className="flex border-b border-black/[0.08] dark:border-white/[0.08] px-6 pt-3 gap-5 shrink-0">
+          <button onClick={() => setActiveTab('single')} className={tabClass('single')}>
+            One link
           </button>
-          <button
-            onClick={() => setActiveTab('bulk')}
-            className={`pb-2.5 px-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-1.5 ${
-              activeTab === 'bulk'
-                ? 'border-accent text-accent'
-                : 'border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
-            }`}
-          >
-            <Layers className="w-3.5 h-3.5" />
-            <span>Bulk Import (Multi-URL)</span>
+          <button onClick={() => setActiveTab('bulk')} className={tabClass('bulk')}>
+            Several links
           </button>
         </div>
 
         {error && (
-          <div className="mx-6 mt-3 p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-600 dark:text-rose-400 text-xs flex items-center gap-2 shrink-0">
+          <div className="mx-6 mt-4 px-3 py-2 rounded-md border border-rose-500/30 text-rose-600 dark:text-rose-400 text-sm flex items-center gap-2 shrink-0">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{error}</span>
           </div>
@@ -477,17 +464,15 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {activeTab === 'single' ? (
             <form onSubmit={handleSingleSubmit} className="space-y-4">
-              {/* Source URL with background check status */}
+              {/* URL with background check status */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-2">
-                    <label className="block text-sm text-slate-700 dark:text-slate-300 font-medium">
-                      Source URL <span className="text-rose-500">*</span>
-                    </label>
+                    <label className="text-xs font-medium text-slate-500 dark:text-slate-400">URL</label>
                     {checkingDuplicate && (
-                      <span className="text-xs text-accent flex items-center gap-1">
-                        <RefreshCw className="w-2.5 h-2.5 animate-spin" />
-                        Checking duplicates...
+                      <span className="text-xs text-slate-400 flex items-center gap-1">
+                        <RefreshCw className="w-3 h-3 animate-spin" />
+                        Checking if it's already saved…
                       </span>
                     )}
                   </div>
@@ -497,16 +482,16 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
                       type="button"
                       onClick={() => fetchUrlMetadata(url.trim())}
                       disabled={fetchingMeta}
-                      className="flex items-center gap-1 text-xs text-accent hover:underline font-semibold"
+                      className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
                     >
                       <RefreshCw className={`w-3 h-3 ${fetchingMeta ? 'animate-spin' : ''}`} />
-                      <span>{fetchingMeta ? 'Inspecting URL...' : 'Inspect & Auto-Fill'}</span>
+                      <span>{fetchingMeta ? 'Fetching…' : 'Fill in title and description'}</span>
                     </button>
                   )}
                 </div>
 
                 <div className="relative">
-                  <LinkIcon className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <LinkIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
                     type="url"
                     required
@@ -516,61 +501,44 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
                       setUrl(e.target.value);
                       if (allowDuplicateOverride) setAllowDuplicateOverride(false);
                     }}
-                    placeholder="https://github.com/..., https://reddit.com/r/..., https://instagram.com/reel/..."
-                    className={`w-full pl-10 pr-10 py-2.5 text-sm bg-black/5 dark:bg-white/5 border rounded-lg focus:outline-none focus:ring-1 focus:ring-accent text-slate-900 dark:text-ink transition-colors ${
-                      duplicateResult?.isDuplicate && !allowDuplicateOverride
-                        ? 'border-amber-500/60 dark:border-amber-500/60 bg-amber-500/[0.04]'
-                        : 'border-black/10 dark:border-white/10'
-                    }`}
+                    placeholder="https://"
+                    className={`${inputClass} pl-9 pr-9`}
                   />
-                  {duplicateResult?.isDuplicate && !allowDuplicateOverride && (
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-amber-600 dark:text-amber-400" title="Existing bookmark detected">
+                  {isBlockedDuplicate && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" title="Already saved">
                       <AlertTriangle className="w-4 h-4" />
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* ========================================================= */}
-              {/* DUPLICATE WARNING & SMART MERGE CARD                      */}
-              {/* ========================================================= */}
+              {/* Already-saved notice with merge / update options */}
               {duplicateResult?.isDuplicate && existing && !allowDuplicateOverride && (
-                <div
-                  id="duplicate-warning-banner"
-                  className="p-4 rounded-xl border border-amber-500/40 bg-amber-500/[0.05] dark:bg-amber-500/[0.08] space-y-3.5"
-                >
-                  {/* Warning Header */}
+                <div id="duplicate-warning-banner" className={`${panelClass} p-4 space-y-3`}>
                   <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-md bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-                        <AlertTriangle className="w-3.5 h-3.5" />
-                      </div>
+                    <div className="flex items-start gap-2">
+                      <AlertTriangle className="w-4 h-4 mt-0.5 text-slate-400 shrink-0" />
                       <div>
-                        <div className="text-base font-semibold text-slate-900 dark:text-ink">
-                          Existing Bookmark Detected
+                        <div className="text-sm font-medium text-slate-900 dark:text-ink">
+                          You've already saved this link
                         </div>
-                        <div className="text-xs text-amber-700 dark:text-amber-300">
+                        <div className="text-xs text-slate-500 dark:text-slate-400">
                           {duplicateResult.matchType === 'exact'
-                            ? 'Exact URL already saved in your repository'
-                            : 'Normalized canonical URL match found in repository'}
+                            ? 'Same URL as a saved link'
+                            : 'Same page as a saved link (URL differs slightly)'}
                         </div>
                       </div>
                     </div>
-
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <span className="text-xs font-semibold px-2 py-0.5 rounded bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30">
-                        {existing.category}
-                      </span>
-                    </div>
+                    <span className="text-xs text-slate-500 dark:text-slate-400 shrink-0">{existing.category}</span>
                   </div>
 
-                  {/* Existing Link Card Summary */}
-                  <div className="p-3 rounded-lg bg-white/80 dark:bg-surface/90 border border-amber-500/20 text-xs space-y-2">
+                  {/* Saved link summary */}
+                  <div className={`${panelClass} p-3 text-xs space-y-1.5`}>
                     <div className="flex items-start justify-between gap-2">
-                      <div className="font-medium text-slate-900 dark:text-slate-100 line-clamp-1">
+                      <div className="text-sm font-medium text-slate-900 dark:text-slate-100 line-clamp-1">
                         {existing.title || existing.url}
                       </div>
-                      <span className="text-xs text-slate-500 shrink-0 capitalize px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/5">
+                      <span className="text-xs text-slate-500 dark:text-slate-400 shrink-0 capitalize">
                         {existing.readStatus}
                       </span>
                     </div>
@@ -581,8 +549,7 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
                       </p>
                     )}
 
-                    {/* Metadata & Tag chips */}
-                    <div className="flex flex-wrap items-center gap-1.5 pt-1 text-xs text-slate-500 dark:text-slate-400">
+                    <div className="flex flex-wrap items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
                       <span className="flex items-center gap-1">
                         <Calendar className="w-3 h-3 text-slate-400" />
                         {new Date(existing.createdAt).toLocaleDateString('en-US', {
@@ -593,13 +560,9 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
                       </span>
                       {existing.tags.length > 0 && (
                         <>
-                          <span className="opacity-40">•</span>
-                          <span className="text-slate-400">Tags:</span>
+                          <span className="opacity-40">·</span>
                           {existing.tags.slice(0, 4).map((t) => (
-                            <span
-                              key={t}
-                              className="px-1.5 py-0.2 rounded bg-black/5 dark:bg-white/5 text-slate-600 dark:text-slate-300"
-                            >
+                            <span key={t} className="text-slate-600 dark:text-slate-300">
                               #{t}
                             </span>
                           ))}
@@ -611,121 +574,102 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
                     </div>
                   </div>
 
-                  {/* Merge & Update Action Buttons */}
-                  <div className="space-y-2 pt-0.5">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {/* Smart Merge Button */}
-                      <button
-                        type="button"
-                        onClick={handleSmartMerge}
-                        disabled={mergingLoading}
-                        className="flex items-center justify-center gap-2 px-3 py-2 bg-accent hover:bg-accent-hover text-on-accent text-xs font-medium rounded-lg shadow-2xs transition-colors"
-                        title="Unions tags, appends notes, and updates category"
-                      >
-                        {mergingLoading ? (
-                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                        ) : (
-                          <GitMerge className="w-3.5 h-3.5" />
-                        )}
-                        <span>Smart Merge Content</span>
-                      </button>
+                  {/* Merge & update actions */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={handleSmartMerge}
+                      disabled={mergingLoading}
+                      className={primaryButtonClass}
+                      title="Adds your tags and notes to the saved link"
+                    >
+                      {mergingLoading ? spinner : <GitMerge className="w-3.5 h-3.5" />}
+                      <span>Merge into saved link</span>
+                    </button>
 
-                      {/* Overwrite / Update Button */}
-                      <button
-                        type="button"
-                        onClick={handleUpdateOverwrite}
-                        disabled={mergingLoading}
-                        className="flex items-center justify-center gap-2 px-3 py-2 bg-white dark:bg-raised hover:bg-slate-100 dark:hover:bg-raised-hover text-slate-800 dark:text-slate-200 border border-black/10 dark:border-white/10 text-xs font-medium rounded-lg shadow-2xs transition-colors"
-                        title="Replaces title, category, tags and notes with form inputs"
-                      >
-                        <RefreshCw className="w-3.5 h-3.5 text-accent" />
-                        <span>Update Existing Entry</span>
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={handleUpdateOverwrite}
+                      disabled={mergingLoading}
+                      className={secondaryButtonClass}
+                      title="Replaces the saved title, category, tags and notes with what you entered here"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5 text-slate-400" />
+                      <span>Replace saved details</span>
+                    </button>
+                  </div>
 
-                    {/* Secondary Inspection & Override Controls */}
-                    <div className="flex items-center justify-between pt-1 text-xs">
-                      <button
-                        type="button"
-                        onClick={handleViewExisting}
-                        className="flex items-center gap-1 text-slate-600 dark:text-slate-300 hover:text-accent hover:underline"
-                      >
-                        <Eye className="w-3 h-3" />
-                        <span>Inspect Existing Bookmark in Detail View</span>
-                      </button>
+                  <div className="flex items-center justify-between text-xs">
+                    <button
+                      type="button"
+                      onClick={handleViewExisting}
+                      className="flex items-center gap-1 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+                    >
+                      <Eye className="w-3 h-3" />
+                      <span>Open saved link</span>
+                    </button>
 
-                      <button
-                        type="button"
-                        onClick={() => setAllowDuplicateOverride(true)}
-                        className="text-amber-700 dark:text-amber-400 hover:underline"
-                      >
-                        Create separate copy anyway &rarr;
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setAllowDuplicateOverride(true)}
+                      className="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+                    >
+                      Save a copy anyway
+                    </button>
                   </div>
                 </div>
               )}
 
-              {/* Page Title */}
+              {/* Title */}
               <div>
-                <label className="block text-sm text-slate-700 dark:text-slate-300 mb-1.5 font-medium">
-                  Page Title (Keywords trigger real-time auto-tagging)
-                </label>
+                <label className={labelClass}>Title</label>
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g. SQLite WAL Concurrency & High Performance Microservices"
-                  className="w-full px-3.5 py-2.5 text-sm bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent text-slate-900 dark:text-ink"
+                  placeholder="Page title"
+                  className={inputClass}
                 />
               </div>
 
-              {/* Page Description / Excerpt for keyword discovery */}
+              {/* Description */}
               <div>
-                <label className="block text-sm text-slate-700 dark:text-slate-300 mb-1.5 font-medium">
-                  Page Description / Key Excerpt
-                </label>
+                <label className={labelClass}>Description</label>
                 <textarea
                   rows={2}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Paste or type brief description, article thesis, or key concepts for tag discovery..."
-                  className="w-full px-3.5 py-2.5 text-sm bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent text-slate-900 dark:text-ink"
+                  placeholder="A line or two about the page"
+                  className={inputClass}
                 />
               </div>
 
-              {/* Real-Time Keyword Auto-Tagging & Category Suggestion Panel */}
+              {/* Tag & category suggestions */}
               {suggestions && (suggestions.suggestedTags.length > 0 || suggestions.suggestedCategory) && (
-                <div className="p-4 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-accent/30 space-y-3">
+                <div className={`${panelClass} p-4 space-y-3`}>
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Wand2 className="w-3.5 h-3.5 text-accent" />
-                      <span className="text-sm font-semibold text-slate-900 dark:text-ink">
-                        Auto-Tag & Category Suggestions
-                      </span>
-                    </div>
+                    <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Suggestions</span>
 
                     {suggestions.suggestedTags.length > 0 && (
                       <button
                         type="button"
                         onClick={handleAcceptAllSuggestions}
-                        className="text-xs font-medium text-accent hover:underline flex items-center gap-1"
+                        className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 flex items-center gap-1"
                       >
                         <Check className="w-3 h-3" />
-                        <span>Accept All ({suggestions.suggestedTags.length})</span>
+                        <span>Add all tags ({suggestions.suggestedTags.length})</span>
                       </button>
                     )}
                   </div>
 
-                  {/* Category Suggestion Chip */}
                   {suggestions.suggestedCategory && (
-                    <div className="flex flex-wrap items-center gap-2 text-xs bg-white dark:bg-surface p-2.5 rounded-lg border border-black/5 dark:border-white/10">
-                      <span className="text-slate-500 dark:text-slate-400">Recommended Category:</span>
-                      <span className="font-semibold text-accent px-2 py-0.5 rounded bg-accent/10">
+                    <div className="flex flex-wrap items-center gap-2 text-sm">
+                      <span className="text-slate-500 dark:text-slate-400">Category:</span>
+                      <span className="font-medium text-slate-900 dark:text-ink">
                         {suggestions.suggestedCategory.category}
                       </span>
-                      <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
-                        ({suggestions.suggestedCategory.confidence}% match)
+                      <span className="text-xs text-slate-400">
+                        {suggestions.suggestedCategory.confidence}% match
                       </span>
                       {category !== suggestions.suggestedCategory.category && (
                         <button
@@ -734,20 +678,17 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
                             setCategory(suggestions.suggestedCategory.category);
                             setIsCategoryManuallySet(true);
                           }}
-                          className="ml-auto px-2 py-0.5 rounded bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 text-xs font-medium"
+                          className="ml-auto px-2.5 py-1 rounded-md border border-black/10 dark:border-white/10 text-xs text-slate-700 dark:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5"
                         >
-                          Apply Category
+                          Use this
                         </button>
                       )}
                     </div>
                   )}
 
-                  {/* Suggested Tag Pills */}
                   {suggestions.suggestedTags.length > 0 && (
                     <div className="space-y-1.5">
-                      <div className="text-xs text-slate-500 dark:text-slate-400 font-semibold">
-                        Click tags to add/remove:
-                      </div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400">Click a tag to add or remove it</div>
                       <div className="flex flex-wrap gap-1.5">
                         {suggestions.suggestedTags.map((sug) => {
                           const isSelected = isTagSelected(sug.tag);
@@ -757,16 +698,16 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
                               type="button"
                               onClick={() => handleToggleTag(sug.tag)}
                               title={`${sug.reason} (${sug.confidence}% confidence)`}
-                              className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs transition-all ${
+                              className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-xs border transition-colors ${
                                 isSelected
-                                  ? 'bg-accent text-on-accent dark:text-slate-950 font-medium shadow-2xs'
-                                  : 'bg-black/5 dark:bg-white/5 text-slate-700 dark:text-slate-300 hover:bg-accent/20 hover:text-accent'
+                                  ? 'bg-accent border-accent text-on-accent'
+                                  : 'border-black/10 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:bg-black/5 dark:hover:bg-white/5'
                               }`}
                             >
                               {isSelected ? (
                                 <Check className="w-3 h-3 shrink-0" />
                               ) : (
-                                <Plus className="w-3 h-3 text-accent shrink-0" />
+                                <Plus className="w-3 h-3 text-slate-400 shrink-0" />
                               )}
                               <span>#{sug.tag}</span>
                             </button>
@@ -776,12 +717,11 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
                     </div>
                   )}
 
-                  {/* Extracted Keyword Tokens */}
                   {suggestions.extractedKeywords.length > 0 && (
-                    <div className="flex items-center gap-1.5 pt-1 overflow-x-auto text-xs text-slate-400 dark:text-slate-500">
-                      <span className="shrink-0 font-semibold">Keywords:</span>
+                    <div className="flex items-center gap-1.5 overflow-x-auto text-xs text-slate-400 dark:text-slate-500">
+                      <span className="shrink-0">Keywords:</span>
                       {suggestions.extractedKeywords.map((kw) => (
-                        <span key={kw} className="px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/5 shrink-0">
+                        <span key={kw} className="shrink-0">
                           {kw}
                         </span>
                       ))}
@@ -790,19 +730,17 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
                 </div>
               )}
 
-              {/* Category & Tags Inputs */}
+              {/* Category & Tags */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm text-slate-700 dark:text-slate-300 mb-1.5 font-medium">
-                    Category
-                  </label>
+                  <label className={labelClass}>Category</label>
                   <select
                     value={category}
                     onChange={(e) => {
                       setCategory(e.target.value);
                       setIsCategoryManuallySet(true);
                     }}
-                    className="w-full px-3 py-2.5 text-sm bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent text-slate-900 dark:text-ink"
+                    className={inputClass}
                   >
                     <option value="Dev & Tech">Dev & Tech</option>
                     <option value="AI & Machine Learning">AI & Machine Learning</option>
@@ -817,98 +755,79 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm text-slate-700 dark:text-slate-300 mb-1.5 font-medium">
-                    Tags (Comma Separated)
-                  </label>
+                  <label className={labelClass}>Tags</label>
                   <input
                     type="text"
                     value={tagsInput}
                     onChange={(e) => setTagsInput(e.target.value)}
-                    placeholder="react, agent, sqlite"
-                    className="w-full px-3.5 py-2.5 text-sm bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent text-slate-900 dark:text-ink"
+                    placeholder="Separate with commas"
+                    className={inputClass}
                   />
                 </div>
               </div>
 
-              {/* Personal Notes */}
+              {/* Notes */}
               <div>
-                <label className="block text-sm text-slate-700 dark:text-slate-300 mb-1.5 font-medium">
-                  Personal Notes / Remarks (Optional)
-                </label>
+                <label className={labelClass}>Notes (optional)</label>
                 <textarea
                   rows={2}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Why are you saving this? Key quotes or remarks..."
-                  className="w-full px-3.5 py-2.5 text-sm bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent text-slate-900 dark:text-ink"
+                  placeholder="Why you're saving it"
+                  className={inputClass}
                 />
               </div>
 
-              {/* Auto-Apply Suggested Tags Toggle & Gemini Extraction */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between p-3 rounded-lg bg-black/[0.02] dark:bg-white/[0.02] border border-black/10 dark:border-white/10">
-                  <div className="flex items-center gap-2">
-                    <Tag className="w-3.5 h-3.5 text-accent" />
-                    <span className="text-xs text-slate-700 dark:text-slate-300">
-                      Auto-merge high confidence keyword tags on save
-                    </span>
+              {/* Options */}
+              <div className={`${panelClass} divide-y divide-black/[0.08] dark:divide-white/[0.08]`}>
+                <label className="flex items-center justify-between gap-3 px-3 py-2.5 cursor-pointer">
+                  <div>
+                    <div className="text-sm text-slate-700 dark:text-slate-200">Add suggested tags when saving</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">Only the closest matches</div>
                   </div>
                   <input
                     type="checkbox"
                     checked={autoApplySuggestedTags}
                     onChange={(e) => setAutoApplySuggestedTags(e.target.checked)}
-                    className="w-4 h-4 text-accent rounded cursor-pointer accent-accent"
+                    className="w-4 h-4 rounded cursor-pointer accent-accent"
                   />
-                </div>
+                </label>
 
-                <div className="flex items-center justify-between p-3 rounded-lg bg-accent/10 border border-accent/20">
-                  <div className="flex items-center gap-2.5">
-                    <Sparkles className="w-4 h-4 text-accent" />
-                    <div>
-                      <div className="text-sm font-medium text-slate-900 dark:text-ink">
-                        Deep AI Ingestion (Gemini 3.7 Flash)
-                      </div>
-                      <div className="text-xs opacity-70">
-                        Extracts TL;DR, takeaways, code snippets & quotes
-                      </div>
+                <label className="flex items-center justify-between gap-3 px-3 py-2.5 cursor-pointer">
+                  <div>
+                    <div className="text-sm text-slate-700 dark:text-slate-200">Summarize with AI</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">
+                      Writes a short summary, key points and quotes
                     </div>
                   </div>
                   <input
                     type="checkbox"
                     checked={autoAiExtract}
                     onChange={(e) => setAutoAiExtract(e.target.checked)}
-                    className="w-4 h-4 text-accent rounded cursor-pointer accent-accent"
+                    className="w-4 h-4 rounded cursor-pointer accent-accent"
                   />
-                </div>
+                </label>
               </div>
 
-              {/* Action Buttons */}
+              {/* Actions */}
               <div className="pt-2 flex items-center justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="px-4 py-2 text-xs text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 rounded-lg"
-                >
+                <button type="button" onClick={onClose} className={secondaryButtonClass}>
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={loading || (duplicateResult?.isDuplicate && !allowDuplicateOverride)}
-                  className={`flex items-center gap-2 px-5 py-2.5 text-xs font-medium rounded-lg shadow-2xs transition-colors ${
-                    duplicateResult?.isDuplicate && !allowDuplicateOverride
-                      ? 'bg-black/10 dark:bg-white/10 text-slate-400 cursor-not-allowed'
-                      : 'bg-accent text-on-accent hover:bg-accent-hover'
-                  }`}
+                  disabled={loading || isBlockedDuplicate}
+                  className={primaryButtonClass}
                 >
                   {loading ? (
                     <>
-                      <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      <span>Extracting with AI...</span>
+                      {spinner}
+                      <span>Saving…</span>
                     </>
-                  ) : duplicateResult?.isDuplicate && !allowDuplicateOverride ? (
-                    <span>Duplicate Detected</span>
+                  ) : isBlockedDuplicate ? (
+                    <span>Already saved</span>
                   ) : (
-                    <span>Save to Repository</span>
+                    <span>Save link</span>
                   )}
                 </button>
               </div>
@@ -916,46 +835,35 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
           ) : (
             <form onSubmit={handleBulkSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm text-slate-700 dark:text-slate-300 mb-1.5 font-medium">
-                  Paste Multiple Links (1 URL per line)
-                </label>
+                <label className={labelClass}>Links, one per line</label>
                 <textarea
                   rows={6}
                   required
                   value={bulkUrls}
                   onChange={(e) => setBulkUrls(e.target.value)}
-                  placeholder="https://github.com/shadcn-ui/ui&#10;https://www.reddit.com/r/LocalLLaMA/...&#10;https://www.instagram.com/reel/..."
-                  className="w-full px-3.5 py-3 text-sm bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent text-slate-900 dark:text-ink"
+                  placeholder="https://&#10;https://"
+                  className={inputClass}
                 />
               </div>
 
-              <div className="p-3.5 rounded-lg bg-black/[0.02] dark:bg-white/[0.02] border border-black/10 dark:border-white/10 text-xs text-slate-600 dark:text-slate-400 space-y-1">
-                <div className="font-semibold text-slate-900 dark:text-ink">Bulk Ingestion Pipeline:</div>
-                <div>• Auto-detects GitHub, Reddit, Instagram, YouTube & research papers</div>
-                <div>• Skips redundant duplicate URLs and deduplicates against vault</div>
-                <div>• Concurrently runs auto-tagging and Gemini 3.7 Flash structured summaries</div>
-              </div>
+              <ul className="text-xs text-slate-500 dark:text-slate-400 space-y-1 list-disc pl-4">
+                <li>Only lines starting with http:// or https:// are saved.</li>
+                <li>Links you've already saved are skipped.</li>
+                <li>Each link is summarized with AI as it's saved.</li>
+              </ul>
 
-              <div className="pt-3 flex items-center justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="px-4 py-2 text-xs text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 rounded-lg"
-                >
+              <div className="pt-2 flex items-center justify-end gap-2">
+                <button type="button" onClick={onClose} className={secondaryButtonClass}>
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-accent hover:bg-accent-hover text-on-accent text-xs font-medium rounded-lg shadow-2xs transition-colors disabled:opacity-50"
-                >
+                <button type="submit" disabled={loading} className={primaryButtonClass}>
                   {loading ? (
                     <>
-                      <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      <span>Processing Ingestion...</span>
+                      {spinner}
+                      <span>Saving links…</span>
                     </>
                   ) : (
-                    <span>Import All Links</span>
+                    <span>Save links</span>
                   )}
                 </button>
               </div>
@@ -966,4 +874,3 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({
     </div>
   );
 };
-

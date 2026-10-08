@@ -1,26 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import {
-  X,
-  Keyboard,
-  Search,
-  Sparkles,
-  Plus,
-  LayoutGrid,
-  List,
-  Columns3,
-  Network,
-  ShieldCheck,
-  Share2,
-  Chrome,
-  Sun,
-  Moon,
-  Bookmark,
-  Star,
-  Archive,
-  ArrowRight,
-  Command,
-  Cpu,
-} from 'lucide-react';
+import { X, Keyboard, Search } from 'lucide-react';
 import { ViewMode } from '../types';
 
 export interface ShortcutItem {
@@ -383,59 +362,37 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
     }
   };
 
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case 'navigation':
-        return <Search className="w-3.5 h-3.5 text-accent" />;
-      case 'actions':
-        return <Plus className="w-3.5 h-3.5 text-accent" />;
-      case 'views':
-        return <LayoutGrid className="w-3.5 h-3.5 text-accent" />;
-      case 'filters':
-        return <Bookmark className="w-3.5 h-3.5 text-accent" />;
-      default:
-        return <Keyboard className="w-3.5 h-3.5 text-slate-400" />;
-    }
-  };
-
   return (
     <div
       id="keyboard-shortcuts-dialog"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-150"
       onClick={onClose}
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="shortcuts-modal-title"
-        className="w-full max-w-2xl max-h-[85vh] flex flex-col rounded-2xl border border-black/10 dark:border-white/10 shadow-2xl overflow-hidden transition-all bg-white dark:bg-surface text-slate-900 dark:text-slate-100"
+        className="w-full max-w-2xl max-h-[85vh] flex flex-col rounded-xl border shadow-xl overflow-hidden text-slate-900 dark:text-slate-100"
+        style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="p-5 pb-4 border-b border-black/10 dark:border-white/10 bg-black/[0.02] dark:bg-white/[0.02]">
+        <div className="px-6 pt-4 border-b border-black/[0.08] dark:border-white/[0.08]">
           <div className="flex items-center justify-between gap-3 mb-4">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-black/5 dark:bg-white/5 text-accent flex items-center justify-center border border-black/5 dark:border-white/5">
-                <Keyboard className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 id="shortcuts-modal-title" className="text-base font-semibold text-slate-900 dark:text-ink flex items-center gap-2">
-                  Keyboard shortcuts
-                  <span className="font-mono text-[11px] font-normal px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/5 text-slate-500 dark:text-slate-400">
-                    {filteredShortcuts.length} of {SHORTCUTS_DATA.length}
-                  </span>
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Press a key, or click a row to run it
-                </p>
-              </div>
+            <div>
+              <h3 id="shortcuts-modal-title" className="text-base font-semibold text-slate-900 dark:text-ink">
+                Keyboard shortcuts
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Press a key, or click a row to run it
+              </p>
             </div>
 
             <button
               id="close-shortcuts-modal-btn"
               onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-              title="Close dialog (Esc)"
+              className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+              aria-label="Close"
             >
               <X className="w-4 h-4" />
             </button>
@@ -451,7 +408,7 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search shortcuts"
-              className="w-full pl-9.5 pr-8 py-2 rounded-xl text-xs outline-none transition-all border text-slate-900 dark:text-ink placeholder:text-slate-400 dark:placeholder:text-slate-500 bg-black/5 dark:bg-white/[0.04] border-transparent focus:border-accent focus:bg-white dark:focus:bg-surface"
+              className="w-full pl-9.5 pr-8 py-2 rounded-md text-sm outline-none transition-colors border text-slate-900 dark:text-ink placeholder:text-slate-400 dark:placeholder:text-slate-500 bg-white dark:bg-surface border-black/10 dark:border-white/10 focus:border-accent"
             />
             {searchQuery && (
               <button
@@ -467,15 +424,15 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
           </div>
 
           {/* Category Filter Pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 text-xs">
+          <div className="flex items-center gap-5 overflow-x-auto no-scrollbar text-sm">
             {SHORTCUT_CATEGORIES.map((cat) => (
               <button
                 key={cat.id}
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors shrink-0 ${
+                className={`py-2 -mb-px border-b-2 transition-colors shrink-0 ${
                   selectedCategory === cat.id
-                    ? 'bg-accent/15 text-accent border border-accent/30 font-semibold'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5 border border-transparent'
+                    ? 'border-accent text-slate-900 dark:text-ink font-medium'
+                    : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                 }`}
               >
                 {cat.label}
@@ -485,7 +442,7 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
         </div>
 
         {/* Shortcuts List Content */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-2 bg-white dark:bg-surface">
+        <div className="flex-1 overflow-y-auto px-3 py-2 sm:px-4">
           {filteredShortcuts.length === 0 ? (
             <div className="py-12 text-center space-y-2">
               <Keyboard className="w-8 h-8 mx-auto text-slate-300 dark:text-slate-600" />
@@ -503,27 +460,20 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
               </button>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="divide-y divide-black/[0.06] dark:divide-white/[0.06]">
               {filteredShortcuts.map((item) => (
                 <div
                   key={item.id}
                   onClick={() => handleTriggerAction(item.actionId)}
-                  className="group flex items-center justify-between p-3 rounded-xl border border-black/5 dark:border-white/5 hover:border-accent/40 bg-black/[0.02] dark:bg-white/[0.02] hover:bg-black/[0.04] dark:hover:bg-white/[0.04] transition-all cursor-pointer"
+                  className="group flex items-center justify-between px-2 py-2.5 rounded-md hover:bg-black/[0.03] dark:hover:bg-white/[0.04] transition-colors cursor-pointer"
                 >
-                  <div className="flex items-start gap-3 min-w-0 pr-4">
-                    <div className="mt-0.5 shrink-0 p-1.5 rounded-lg bg-white dark:bg-surface border border-black/10 dark:border-white/10 shadow-2xs">
-                      {getCategoryIcon(item.category)}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <h4 className="text-xs font-semibold text-slate-900 dark:text-ink group-hover:text-accent transition-colors">
-                          {item.title}
-                        </h4>
-                      </div>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1">
-                        {item.description}
-                      </p>
-                    </div>
+                  <div className="min-w-0 pr-4">
+                    <h4 className="text-sm font-medium text-slate-900 dark:text-ink">
+                      {item.title}
+                    </h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">
+                      {item.description}
+                    </p>
                   </div>
 
                   {/* Key Combo Display */}
@@ -531,7 +481,7 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
                     {item.keys.map((combo, idx) => (
                       <React.Fragment key={idx}>
                         {idx > 0 && (
-                          <span className="text-[10px] text-slate-400 font-mono px-0.5">
+                          <span className="text-xs text-slate-400 px-0.5">
                             or
                           </span>
                         )}
@@ -539,7 +489,7 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
                           {combo.map((key, kIdx) => (
                             <kbd
                               key={kIdx}
-                              className="inline-flex items-center justify-center min-w-[22px] h-[22px] px-1.5 rounded-md font-mono text-[10px] font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-surface border border-black/10 dark:border-white/15 shadow-2xs group-hover:border-accent/40 transition-all"
+                              className="inline-flex items-center justify-center min-w-[22px] h-[22px] px-1.5 rounded font-sans text-[11px] font-medium text-slate-600 dark:text-slate-300 bg-black/[0.03] dark:bg-white/[0.06] border border-black/10 dark:border-white/10"
                             >
                               {key === '⌘' ? (
                                 <span className="text-[11px]">⌘</span>
@@ -551,9 +501,6 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
                         </div>
                       </React.Fragment>
                     ))}
-                    <div className="hidden group-hover:flex items-center pl-1.5 text-accent">
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </div>
                   </div>
                 </div>
               ))}
@@ -561,25 +508,6 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
           )}
         </div>
 
-        {/* Modal Footer Tip */}
-        <div className="p-3.5 px-5 border-t border-black/10 dark:border-white/10 bg-black/[0.02] dark:bg-white/[0.02] flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
-          <div className="flex items-center gap-2">
-            <span>Press</span>
-            <kbd className="px-1.5 py-0.5 rounded font-mono text-[10px] bg-white dark:bg-white/10 border border-black/10 dark:border-white/10 font-medium">
-              ?
-            </kbd>
-            <span>to open or close this list</span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="hidden sm:inline">Click a row to run it</span>
-            <span>•</span>
-            <kbd className="px-1.5 py-0.5 rounded font-mono text-[10px] bg-white dark:bg-white/10 border border-black/10 dark:border-white/10 font-medium">
-              Esc
-            </kbd>
-            <span>to close</span>
-          </div>
-        </div>
       </div>
     </div>
   );
