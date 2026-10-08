@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.3.0](https://github.com/vivekmaru/omnilink-ai/compare/omnilink-ai-v1.2.0...omnilink-ai-v1.3.0) (2026-10-08)
+
+
+### Features
+
+* add built-in password login for multi-user mode ([c1a1304](https://github.com/vivekmaru/omnilink-ai/commit/c1a1304524c5372608b930c90311fab2be8d2f3f))
+* add built-in password login for multi-user mode ([f5e1075](https://github.com/vivekmaru/omnilink-ai/commit/f5e107529d84d12ed4370651af97d3482e922e9e))
+* add service token management screen ([140cf3f](https://github.com/vivekmaru/omnilink-ai/commit/140cf3fc341a64ece96dc81815172dbdd2f48a50))
+* add service token management screen ([d294dfa](https://github.com/vivekmaru/omnilink-ai/commit/d294dfaf40c6af84b4a96f443ab3954d958e1cc5))
+* article page with a side panel for summary, tags and notes ([#18](https://github.com/vivekmaru/omnilink-ai/issues/18)) ([96a00dd](https://github.com/vivekmaru/omnilink-ai/commit/96a00dd8043cd21402e88d8c11b3fc412a96d0ba))
+* one Settings page at /settings instead of six pop-ups ([7583a6b](https://github.com/vivekmaru/omnilink-ai/commit/7583a6bf47a81405d12b5fc13e0127ff09f534a6))
+* open saved links as their own page at /link/:id  ([fda31a7](https://github.com/vivekmaru/omnilink-ai/commit/fda31a723dcfa05ed0aeda6c648046e23cdb64c9))
+
+
+### Bug Fixes
+
+* key sign-in limits by real client IP and reserve attempts before hashing ([98283eb](https://github.com/vivekmaru/omnilink-ai/commit/98283ebb6799dc2bfef4b8be25a3e83000a8e35a))
+* simplify typography and decoration in modal screens ([3823aac](https://github.com/vivekmaru/omnilink-ai/commit/3823aaced03b05ca757123f3c940150743488bc9))
+* simplify typography and decoration in modal screens ([90afb5c](https://github.com/vivekmaru/omnilink-ai/commit/90afb5c1b86072dafb9cf3ad3c74e4821b335e8d))
+
 ## [1.2.0](https://github.com/vivekmaru/omnilink-ai/compare/omnilink-ai-v1.1.0...omnilink-ai-v1.2.0) (2026-09-03)
 
 
